@@ -1,6 +1,8 @@
 
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
+![Gantt diagram](https://github.com/starseeker-code/five-a-day/blob/main/docs/resources/logo.png)
+
 [![Versión](https://img.shields.io/badge/versión-v0.1-brightgreen?style=for-the-badge)](#)
 [![Última actualización](https://img.shields.io/badge/última%20actualización-2025--08--09-blue?style=for-the-badge)](#)
 [![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange?style=for-the-badge)](#)
