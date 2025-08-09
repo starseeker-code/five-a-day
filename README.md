@@ -7,9 +7,32 @@
 
 ---
 
+## 📄 Descripción General
+
+*Sistema desarrollado con ❤️ para la gestión integral de centros educativos*
+
+Five a Day eVolution es un sistema completo de gestión académica para la administración integral de una academia.
+
+Servicios:
+
+- Administración de alumnos, padres/tutores y profesores.
+- Control de pagos, facturación y gastos.
+- Automatización de recordatorios, notificaciones, emails y documentación.
+- Soporte para administradores y profesores.
+
+---
+
+## 🎯 Objetivos del Proyecto
+
+- Reducir la carga administrativa mediante automatización.
+- Centralizar la información académica y financiera en un solo sistema.
+- Garantizar la seguridad y la integridad de la información.
+
+---
+
 ## 📌 Estado del Proyecto
 
-URL: five-a-day.netlify.app
+URL: [Five a Day eVolution](five-a-day.netlify.app)
 
 Documentacion: ...
 
@@ -19,7 +42,7 @@ Version actual: **v0.1**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
 |--------------|---------------------|-----------------------------|
-| Sistema de notificaciones mejorado | 2025-08-09 | Integración de Celery + Redis |
+| Setup completo del proyecto | 2025-08-09 | Modelos |
 
 ---
 
@@ -28,9 +51,9 @@ Version actual: **v0.1**
 <details>
 <summary>🔶 Versión Alfa (8-10 semanas | 160-200h)</summary>
 
-- [ ] Análisis de Google Sheets existentes
-- [ ] Diseño de base de datos relacional (ER + normalización)
-- [ ] Configuración inicial del proyecto (Poetry + Django + Git)
+- [X] Análisis de Google Sheets existentes
+- [X] Diseño de base de datos relacional (ER + normalización)
+- [X] Configuración inicial del proyecto (Poetry + Django + Git)
 - [ ] Modelos principales en Django
 - [ ] Django Admin personalizado
 - [ ] Lógica contable básica (tracking de pagos, informes)
@@ -82,53 +105,29 @@ Version actual: **v0.1**
 
 ## 📑 Índice
 
-1. [Descripción General](#-descripción-general)
-2. [Objetivos del Proyecto](#-objetivos-del-proyecto)
-3. [Características Principales](#-características-principales)
-4. [Planificación y Roadmap](#-planificación-y-roadmap)
-5. [Arquitectura y Tecnologías](#-arquitectura-y-tecnologías)
-6. [Esquema de Base de Datos (ER)](#-esquema-de-base-de-datos-er)
-7. [Interfaz de Usuario (UI)](#-interfaz-de-usuario-ui)
-8. [Instalación y Configuración](#-instalación-y-configuración)
+1. [Características Principales](#-características-principales)
+2. [Planificación y Roadmap](#-planificación-y-roadmap)
+3. [Arquitectura y Tecnologías](#-arquitectura-y-tecnologías)
+4. [Esquema de Base de Datos](#-esquema-de-base-de-datos)
+5. [Interfaz de Usuario (UI)](#-interfaz-de-usuario-ui)
+6. [Desarrollo](#-instalación-para-desarrollo)
     - [Instalación con Docker](#instalación-con-docker)
-    - [Instalación manual (opcional)](#instalación-manual-opcional)
-9. [Guía de Uso](#-guía-de-uso)
-10. [Pruebas y Calidad](#-pruebas-y-calidad)
-11. [Despliegue en Producción](#-despliegue-en-producción)
-12. [Integraciones Externas](#-integraciones-externas)
-13. [Futuras Mejoras](#-futuras-mejoras)
-14. [Licencia](#-licencia)
-
----
-
-## 📄 Descripción General
-
-Este proyecto es una solución integral para la **gestión académica** que cubre:
-
-- Administración de alumnos, padres/tutores y profesores.
-- Control de pagos, facturación y gastos.
-- Automatización de recordatorios y notificaciones.
-- Exportación de datos a Google Sheets y generación de documentos PDF.
-- Integración con servicios externos como Gmail, Stripe y Twilio.
-- Sistema de permisos y auditoría para entornos multiusuario.
-
-**Duración estimada de desarrollo:** 26-30 semanas (520-600 horas).  
-**Metodología:** Desarrollo incremental con entregas Alfa, Beta, v1.0 y v2.0.
-
----
-
-## 🎯 Objetivos del Proyecto
-
-- Reducir la carga administrativa mediante automatización.
-- Centralizar la información académica y financiera en un solo sistema.
-- Facilitar el acceso y la interacción para usuarios no técnicos.
-- Garantizar la seguridad y la integridad de la información.
+    - [Instalación manual](#instalación-manual)
+    - [Archivo .env](#-archivo-.env)
+7. [Dependencias](#-dependencias)
+8. [Guía de Uso](#-guía-de-uso)
+9. [Pruebas y Calidad](#-pruebas-y-calidad)
+10. [Despliegue en Producción](#-despliegue-en-producción)
+11. [Integraciones Externas](#-integraciones-externas)
+12. [Futuras Mejoras](#-futuras-mejoras)
+13. [Licencia](#-licencia)
+14. [Contribución](#-contribución)
 
 ---
 
 ## 🚀 Características Principales
 
-### 🔶 Versión Alfa
+### 🔶 Versión Alfa - 22 Agosto
 - Análisis y diseño de base de datos.
 - Implementación de modelos principales en Django.
 - Django Admin personalizado.
@@ -136,14 +135,14 @@ Este proyecto es una solución integral para la **gestión académica** que cubr
 - Migración inicial de datos.
 - Dashboard básico.
 
-### 🔷 Versión Beta
+### 🔷 Versión Beta - 4 Octubre
 - Dockerización y PostgreSQL.
 - Mejora del frontend (templates y UX).
 - Integración con Google Sheets y Gmail.
 - Primeras automatizaciones.
 - Despliegue inicial.
 
-### 🟢 Versión 1.0
+### 🟢 Versión 1.0 - 25 Diciembre
 - Rediseño completo de la UI.
 - Exportación automática a Google Sheets.
 - Generación de facturas y certificados en PDF.
@@ -170,15 +169,19 @@ Este proyecto es una solución integral para la **gestión académica** que cubr
 
 - **Backend:** Django (Python)
 - **Base de datos:** PostgreSQL
-- **Contenedores:** Docker + docker-compose
-- **Frontend:** Templates Django (Bootstrap + CSS personalizado)
+- **Contenedores:** Docker
+- **Cloud:** Google Cloud Platform
+- **Frontend:** Templates Django (Bootstrap CSS + Javascript)
 - **Servicios externos:** Google Sheets API, Gmail API, Twilio, Stripe
 - **Automatización:** Celery + Redis
 - **Servidor de producción:** Nginx + Gunicorn
 
 ---
 
-## 🗃 Esquema de Base de Datos (ER)
+## 🗃 Esquema de Base de Datos
+
+<details>
+<summary>Esquema ER</summary>
 
 ```mermaid
 erDiagram
@@ -278,14 +281,21 @@ erDiagram
     MATRICULAS ||--o{ PAGOS : "corresponde_a"
 ```
 
-## 📥 Instalación y Configuración
+</details>
+
+## 📥 Desarrollo
 
 ### Instalación con Docker
 
+<details>
+<summary>Docker</summary>
+    
 1. Clonar el repositorio:
 
-git clone https://github.com/usuario/sistema-gestion-academica.git
-cd sistema-gestion-academica
+```bash
+git clone https://github.com/starseeker-code/five-a-day.git
+cd five-a-day
+```
 
 2. Configurar variables de entorno:
 
@@ -294,41 +304,108 @@ Completa la información de base de datos, API Keys y credenciales.
 
 3. Levantar contenedores:
 
+```bash
 docker-compose up --build
+```
 
 4. Aplicar migraciones:
 
+```bash
 docker-compose exec web python manage.py migrate
+```
 
-5. Crear usuario administrador:
+5. Acceder a la aplicación en local:
 
-docker-compose exec web python manage.py createsuperuser
-
-6. Acceder a la aplicación:
-
+```bash
 URL: http://localhost:8000
-Admin: http://localhost:8000/admin
+```
 
----
+</details>
 
-### Instalación manual (opcional)
+### Instalación manual
 
-Crear entorno virtual e instalar dependencias con Poetry.
-Configurar PostgreSQL y el archivo .env.
-Ejecutar migraciones y crear usuario administrador.
-Lanzar el servidor con python manage.py runserver.
+<details>
+<summary>Poetry</summary>
 
-## 🖥 Interfaz de Usuario (UI)
+1. Clonar el repositorio:
 
-![UI screenshot 1](https://github.com/starseeker-code/five-a-day/blob/main/docs/UI/ui_1.png)
+```bash
+git clone https://github.com/starseeker-code/five-a-day.git
+cd five-a-day
+```
+
+2. Configurar variables de entorno:
+
+Copia el archivo .env.example a .env.
+Completa la información de base de datos, API Keys y credenciales.
+
+3. Crear entorno virtual:
+
+```bash
+poetry install
+```
+
+4. Acceder al entorno virtual:
+
+```bash
+poetry shell
+```
+
+5. Ejecutar migraciones y lanzar servidor:
+
+```bash
+cd project && python manage.py migrate && python manage.py runserver
+```
+
+</details>
+
+### Archivo .env
+
+<details>
+<summary>Archivo `.env` en `/project/.env`</summary>
+
+```ini
+# Django
+SECRET_KEY=tu_secret_key_django_muy_seguro
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,tu-dominio.com
+
+# Base de datos
+DB_NAME=sga_db
+DB_USER=sga_user
+DB_PASSWORD=tu_password_seguro
+DB_HOST=db
+DB_PORT=5432
+
+# Email
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=tu-email@gmail.com
+EMAIL_HOST_PASSWORD=tu_app_password
+```
+
+</details>
+
+
+## 📦 Dependencias
+
+<!-- AUTO-SECTION:DEPENDENCIAS -->
+
+| Paquete | Versión |
+|---------|---------|
+| django  | 5.0.3   |
+| psycopg2| 2.9.9   |
+| celery  | 5.3.6   |
+| redis   | 5.0.1   |
+
+<!-- /AUTO-SECTION:DEPENDENCIAS -->
 
 ## 📘 Guía de Uso
 
-Inicio de sesión: Accede con tu usuario y contraseña.
-Navegación: Menú principal para acceder a módulos de gestión.
-Búsquedas y filtros: Herramientas integradas para encontrar registros rápidamente.
-Exportación de datos: Opción de exportar a Google Sheets desde el panel de administración.
-Generación de documentos: Descargar facturas y certificados en PDF.
+![UI screenshot 1](https://github.com/starseeker-code/five-a-day/blob/main/docs/UI/ui_1.png)
+
+---
 
 ## 🧪 Pruebas y Calidad
 
@@ -351,6 +428,18 @@ Instalar Docker y docker-compose.
 Configurar backups automáticos de base de datos.
 Configurar SSL/HTTPS.
 Activar tareas programadas con Celery Beat.
+
+## Futuras mejoras
+
+WIP
+
+## Licencia
+
+WIP
+
+## Contribución
+
+WIP
 
 # Experimental - Aun estoy viendo como funciona esto
 
