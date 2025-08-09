@@ -1,7 +1,7 @@
 
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
-[![Versión](https://img.shields.io/badge/versión-v1.0-brightgreen?style=for-the-badge)](#)
+[![Versión](https://img.shields.io/badge/versión-v0.1-brightgreen?style=for-the-badge)](#)
 [![Última actualización](https://img.shields.io/badge/última%20actualización-2025--08--09-blue?style=for-the-badge)](#)
 [![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange?style=for-the-badge)](#)
 
@@ -10,8 +10,11 @@
 ## 📌 Estado del Proyecto
 
 URL: five-a-day.netlify.app
+
 Documentacion: ...
+
 Estado: 🟢
+
 Version actual: **v0.1**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
@@ -159,7 +162,7 @@ Este proyecto es una solución integral para la **gestión académica** que cubr
 
 ## 🗓 Planificación y Roadmap
 
-
+![Gantt diagram](https://github.com/starseeker-code/five-a-day/blob/main/docs/development/gantt-alfa.png)
 
 ---
 
@@ -317,7 +320,7 @@ Lanzar el servidor con python manage.py runserver.
 
 ## 🖥 Interfaz de Usuario (UI)
 
-
+![UI screenshot 1](https://github.com/starseeker-code/five-a-day/blob/main/docs/UI/ui_1.png)
 
 ## 📘 Guía de Uso
 
