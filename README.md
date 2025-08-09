@@ -32,7 +32,7 @@ Servicios:
 
 ## 📌 Estado del Proyecto
 
-URL: [Five a Day eVolution](five-a-day.netlify.app)
+URL: [Five a Day eVolution](https://five-a-day.netlify.app)
 
 Documentacion: ...
 
@@ -110,18 +110,18 @@ Version actual: **v0.1**
 3. [Arquitectura y Tecnologías](#-arquitectura-y-tecnologías)
 4. [Esquema de Base de Datos](#-esquema-de-base-de-datos)
 5. [Interfaz de Usuario (UI)](#-interfaz-de-usuario-ui)
-6. [Desarrollo](#-instalación-para-desarrollo)
+6. [Desarrollo](#-desarrollo)
     - [Instalación con Docker](#instalación-con-docker)
     - [Instalación manual](#instalación-manual)
-    - [Archivo .env](#-archivo-.env)
+    - [Archivo .env](#-archivo-env)
 7. [Dependencias](#-dependencias)
 8. [Guía de Uso](#-guía-de-uso)
 9. [Pruebas y Calidad](#-pruebas-y-calidad)
-10. [Despliegue en Producción](#-despliegue-en-producción)
+10. [Despliegue en Producción](#despliegue-en-producción)
 11. [Integraciones Externas](#-integraciones-externas)
-12. [Futuras Mejoras](#-futuras-mejoras)
-13. [Licencia](#-licencia)
-14. [Contribución](#-contribución)
+12. [Futuras Mejoras](#futuras-mejoras)
+13. [Licencia](#licencia)
+14. [Contribuir](#contribuir)
 
 ---
 
