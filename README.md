@@ -353,7 +353,7 @@ cd project && python manage.py migrate && python manage.py runserver
 ### Archivo .env
 
 <details>
-<summary>Archivo `.env` en `/project/.env`</summary>
+<summary>Archivo <code>.env`<code> en </code>`/project/.env`</code>code></summary>
 
 ```ini
 # Django
