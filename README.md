@@ -6,7 +6,7 @@
 [![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange?style=for-the-badge)](#)
 
 ---
-``  
+<br></br>
 
 ## 🎓 Descripción General
 
