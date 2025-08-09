@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "five-a-day"
+version = "0.0.1"
+description = "Five a Day management software"
+authors = ["Joaquin Hernandez Martinez <proyecto_noether@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.2.5"
+pytest = "^8.4.1"
+pandas = "^2.3.1"
+django-filter = "^25.1"
+django-debug-toolbar = "^6.0.0"
+djangorestframework = "^3.16.1"
+markdown = "^3.8.2"
+django-cors-headers = "^4.7.0"
+django-extensions = "^4.1"
+django-storages = "^1.14.6"
+pytest-django = "^4.11.1"
+django-redis = "^6.0.0"
+django-environ = "^0.12.0"
+celery = "^5.5.3"
+django-gsheets = "^0.0.10"
+gspread = "^6.2.1"
+httpx = "^0.28.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

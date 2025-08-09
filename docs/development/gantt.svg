@@ -1,0 +1,200 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Estilos -->
+  <defs>
+    <style>
+      .month-label { font-size: 12px; fill: #666; }
+      .task-label { font-size: 11px; fill: #333; }
+      .version-label { font-size: 14px; font-weight: bold; fill: #000; }
+      .grid-line { stroke: #e0e0e0; stroke-width: 1; }
+      .today-line { stroke: #ff6b6b; stroke-width: 2; stroke-dasharray: 5,5; }
+      
+      /* Colores por versión */
+      .alfa { fill: #FF6B35; opacity: 0.8; }
+      .beta { fill: #4ECDC4; opacity: 0.8; }
+      .v1 { fill: #95E77E; opacity: 0.8; }
+      .v2 { fill: #6C5CE7; opacity: 0.8; }
+      
+      /* Hover effect */
+      rect:hover { opacity: 1; cursor: pointer; }
+    </style>
+  </defs>
+  
+  <!-- Fondo -->
+  <rect width="1400" height="900" fill="#fafafa"/>
+  
+  <!-- Título -->
+  <text x="700" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#2c3e50">
+    Planificación Proyecto Sistema de Gestión Académica
+  </text>
+  <text x="700" y="50" text-anchor="middle" font-size="14" fill="#7f8c8d">
+    Duración total: 26-30 semanas
+  </text>
+  
+  <!-- Grid vertical (meses) -->
+  <g id="months">
+    <!-- Líneas de mes -->
+    <line x1="200" y1="80" x2="200" y2="850" class="grid-line"/>
+    <line x1="350" y1="80" x2="350" y2="850" class="grid-line"/>
+    <line x1="500" y1="80" x2="500" y2="850" class="grid-line"/>
+    <line x1="650" y1="80" x2="650" y2="850" class="grid-line"/>
+    <line x1="800" y1="80" x2="800" y2="850" class="grid-line"/>
+    <line x1="950" y1="80" x2="950" y2="850" class="grid-line"/>
+    <line x1="1100" y1="80" x2="1100" y2="850" class="grid-line"/>
+    <line x1="1250" y1="80" x2="1250" y2="850" class="grid-line"/>
+    
+    <!-- Etiquetas de mes -->
+    <text x="275" y="95" text-anchor="middle" class="month-label">Mes 1</text>
+    <text x="425" y="95" text-anchor="middle" class="month-label">Mes 2</text>
+    <text x="575" y="95" text-anchor="middle" class="month-label">Mes 3</text>
+    <text x="725" y="95" text-anchor="middle" class="month-label">Mes 4</text>
+    <text x="875" y="95" text-anchor="middle" class="month-label">Mes 5</text>
+    <text x="1025" y="95" text-anchor="middle" class="month-label">Mes 6</text>
+    <text x="1175" y="95" text-anchor="middle" class="month-label">Mes 7</text>
+  </g>
+  
+  <!-- VERSIÓN ALFA -->
+  <text x="30" y="130" class="version-label">ALFA</text>
+  
+  <!-- Análisis y Diseño (Semanas 1-3) -->
+  <rect x="200" y="140" width="105" height="15" class="alfa" rx="2"/>
+  <text x="210" y="151" class="task-label" fill="white">Análisis Sheets</text>
+  
+  <rect x="200" y="160" width="105" height="15" class="alfa" rx="2"/>
+  <text x="210" y="171" class="task-label" fill="white">Diseño BD</text>
+  
+  <rect x="200" y="180" width="70" height="15" class="alfa" rx="2"/>
+  <text x="210" y="191" class="task-label" fill="white">Setup inicial</text>
+  
+  <!-- Modelos Django (Semanas 3-5) -->
+  <rect x="270" y="200" width="105" height="15" class="alfa" rx="2"/>
+  <text x="280" y="211" class="task-label" fill="white">Modelos Django</text>
+  
+  <!-- Admin y Lógica (Semanas 4-7) -->
+  <rect x="305" y="220" width="105" height="15" class="alfa" rx="2"/>
+  <text x="315" y="231" class="task-label" fill="white">Django Admin</text>
+  
+  <rect x="375" y="240" width="140" height="15" class="alfa" rx="2"/>
+  <text x="385" y="251" class="task-label" fill="white">Lógica contabilidad</text>
+  
+  <!-- Vistas y Migración (Semanas 7-10) -->
+  <rect x="480" y="260" width="70" height="15" class="alfa" rx="2"/>
+  <text x="490" y="271" class="task-label" fill="white">Vistas básicas</text>
+  
+  <rect x="445" y="280" width="105" height="15" class="alfa" rx="2"/>
+  <text x="455" y="291" class="task-label" fill="white">Migración datos</text>
+  
+  <!-- VERSIÓN BETA -->
+  <text x="30" y="330" class="version-label">BETA</text>
+  
+  <!-- Docker y PostgreSQL (Semanas 10-11) -->
+  <rect x="550" y="340" width="70" height="15" class="beta" rx="2"/>
+  <text x="560" y="351" class="task-label" fill="white">Docker + PG</text>
+  
+  <!-- Frontend mejorado (Semanas 11-13) -->
+  <rect x="585" y="360" width="105" height="15" class="beta" rx="2"/>
+  <text x="595" y="371" class="task-label" fill="white">Mejora Frontend</text>
+  
+  <!-- Integraciones Google (Semanas 12-14) -->
+  <rect x="620" y="380" width="140" height="15" class="beta" rx="2"/>
+  <text x="630" y="391" class="task-label" fill="white">Google Sheets API</text>
+  
+  <rect x="690" y="400" width="70" height="15" class="beta" rx="2"/>
+  <text x="700" y="411" class="task-label" fill="white">Gmail API</text>
+  
+  <!-- Despliegue (Semanas 14-15) -->
+  <rect x="725" y="420" width="70" height="15" class="beta" rx="2"/>
+  <text x="735" y="431" class="task-label" fill="white">Despliegue</text>
+  
+  <!-- VERSIÓN 1.0 -->
+  <text x="30" y="470" class="version-label">V1.0</text>
+  
+  <!-- Frontend definitivo (Semanas 16-17) -->
+  <rect x="795" y="480" width="105" height="15" class="v1" rx="2"/>
+  <text x="805" y="491" class="task-label">Frontend final</text>
+  
+  <!-- Refinamientos (Semanas 17-20) -->
+  <rect x="865" y="500" width="70" height="15" class="v1" rx="2"/>
+  <text x="875" y="511" class="task-label">Sheets mejorado</text>
+  
+  <rect x="865" y="520" width="105" height="15" class="v1" rx="2"/>
+  <text x="875" y="531" class="task-label">Gestión PDFs</text>
+  
+  <rect x="900" y="540" width="70" height="15" class="v1" rx="2"/>
+  <text x="910" y="551" class="task-label">Notificaciones</text>
+  
+  <!-- Optimización y lanzamiento (Semanas 20-22) -->
+  <rect x="935" y="560" width="105" height="15" class="v1" rx="2"/>
+  <text x="945" y="571" class="task-label">Optimización</text>
+  
+  <rect x="1005" y="580" width="35" height="15" class="v1" rx="2"/>
+  <text x="1010" y="591" class="task-label">Docs</text>
+  
+  <rect x="1005" y="600" width="70" height="15" class="v1" rx="2"/>
+  <text x="1015" y="611" class="task-label">Correcciones</text>
+  
+  <!-- VERSIÓN 2.0 -->
+  <text x="30" y="650" class="version-label">V2.0</text>
+  
+  <!-- Celery (Semanas 23-24) -->
+  <rect x="1075" y="660" width="70" height="15" class="v2" rx="2"/>
+  <text x="1085" y="671" class="task-label" fill="white">Celery+Redis</text>
+  
+  <!-- Automatizaciones (Semanas 24-27) -->
+  <rect x="1110" y="680" width="175" height="15" class="v2" rx="2"/>
+  <text x="1120" y="691" class="task-label" fill="white">Automatizaciones</text>
+  
+  <!-- Integraciones (Semanas 25-28) -->
+  <rect x="1145" y="700" width="70" height="15" class="v2" rx="2"/>
+  <text x="1155" y="711" class="task-label" fill="white">SMS Twilio</text>
+  
+  <rect x="1180" y="720" width="105" height="15" class="v2" rx="2"/>
+  <text x="1190" y="731" class="task-label" fill="white">Pagos Stripe</text>
+  
+  <!-- Sistema usuarios (Semanas 28-30) -->
+  <rect x="1250" y="740" width="105" height="15" class="v2" rx="2"/>
+  <text x="1260" y="751" class="task-label" fill="white">Multi-usuario</text>
+  
+  <rect x="1285" y="760" width="70" height="15" class="v2" rx="2"/>
+  <text x="1295" y="771" class="task-label" fill="white">Auditoría</text>
+  
+  <rect x="1320" y="780" width="35" height="15" class="v2" rx="2"/>
+  <text x="1325" y="791" class="task-label" fill="white">Sec.</text>
+  
+  <!-- Leyenda -->
+  <g transform="translate(50, 820)">
+    <rect x="0" y="0" width="15" height="15" class="alfa"/>
+    <text x="20" y="12" class="task-label">Versión Alfa (10 semanas)</text>
+    
+    <rect x="200" y="0" width="15" height="15" class="beta"/>
+    <text x="220" y="12" class="task-label">Versión Beta (5 semanas)</text>
+    
+    <rect x="400" y="0" width="15" height="15" class="v1"/>
+    <text x="420" y="12" class="task-label">Versión 1.0 (7 semanas)</text>
+    
+    <rect x="600" y="0" width="15" height="15" class="v2"/>
+    <text x="620" y="12" class="task-label">Versión 2.0 (8 semanas)</text>
+  </g>
+  
+  <!-- Línea de hitos -->
+  <g>
+    <!-- Hito Alfa -->
+    <line x1="550" y1="110" x2="550" y2="850" stroke="#FF6B35" stroke-width="2" stroke-dasharray="3,3" opacity="0.5"/>
+    <circle cx="550" cy="110" r="5" fill="#FF6B35"/>
+    <text x="555" y="112" class="task-label" font-weight="bold">Alfa</text>
+    
+    <!-- Hito Beta -->
+    <line x1="795" y1="110" x2="795" y2="850" stroke="#4ECDC4" stroke-width="2" stroke-dasharray="3,3" opacity="0.5"/>
+    <circle cx="795" cy="110" r="5" fill="#4ECDC4"/>
+    <text x="800" y="112" class="task-label" font-weight="bold">Beta</text>
+    
+    <!-- Hito V1 -->
+    <line x1="1075" y1="110" x2="1075" y2="850" stroke="#95E77E" stroke-width="2" stroke-dasharray="3,3" opacity="0.5"/>
+    <circle cx="1075" cy="110" r="5" fill="#95E77E"/>
+    <text x="1080" y="112" class="task-label" font-weight="bold">V1.0</text>
+    
+    <!-- Hito V2 -->
+    <line x1="1355" y1="110" x2="1355" y2="850" stroke="#6C5CE7" stroke-width="2" stroke-dasharray="3,3" opacity="0.5"/>
+    <circle cx="1355" cy="110" r="5" fill="#6C5CE7"/>
+    <text x="1360" y="112" class="task-label" font-weight="bold">V2.0</text>
+  </g>
+</svg>

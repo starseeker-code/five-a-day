@@ -1,0 +1,271 @@
+<svg viewBox="0 0 1600 1200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Estilos -->
+  <defs>
+    <style>
+      .week-label { font-size: 11px; fill: #666; font-weight: bold; }
+      .day-label { font-size: 9px; fill: #999; }
+      .task-label { font-size: 10px; fill: #333; }
+      .task-hours { font-size: 9px; fill: #666; font-style: italic; }
+      .section-label { font-size: 12px; font-weight: bold; fill: #000; }
+      .grid-line { stroke: #e0e0e0; stroke-width: 0.5; }
+      .grid-week { stroke: #ccc; stroke-width: 1; }
+      .critical-path { stroke: #e74c3c; stroke-width: 2; stroke-dasharray: 5,3; }
+      
+      /* Colores por tipo de tarea */
+      .analysis { fill: #79bfed; opacity: 0.8; }
+      .design { fill: #ba82d1; opacity: 0.8; }
+      .setup { fill: #f5f2c4; opacity: 0.8; }
+      .models { fill: #ffc591; opacity: 0.8; }
+      .admin { fill: #7dd4c3; opacity: 0.8; }
+      .logic { fill: #ff978c; opacity: 0.8; }
+      .frontend { fill: #3dfc8e; opacity: 0.8; }
+      .migration { fill: #ffb238; opacity: 0.8; }
+      .testing { fill: #b8c1c2; opacity: 0.8; }
+      
+      /* Hover effect */
+      rect:hover { opacity: 1; cursor: pointer; stroke: #2c3e50; stroke-width: 2; }
+      
+      /* Milestone */
+      .milestone { fill: #e74c3c; }
+    </style>
+  </defs>
+  
+  <!-- Fondo -->
+  <rect width="1600" height="1200" fill="#fafafa"/>
+  
+  <!-- Título -->
+  <text x="800" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#2c3e50">
+    Versión ALFA - Planificación Detallada (10 semanas)
+  </text>
+  <text x="800" y="50" text-anchor="middle" font-size="12" fill="#7f8c8d">
+    Version Alfa: Funcionalidades core del proyecto
+  </text>
+  
+  <!-- Escala temporal (10 semanas) -->
+  <g id="timeline">
+    <!-- Líneas de semana -->
+    <line x1="250" y1="80" x2="250" y2="1150" class="grid-week"/>
+    <line x1="370" y1="80" x2="370" y2="1150" class="grid-week"/>
+    <line x1="490" y1="80" x2="490" y2="1150" class="grid-week"/>
+    <line x1="610" y1="80" x2="610" y2="1150" class="grid-week"/>
+    <line x1="730" y1="80" x2="730" y2="1150" class="grid-week"/>
+    <line x1="850" y1="80" x2="850" y2="1150" class="grid-week"/>
+    <line x1="970" y1="80" x2="970" y2="1150" class="grid-week"/>
+    <line x1="1090" y1="80" x2="1090" y2="1150" class="grid-week"/>
+    <line x1="1210" y1="80" x2="1210" y2="1150" class="grid-week"/>
+    <line x1="1330" y1="80" x2="1330" y2="1150" class="grid-week"/>
+    <line x1="1450" y1="80" x2="1450" y2="1150" class="grid-week"/>
+    
+    <!-- Etiquetas de semana -->
+    <text x="310" y="95" text-anchor="middle" class="week-label">Semana 1</text>
+    <text x="430" y="95" text-anchor="middle" class="week-label">Semana 2</text>
+    <text x="550" y="95" text-anchor="middle" class="week-label">Semana 3</text>
+    <text x="670" y="95" text-anchor="middle" class="week-label">Semana 4</text>
+    <text x="790" y="95" text-anchor="middle" class="week-label">Semana 5</text>
+    <text x="910" y="95" text-anchor="middle" class="week-label">Semana 6</text>
+    <text x="1030" y="95" text-anchor="middle" class="week-label">Semana 7</text>
+    <text x="1150" y="95" text-anchor="middle" class="week-label">Semana 8</text>
+    <text x="1270" y="95" text-anchor="middle" class="week-label">Semana 9</text>
+    <text x="1390" y="95" text-anchor="middle" class="week-label">Semana 10</text>
+    
+    <!-- Subdivisiones de días (4 días = 20h/semana, 5h por día) -->
+    <text x="280" y="110" text-anchor="middle" class="day-label">L-J</text>
+    <text x="340" y="110" text-anchor="middle" class="day-label">V-D</text>
+  </g>
+  
+  <!-- FASE 1: ANÁLISIS Y DISEÑO -->
+  <text x="30" y="140" class="section-label">FASE 1: ANÁLISIS Y DISEÑO</text>
+  
+  <!-- 1. Análisis de Google Sheets (20h) -->
+  <rect x="250" y="150" width="120" height="18" class="analysis" rx="2"/>
+  <text x="255" y="162" class="task-label" fill="white">1.1 Mapeo de gsheets</text>
+  <text x="255" y="182" class="task-hours">8h</text>
+  
+  <rect x="310" y="190" width="90" height="18" class="analysis" rx="2"/>
+  <text x="315" y="202" class="task-label" fill="white">1.2 Identificar entidades</text>
+  <text x="315" y="222" class="task-hours">6h</text>
+  
+  <rect x="370" y="230" width="90" height="18" class="analysis" rx="2"/>
+  <text x="375" y="242" class="task-label" fill="white">1.3 Documentar reglas</text>
+  <text x="375" y="262" class="task-hours">6h</text>
+  
+  <!-- 2. Diseño de Base de Datos (20h) -->
+  <rect x="280" y="270" width="90" height="18" class="design" rx="2"/>
+  <text x="285" y="282" class="task-label" fill="white">2.1 Modelo ER inicial</text>
+  <text x="285" y="302" class="task-hours">6h</text>
+  
+  <rect x="370" y="310" width="120" height="18" class="design" rx="2"/>
+  <text x="375" y="322" class="task-label" fill="white">2.2 Normalización 3FN</text>
+  <text x="375" y="342" class="task-hours">8h</text>
+  
+  <rect x="460" y="350" width="90" height="18" class="design" rx="2"/>
+  <text x="465" y="362" class="task-label" fill="white">2.3 Índices y constraints</text>
+  <text x="465" y="382" class="task-hours">6h</text>
+  
+  <!-- 3. Setup Inicial (20h) -->
+  <rect x="250" y="390" width="60" height="18" class="setup" rx="2"/>
+  <text x="255" y="402" class="task-label" fill="white">3.1 Poetry</text>
+  <text x="255" y="422" class="task-hours">3h</text>
+  
+  <rect x="310" y="390" width="60" height="18" class="setup" rx="2"/>
+  <text x="315" y="402" class="task-label" fill="white">3.2 Django</text>
+  <text x="315" y="422" class="task-hours">4h</text>
+  
+  <rect x="370" y="430" width="90" height="18" class="setup" rx="2"/>
+  <text x="375" y="442" class="task-label" fill="white">3.3 Estructurar</text>
+  <text x="375" y="462" class="task-hours">6h</text>
+  
+  <rect x="460" y="470" width="90" height="18" class="setup" rx="2"/>
+  <text x="465" y="482" class="task-label" fill="white">3.4 Git + .gitignore</text>
+  <text x="465" y="502" class="task-hours">3h</text>
+  
+  <rect x="490" y="510" width="60" height="18" class="setup" rx="2"/>
+  <text x="495" y="522" class="task-label" fill="white">3.5 Settings</text>
+  <text x="495" y="542" class="task-hours">4h</text>
+  
+  <!-- FASE 2: IMPLEMENTACIÓN CORE -->
+  <text x="30" y="570" class="section-label">FASE 2: IMPLEMENTACIÓN CORE</text>
+  
+  <!-- 4. Modelos Django (30h) -->
+  <rect x="550" y="580" width="120" height="18" class="models" rx="2"/>
+  <text x="555" y="592" class="task-label" fill="white">4.1 Modelos base</text>
+  <text x="555" y="612" class="task-hours">10h (Alumno, Padre)</text>
+  
+  <rect x="610" y="620" width="120" height="18" class="models" rx="2"/>
+  <text x="615" y="632" class="task-label" fill="white">4.2 Modelos financieros</text>
+  <text x="615" y="652" class="task-hours">10h (Pago, Factura)</text>
+  
+  <rect x="670" y="660" width="120" height="18" class="models" rx="2"/>
+  <text x="675" y="672" class="task-label" fill="white">4.3 Modelos auxiliares</text>
+  <text x="675" y="692" class="task-hours">10h (Tarifa, Nota, etc)</text>
+  
+  <!-- 5. Django Admin (25h) -->
+  <rect x="670" y="700" width="90" height="18" class="admin" rx="2"/>
+  <text x="675" y="712" class="task-label" fill="white">5.1 Config básica admin</text>
+  <text x="675" y="732" class="task-hours">5h</text>
+  
+  <rect x="760" y="740" width="120" height="18" class="admin" rx="2"/>
+  <text x="765" y="752" class="task-label" fill="white">5.2 Inline forms</text>
+  <text x="765" y="772" class="task-hours">8h</text>
+  
+  <rect x="850" y="780" width="120" height="18" class="admin" rx="2"/>
+  <text x="855" y="792" class="task-label" fill="white">5.3 Filtros y búsquedas</text>
+  <text x="855" y="812" class="task-hours">7h</text>
+  
+  <rect x="940" y="820" width="90" height="18" class="admin" rx="2"/>
+  <text x="945" y="832" class="task-label" fill="white">5.4 Actions custom</text>
+  <text x="945" y="852" class="task-hours">5h</text>
+  
+  <!-- 6. Lógica de Contabilidad (35h) -->
+  <rect x="790" y="860" width="150" height="18" class="logic" rx="2"/>
+  <text x="795" y="872" class="task-label" fill="white">6.1 Sistema tracking pagos</text>
+  <text x="795" y="892" class="task-hours">12h</text>
+  
+  <rect x="910" y="900" width="120" height="18" class="logic" rx="2"/>
+  <text x="915" y="912" class="task-label" fill="white">6.2 Cálculo deudas</text>
+  <text x="915" y="932" class="task-hours">8h</text>
+  
+  <rect x="1000" y="940" width="120" height="18" class="logic" rx="2"/>
+  <text x="1005" y="952" class="task-label" fill="white">6.3 Sistema alertas</text>
+  <text x="1005" y="972" class="task-hours">8h</text>
+  
+  <rect x="1090" y="980" width="120" height="18" class="logic" rx="2"/>
+  <text x="1095" y="992" class="task-label" fill="white">6.4 Informes básicos</text>
+  <text x="1095" y="1012" class="task-hours">7h</text>
+  
+  <!-- 7. Vistas y Templates (20h) -->
+  <rect x="1090" y="1020" width="90" height="18" class="frontend" rx="2"/>
+  <text x="1095" y="1032" class="task-label" fill="white">7.1 Dashboard</text>
+  <text x="1095" y="1052" class="task-hours">8h</text>
+  
+  <rect x="1180" y="1020" width="90" height="18" class="frontend" rx="2"/>
+  <text x="1185" y="1032" class="task-label" fill="white">7.2 Vistas alumno</text>
+  <text x="1185" y="1052" class="task-hours">7h</text>
+  
+  <rect x="1210" y="1060" width="60" height="18" class="frontend" rx="2"/>
+  <text x="1215" y="1072" class="task-label" fill="white">7.3 Bootstrap</text>
+  <text x="1215" y="1092" class="task-hours">5h</text>
+  
+  <!-- 8. Migración de Datos (25h) -->
+  <rect x="970" y="1100" width="150" height="18" class="migration" rx="2"/>
+  <text x="975" y="1112" class="task-label">8.1 Scripts pandas limpieza</text>
+  <text x="975" y="1132" class="task-hours">10h</text>
+  
+  <rect x="1120" y="1100" width="120" height="18" class="migration" rx="2"/>
+  <text x="1125" y="1112" class="task-label">8.2 Mapeo y validación</text>
+  <text x="1125" y="1132" class="task-hours">8h</text>
+  
+  <rect x="1240" y="1100" width="90" height="18" class="migration" rx="2"/>
+  <text x="1245" y="1112" class="task-label">8.3 Carga inicial</text>
+  <text x="1245" y="1132" class="task-hours">7h</text>
+  
+  <!-- 9. Testing y Ajustes (10h) -->
+  <rect x="1330" y="1100" width="120" height="18" class="testing" rx="2"/>
+  <text x="1335" y="1112" class="task-label">9. Testing manual</text>
+  <text x="1335" y="1132" class="task-hours">10h</text>
+  
+  <!-- Hitos importantes -->
+  <g>
+    <!-- Hito: BD Diseñada -->
+    <line x1="550" y1="80" x2="550" y2="1150" stroke="#e74c3c" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+    <circle cx="550" cy="370" r="4" class="milestone"/>
+    <text x="555" y="370" class="day-label" font-weight="bold">BD Lista</text>
+    
+    <!-- Hito: Modelos completos -->
+    <line x1="790" y1="80" x2="790" y2="1150" stroke="#e74c3c" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+    <circle cx="790" cy="680" r="4" class="milestone"/>
+    <text x="795" y="680" class="day-label" font-weight="bold">Modelos OK</text>
+    
+    <!-- Hito: Admin funcional -->
+    <line x1="1030" y1="80" x2="1030" y2="1150" stroke="#e74c3c" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+    <circle cx="1030" cy="840" r="4" class="milestone"/>
+    <text x="1035" y="840" class="day-label" font-weight="bold">Admin OK</text>
+    
+    <!-- Hito: ALFA Complete -->
+    <line x1="1450" y1="80" x2="1450" y2="1150" stroke="#27ae60" stroke-width="2" stroke-dasharray="3,3" opacity="0.5"/>
+    <circle cx="1450" cy="1120" r="5" fill="#27ae60"/>
+    <text x="1455" y="1120" class="week-label" font-weight="bold">ALFA</text>
+  </g>
+  
+  <!-- Ruta crítica -->
+  <polyline points="310,159 400,199 460,239 370,279 490,319 550,359 550,589 670,629 730,669 760,709 880,749 970,789 940,829 1030,869 1120,909 1210,989 1270,1029 1330,1109 1450,1109" 
+            fill="none" class="critical-path" marker-end="url(#arrowhead)"/>
+  
+  <!-- Flecha para ruta crítica -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c"/>
+    </marker>
+  </defs>
+  
+  <!-- Leyenda -->
+  <g transform="translate(50, 1160)">
+    <text x="0" y="0" class="section-label">Leyenda:</text>
+    <rect x="100" y="-12" width="15" height="12" class="analysis"/>
+    <text x="120" y="0" class="task-label">Análisis</text>
+    
+    <rect x="200" y="-12" width="15" height="12" class="design"/>
+    <text x="220" y="0" class="task-label">Diseño</text>
+    
+    <rect x="300" y="-12" width="15" height="12" class="setup"/>
+    <text x="320" y="0" class="task-label">Setup</text>
+    
+    <rect x="400" y="-12" width="15" height="12" class="models"/>
+    <text x="420" y="0" class="task-label">Modelos</text>
+    
+    <rect x="500" y="-12" width="15" height="12" class="admin"/>
+    <text x="520" y="0" class="task-label">Admin</text>
+    
+    <rect x="600" y="-12" width="15" height="12" class="logic"/>
+    <text x="620" y="0" class="task-label">Lógica</text>
+    
+    <rect x="700" y="-12" width="15" height="12" class="frontend"/>
+    <text x="720" y="0" class="task-label">Frontend</text>
+    
+    <rect x="800" y="-12" width="15" height="12" class="migration"/>
+    <text x="820" y="0" class="task-label">Migración</text>
+    
+    <line x1="950" y1="-6" x2="980" y2="-6" class="critical-path"/>
+    <text x="985" y="0" class="task-label">Ruta Crítica</text>
+  </g>
+</svg>
