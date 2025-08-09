@@ -176,100 +176,108 @@ Version actual: **v0.1**
 
 ```mermaid
 erDiagram
-    PROFESORES {
-        int id_profesor PK
-        varchar apellidos
-        varchar nombre
+    TEACHERS {
+        int teacher_id PK
+        varchar last_name
+        varchar first_name
         varchar email UK
-        varchar telefono
-        boolean activo
-        timestamp fecha_creacion
-        timestamp fecha_actualizacion
+        varchar phone
+        boolean active
+        boolean admin
+        timestamp created_at
+        timestamp updated_at
     }
     
-    GRUPOS {
-        int id_grupo PK
-        varchar nombre_grupo UK
-        int id_profesor FK
-        decimal cuota_mensual
-        decimal cuota_descuento
-        decimal cuota_trimestral
-        decimal cuota_sesion_semanal
-        boolean activo
-        timestamp fecha_creacion
-        timestamp fecha_actualizacion
+    GROUPS {
+        int group_id PK
+        varchar group_name UK
+        int teacher_id FK
+        boolean active
+        timestamp created_at
+        timestamp updated_at
     }
     
-    ESTUDIANTES {
-        int id_estudiante PK
-        varchar apellidos
-        varchar nombre
-        date fecha_nacimiento
+    STUDENTS {
+        int student_id PK
+        varchar last_name
+        varchar first_name
+        date birth_date
         varchar email
-        varchar colegio
-        text alergias
-        boolean gdpr_firmado
-        boolean puede_salir_grupo
-        int id_grupo FK
-        boolean activo
-        date fecha_baja
-        text motivo_baja
-        timestamp fecha_creacion
-        timestamp fecha_actualizacion
+        varchar school
+        text allergies
+        boolean gdpr_signed
+        int group_id FK
+        boolean active
+        date withdrawal_date
+        text withdrawal_reason
+        timestamp created_at
+        timestamp updated_at
     }
     
-    TUTORES {
-        int id_tutor PK
-        varchar apellidos
-        varchar nombre
+    PARENTS {
+        int parent_id PK
+        varchar last_name
+        varchar first_name
         varchar dni UK
-        varchar telefono
+        varchar phone
         varchar email
         varchar iban
-        timestamp fecha_creacion
+        timestamp created_at
     }
     
-    ESTUDIANTE_TUTORES {
-        int id_estudiante PK,FK
-        int id_tutor PK,FK
-        boolean es_principal
-    }
-    
-    MATRICULAS {
-        int id_matricula PK
-        int id_estudiante FK
-        varchar periodo_escolar
-        int trimestre
-        decimal importe_matricula
-        boolean pagado
-        date fecha_matricula
-        timestamp fecha_creacion
-    }
-    
-    PAGOS {
-        int id_pago PK
-        int id_estudiante FK
-        int id_matricula FK
-        varchar tipo_pago
-        decimal importe
-        date fecha_pago
-        int mes_correspondiente
-        int año_correspondiente
-        varchar concepto
-        int id_tutor FK
-        text observaciones
-        timestamp fecha_creacion
+    STUDENT_PARENTS {
+        int student_id PK,FK
+        int parent_id PK,FK
     }
 
-    %% Relaciones
-    PROFESORES ||--o{ GRUPOS : "enseña_a"
-    GRUPOS ||--o{ ESTUDIANTES : "pertenece_a"
-    ESTUDIANTES ||--o{ ESTUDIANTE_TUTORES : "tiene"
-    TUTORES ||--o{ ESTUDIANTE_TUTORES : "es_tutor_de"
-    ESTUDIANTES ||--o{ MATRICULAS : "se_matricula"
-    ESTUDIANTES ||--o{ PAGOS : "realiza"
-    TUTORES ||--o{ PAGOS : "paga_por"
-    MATRICULAS ||--o{ PAGOS : "corresponde_a"
+    ENROLLMENTS {
+        int enrollment_id PK
+        int student_id FK
+        date enrollment_period_start
+        date enrollment_period_end
+        decimal enrollment_amount
+        boolean paid
+        date enrollment_date
+        varchar document_url
+        timestamp created_at
+    }
+    
+    PAYMENTS {
+        int payment_id PK
+        int student_id FK
+        int enrollment_id FK
+        varchar payment_type
+        varchar payment_method
+        decimal amount
+        bool paid
+        date payment_date
+        date actual_payment_date
+        varchar concept
+        int parent_id FK
+        text observations
+        varchar document_url
+        timestamp created_at
+    }
+
+    PAYROLLS {
+        int payroll_id PK
+        int teacher_id FK
+        decimal amount
+        date payment_date
+        varchar document_url
+        timestamp created_at
+    }
+
+    %% Relationships
+    TEACHERS ||--o{ GROUPS : "teaches"
+    GROUPS ||--o{ STUDENTS : "belongs to"
+    STUDENTS ||--o{ STUDENT_PARENTS : "has as parent"
+    PARENTS ||--o{ STUDENT_PARENTS : "is parent of"
+    STUDENTS ||--o{ ENROLLMENTS : "enrolls in"
+    STUDENTS ||--o{ PAYMENTS : "makes"
+    PARENTS ||--o{ PAYMENTS : "pays for"
+    ENROLLMENTS ||--o{ PAYMENTS : "corresponds to"
+    PAYROLLS ||--o{ TEACHERS : "have"
 ```
 
 </details>
