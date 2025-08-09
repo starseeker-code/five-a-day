@@ -6,8 +6,9 @@
 [![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange?style=for-the-badge)](#)
 
 ---
+` `  
 
-## 📄 Descripción General
+## 🎓 Descripción General
 
 *Sistema desarrollado con ❤️ para la gestión integral de centros educativos*
 
@@ -20,17 +21,13 @@ Servicios:
 - Automatización de recordatorios, notificaciones, emails y documentación.
 - Soporte para administradores y profesores.
 
----
-
 ## 🎯 Objetivos del Proyecto
 
 - Reducir la carga administrativa mediante automatización.
 - Centralizar la información académica y financiera en un solo sistema.
 - Garantizar la seguridad y la integridad de la información.
 
----
-
-## 📌 Estado del Proyecto
+## 🚩 Estado del Proyecto
 
 URL: [Five a Day eVolution](https://five-a-day.netlify.app)
 
@@ -44,9 +41,7 @@ Version actual: **v0.1**
 |--------------|---------------------|-----------------------------|
 | Setup completo del proyecto | 2025-08-09 | Modelos |
 
----
-
-## ✅ Checklist de Desarrollo
+## ✅ Roadmap de Desarrollo
 
 <details>
 <summary>🔶 Versión Alfa (8-10 semanas | 160-200h)</summary>
@@ -103,17 +98,17 @@ Version actual: **v0.1**
 
 </details>
 
-## 📑 Índice
+## 📋 Índice
 
 1. [Características Principales](#-características-principales)
-2. [Planificación y Roadmap](#-planificación-y-roadmap)
+2. [Planificación y Diagrama de Gantt](#-planificación-y-diagrama-de-gantt)
 3. [Arquitectura y Tecnologías](#-arquitectura-y-tecnologías)
 4. [Esquema de Base de Datos](#-esquema-de-base-de-datos)
 5. [Interfaz de Usuario (UI)](#-interfaz-de-usuario-ui)
 6. [Desarrollo](#-desarrollo)
     - [Instalación con Docker](#instalación-con-docker)
     - [Instalación manual](#instalación-manual)
-    - [Archivo .env](#-archivo-env)
+    - [Archivo .env](#archivo-env)
 7. [Dependencias](#-dependencias)
 8. [Guía de Uso](#-guía-de-uso)
 9. [Pruebas y Calidad](#-pruebas-y-calidad)
@@ -125,7 +120,7 @@ Version actual: **v0.1**
 
 ---
 
-## 🚀 Características Principales
+## 📅 Características Principales
 
 ### 🔶 Versión Alfa - 22 Agosto
 - Análisis y diseño de base de datos.
@@ -157,13 +152,9 @@ Version actual: **v0.1**
 - Sistema multiusuario con permisos.
 - Auditoría y mejoras de seguridad.
 
----
-
-## 🗓 Planificación y Roadmap
+## 📈 Planificación y Diagrama de Gantt
 
 ![Gantt diagram](https://github.com/starseeker-code/five-a-day/blob/main/docs/development/gantt-alfa.png)
-
----
 
 ## 🛠 Arquitectura y Tecnologías
 
@@ -176,9 +167,7 @@ Version actual: **v0.1**
 - **Automatización:** Celery + Redis
 - **Servidor de producción:** Nginx + Gunicorn
 
----
-
-## 🗃 Esquema de Base de Datos
+## 🔗 Esquema de Base de Datos
 
 <details>
 <summary>Esquema ER</summary>
@@ -283,7 +272,7 @@ erDiagram
 
 </details>
 
-## 📥 Desarrollo
+## 💻 Desarrollo
 
 ### Instalación con Docker
 
@@ -401,11 +390,10 @@ EMAIL_HOST_PASSWORD=tu_app_password
 
 <!-- /AUTO-SECTION:DEPENDENCIAS -->
 
-## 📘 Guía de Uso
+## 📖 Guía de Uso
 
 ![UI screenshot 1](https://github.com/starseeker-code/five-a-day/blob/main/docs/UI/ui_1.png)
 
----
 
 ## 🧪 Pruebas y Calidad
 
@@ -414,14 +402,14 @@ Pruebas unitarias de modelos y vistas.
 Pruebas de integración para APIs externas.
 Pruebas de carga y estrés (especialmente para Celery + Redis).
 
-## 🔗 Integraciones Externas
+## 🌍 Integraciones Externas
 
 Google Sheets API: Exportación y sincronización de datos.
 Gmail API: Envío de correos electrónicos personalizados.
 Twilio: Envío de notificaciones SMS.
 Stripe: Pagos online y conciliación automática.
 
-##  Despliegue en Producción
+## 🚀 Despliegue en Producción
 
 Configurar servidor con Nginx + Gunicorn.
 Instalar Docker y docker-compose.
@@ -437,9 +425,11 @@ WIP
 
 WIP
 
-## Contribución
+## Contribuir
 
 WIP
+
+---
 
 # Experimental - Aun estoy viendo como funciona esto
 
@@ -452,8 +442,6 @@ WIP
 |----------------|--------------|---------------------|-----------------------------|
 | **vX.Y.Z** | *Texto de última mejora* | YYYY-MM-DD | *Siguiente feature* |
 <!-- /AUTO-SECTION:VERSION -->
-
----
 
 <!-- AUTO-SECTION:DEPENDENCIAS -->
 ## 📦 Dependencias
