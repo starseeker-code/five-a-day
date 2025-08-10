@@ -269,14 +269,14 @@ erDiagram
     }
 
     %% Relationships
-    TEACHERS ||--o{ GROUPS : "teaches"
-    GROUPS ||--o{ STUDENTS : "belongs to"
-    STUDENTS ||--o{ STUDENT_PARENTS : "has as parent"
-    PARENTS ||--o{ STUDENT_PARENTS : "is parent of"
-    STUDENTS ||--o{ ENROLLMENTS : "enrolls in"
-    STUDENTS ||--o{ PAYMENTS : "makes"
-    PARENTS ||--o{ PAYMENTS : "pays for"
-    ENROLLMENTS ||--o{ PAYMENTS : "corresponds to"
+    TEACHERS ||--|{ GROUPS : "teaches"
+    GROUPS ||--|{ STUDENTS : "belongs to"
+    STUDENTS ||--|{ STUDENT_PARENTS : "has as parent"
+    PARENTS ||--|{ STUDENT_PARENTS : "is parent of"
+    STUDENTS ||--|{ ENROLLMENTS : "enrolls in"
+    STUDENTS ||--|{ PAYMENTS : "makes"
+    PARENTS ||--|{ PAYMENTS : "pays for"
+    ENROLLMENTS ||--|{ PAYMENTS : "corresponds to"
     PAYROLLS ||--o{ TEACHERS : "have"
 ```
 
