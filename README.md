@@ -176,6 +176,7 @@ Version actual: **v0.1**
 
 ```mermaid
 erDiagram
+    %% CORE ENTITIES
     TEACHERS {
         int teacher_id PK
         varchar last_name
@@ -206,7 +207,7 @@ erDiagram
         varchar school
         text allergies
         boolean gdpr_signed
-        int group_id FK
+        int group_id FK "NULL allowed"
         boolean active
         date withdrawal_date
         text withdrawal_reason
@@ -223,6 +224,7 @@ erDiagram
         varchar email
         varchar iban
         timestamp created_at
+        timestamp updated_at
     }
     
     STUDENT_PARENTS {
@@ -230,54 +232,175 @@ erDiagram
         int parent_id PK,FK
     }
 
+    %% ENROLLMENT SYSTEM
+    ENROLLMENT_TYPES {
+        int id PK
+        varchar name UK "adults,special,languages_ticket,monthly,half_month,quarterly"
+        varchar display_name
+        decimal base_amount_full_time
+        decimal base_amount_part_time
+        text description
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+
     ENROLLMENTS {
         int enrollment_id PK
         int student_id FK
+        int enrollment_type_id FK
         date enrollment_period_start
         date enrollment_period_end
+        varchar schedule_type "full_time,part_time"
         decimal enrollment_amount
-        boolean paid
+        decimal discount_percentage
+        decimal final_amount
+        varchar status "pending,active,completed,cancelled,suspended"
         date enrollment_date
         varchar document_url
+        text notes
         timestamp created_at
+        timestamp updated_at
     }
     
+    %% PAYMENT SYSTEM
     PAYMENTS {
         int payment_id PK
         int student_id FK
-        int enrollment_id FK
-        varchar payment_type
-        varchar payment_method
-        decimal amount
-        bool paid
-        date payment_date
-        date actual_payment_date
-        varchar concept
+        int enrollment_id FK "nullable"
         int parent_id FK
+        varchar payment_type "enrollment,monthly,materials,registration,exam,other"
+        varchar payment_method "cash,transfer,credit_card"
+        decimal amount
+        varchar currency
+        varchar payment_status "pending,completed,failed,cancelled,refunded"
+        date due_date
+        date payment_date "nullable"
+        varchar concept
+        varchar reference_number
         text observations
         varchar document_url
         timestamp created_at
+        timestamp updated_at
     }
 
+    %% PAYROLL SYSTEM
     PAYROLLS {
         int payroll_id PK
         int teacher_id FK
-        decimal amount
-        date payment_date
+        varchar payroll_type "monthly_salary,hourly_payment,bonus,commission,reimbursement,other"
+        date period_start
+        date period_end
+        decimal gross_amount
+        decimal tax_deductions
+        decimal other_deductions
+        decimal net_amount
+        varchar status "pending,paid,cancelled"
+        date payment_date "nullable"
         varchar document_url
+        text notes
         timestamp created_at
+        timestamp updated_at
     }
 
-    %% Relationships
-    TEACHERS ||--|{ GROUPS : "teaches"
-    GROUPS ||--|{ STUDENTS : "belongs to"
-    STUDENTS ||--|{ STUDENT_PARENTS : "has as parent"
+    %% EXPENSE MANAGEMENT SYSTEM
+    EXPENSE_CATEGORIES {
+        int id PK
+        varchar name UK
+        varchar category_type "operational,administrative,marketing,infrastructure,legal,other"
+        text description
+        boolean is_tax_deductible
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    EXPENSES {
+        int expense_id PK
+        varchar expense_number UK
+        varchar description
+        int category_id FK
+        varchar vendor_name
+        varchar vendor_tax_id
+        decimal amount
+        decimal tax_amount
+        decimal total_amount
+        varchar currency
+        varchar expense_type "recurring,one_time,reimbursement"
+        date expense_date
+        date due_date "nullable"
+        date payment_date "nullable"
+        varchar status "pending,approved,paid,rejected,cancelled"
+        varchar payment_method "cash,transfer,credit_card,debit_card,check,direct_debit"
+        varchar invoice_number
+        varchar receipt_url
+        int approved_by_id FK "nullable"
+        date approval_date "nullable"
+        text notes
+        boolean is_recurring
+        varchar recurring_frequency "monthly,quarterly,annually"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RECURRING_EXPENSE_TEMPLATES {
+        int id PK
+        varchar name
+        text description
+        int category_id FK
+        varchar vendor_name
+        varchar vendor_tax_id
+        decimal default_amount
+        decimal default_tax_amount
+        varchar frequency "monthly,quarterly,annually"
+        date start_date
+        date end_date "nullable"
+        boolean auto_generate
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% FINANCIAL REPORTING
+    FINANCIAL_PERIODS {
+        int id PK
+        varchar name
+        varchar period_type "monthly,quarterly,annual"
+        date start_date
+        date end_date
+        decimal total_income
+        decimal total_expenses
+        decimal net_profit
+        boolean is_closed
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% RELATIONSHIPS
+    
+    %% Core relationships
+    TEACHERS ||--o{ GROUPS : "teaches"
+    GROUPS ||--0{ STUDENTS : "belongs to"
+    STUDENTS ||--|{ STUDENT_PARENTS : "has parent"
     PARENTS ||--|{ STUDENT_PARENTS : "is parent of"
+    
+    %% Enrollment relationships
+    ENROLLMENT_TYPES ||--|{ ENROLLMENTS : "defines pricing"
     STUDENTS ||--|{ ENROLLMENTS : "enrolls in"
-    STUDENTS ||--|{ PAYMENTS : "makes"
-    PARENTS ||--|{ PAYMENTS : "pays for"
-    ENROLLMENTS ||--|{ PAYMENTS : "corresponds to"
-    PAYROLLS ||--o{ TEACHERS : "have"
+    
+    %% Payment relationships
+    STUDENTS ||--o{ PAYMENTS : "student pays"
+    PARENTS ||--o{ PAYMENTS : "parent pays for"
+    ENROLLMENTS ||--o{ PAYMENTS : "generates"
+    
+    %% Payroll relationships
+    TEACHERS ||--o{ PAYROLLS : "receives"
+    
+    %% Expense relationships
+    EXPENSE_CATEGORIES ||--|{ EXPENSES : "categorizes"
+    TEACHERS ||--o{ EXPENSES : "approves"
+    EXPENSE_CATEGORIES ||--o{ RECURRING_EXPENSE_TEMPLATES : "categorizes"
 ```
 
 </details>
