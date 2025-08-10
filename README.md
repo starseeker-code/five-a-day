@@ -207,7 +207,7 @@ erDiagram
         varchar school
         text allergies
         boolean gdpr_signed
-        int group_id FK "NULL allowed"
+        int group_id FK
         boolean active
         date withdrawal_date
         text withdrawal_reason
@@ -228,14 +228,14 @@ erDiagram
     }
     
     STUDENT_PARENTS {
-        int student_id PK,FK
-        int parent_id PK,FK
+        int student_id PK
+        int parent_id PK
     }
 
     %% ENROLLMENT SYSTEM
     ENROLLMENT_TYPES {
         int id PK
-        varchar name UK "adults,special,languages_ticket,monthly,half_month,quarterly"
+        varchar name UK
         varchar display_name
         decimal base_amount_full_time
         decimal base_amount_part_time
@@ -251,11 +251,11 @@ erDiagram
         int enrollment_type_id FK
         date enrollment_period_start
         date enrollment_period_end
-        varchar schedule_type "full_time,part_time"
+        varchar schedule_type
         decimal enrollment_amount
         decimal discount_percentage
         decimal final_amount
-        varchar status "pending,active,completed,cancelled,suspended"
+        varchar status
         date enrollment_date
         varchar document_url
         text notes
@@ -267,15 +267,15 @@ erDiagram
     PAYMENTS {
         int payment_id PK
         int student_id FK
-        int enrollment_id FK "nullable"
+        int enrollment_id FK
         int parent_id FK
-        varchar payment_type "enrollment,monthly,materials,registration,exam,other"
-        varchar payment_method "cash,transfer,credit_card"
+        varchar payment_type
+        varchar payment_method
         decimal amount
         varchar currency
-        varchar payment_status "pending,completed,failed,cancelled,refunded"
+        varchar payment_status
         date due_date
-        date payment_date "nullable"
+        date payment_date
         varchar concept
         varchar reference_number
         text observations
@@ -288,15 +288,15 @@ erDiagram
     PAYROLLS {
         int payroll_id PK
         int teacher_id FK
-        varchar payroll_type "monthly_salary,hourly_payment,bonus,commission,reimbursement,other"
+        varchar payroll_type
         date period_start
         date period_end
         decimal gross_amount
         decimal tax_deductions
         decimal other_deductions
         decimal net_amount
-        varchar status "pending,paid,cancelled"
-        date payment_date "nullable"
+        varchar status
+        date payment_date
         varchar document_url
         text notes
         timestamp created_at
@@ -307,7 +307,7 @@ erDiagram
     EXPENSE_CATEGORIES {
         int id PK
         varchar name UK
-        varchar category_type "operational,administrative,marketing,infrastructure,legal,other"
+        varchar category_type
         text description
         boolean is_tax_deductible
         boolean active
@@ -326,19 +326,19 @@ erDiagram
         decimal tax_amount
         decimal total_amount
         varchar currency
-        varchar expense_type "recurring,one_time,reimbursement"
+        varchar expense_type
         date expense_date
-        date due_date "nullable"
-        date payment_date "nullable"
-        varchar status "pending,approved,paid,rejected,cancelled"
-        varchar payment_method "cash,transfer,credit_card,debit_card,check,direct_debit"
+        date due_date
+        date payment_date
+        varchar status
+        varchar payment_method
         varchar invoice_number
         varchar receipt_url
-        int approved_by_id FK "nullable"
-        date approval_date "nullable"
+        int approved_by_id FK
+        date approval_date
         text notes
         boolean is_recurring
-        varchar recurring_frequency "monthly,quarterly,annually"
+        varchar recurring_frequency
         timestamp created_at
         timestamp updated_at
     }
@@ -352,9 +352,9 @@ erDiagram
         varchar vendor_tax_id
         decimal default_amount
         decimal default_tax_amount
-        varchar frequency "monthly,quarterly,annually"
+        varchar frequency
         date start_date
-        date end_date "nullable"
+        date end_date
         boolean auto_generate
         boolean active
         timestamp created_at
@@ -365,7 +365,7 @@ erDiagram
     FINANCIAL_PERIODS {
         int id PK
         varchar name
-        varchar period_type "monthly,quarterly,annual"
+        varchar period_type
         date start_date
         date end_date
         decimal total_income
@@ -381,26 +381,26 @@ erDiagram
     
     %% Core relationships
     TEACHERS ||--o{ GROUPS : "teaches"
-    GROUPS ||--0{ STUDENTS : "belongs to"
-    STUDENTS ||--|{ STUDENT_PARENTS : "has parent"
-    PARENTS ||--|{ STUDENT_PARENTS : "is parent of"
+    GROUPS ||--o{ STUDENTS : "contains"
+    STUDENTS ||--o{ STUDENT_PARENTS : "has"
+    PARENTS ||--o{ STUDENT_PARENTS : "parent of"
     
     %% Enrollment relationships
-    ENROLLMENT_TYPES ||--|{ ENROLLMENTS : "defines pricing"
-    STUDENTS ||--|{ ENROLLMENTS : "enrolls in"
+    ENROLLMENT_TYPES ||--o{ ENROLLMENTS : "defines"
+    STUDENTS ||--o{ ENROLLMENTS : "enrolls"
     
     %% Payment relationships
-    STUDENTS ||--o{ PAYMENTS : "student pays"
-    PARENTS ||--o{ PAYMENTS : "parent pays for"
+    STUDENTS ||--o{ PAYMENTS : "makes"
+    PARENTS ||--o{ PAYMENTS : "pays"
     ENROLLMENTS ||--o{ PAYMENTS : "generates"
     
     %% Payroll relationships
     TEACHERS ||--o{ PAYROLLS : "receives"
     
     %% Expense relationships
-    EXPENSE_CATEGORIES ||--|{ EXPENSES : "categorizes"
+    EXPENSE_CATEGORIES ||--o{ EXPENSES : "categorizes"
     TEACHERS ||--o{ EXPENSES : "approves"
-    EXPENSE_CATEGORIES ||--o{ RECURRING_EXPENSE_TEMPLATES : "categorizes"
+    EXPENSE_CATEGORIES ||--o{ RECURRING_EXPENSE_TEMPLATES : "applies to"
 ```
 
 </details>
