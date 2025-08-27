@@ -25,5 +25,4 @@ urlpatterns = [
     path("groups/", groups, name="groups"),
     path("students/", students, name="students"),
     path("parents/", parents, name="parents"),
-    path("student-parents/", student_parents, name="student-parents"),
 ]

@@ -62,7 +62,3 @@ def students(request):
 def parents(request):
     parents = Parent.objects.all()
     return render(request, "parents.html", {"parents": parents})
-
-def student_parents(request):
-    relations = StudentParent.objects.all()
-    return render(request, "student_parents.html", {"relations": relations})
