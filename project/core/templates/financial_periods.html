@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finantial periods</title>
+</head>
+<body>
+    <h1>Finantial periods</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Period type</th>
+            <th>Start date</th>
+            <th>End date</th>
+            <th>Total income</th>
+            <th>Total expenses</th>
+            <th>Net profit</th>
+            <th>Notes</th>
+        </tr>
+        {% for period in periods %}
+        <tr>
+            <td>{{ period.id }}</td>
+            <td>{{ period.name }}</td>
+            <td>{{ period.èriod_type }}</td>
+            <td>{{ period.start_date }}</td>
+            <td>{{ period.end_date }}</td>
+            <td>{{ period.total_income }}</td>
+            <td>{{ period.total_expenses }}</td>
+            <td>{{ period.net_profit }}</td>
+            <td>{{ period.notes }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

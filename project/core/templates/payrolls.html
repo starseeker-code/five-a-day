@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payrolls</title>
+</head>
+<body>
+    <h1>Payrolls</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Teacher</th>
+            <th>Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Amount (net)</th>
+        </tr>
+        {% for payroll in payrolls %}
+        <tr>
+            <td>{{ payroll.id }}</td>
+            <td>{{ payroll.teacher }}</td>
+            <td>{{ payroll.payroll_type }}</td>
+            <td>{{ payroll.period_start }}</td>
+            <td>{{ payroll.period_end }}</td>
+            <td>{{ payroll.net_amount }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

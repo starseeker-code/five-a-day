@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payments</title>
+</head>
+<body>
+    <h1>Expenses</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Student</th>
+            <th>Enrollment</th>
+            <th>Parent</th>
+            <th>Payment type</th>
+            <th>Payment method</th>
+            <th>Amount</th>
+            <th>Payment status</th>
+            <th>Due date</th>
+            <th>Payment date type</th>
+            <th>Concept</th>
+            <th>Observations</th>
+        </tr>
+        {% for payment in payments %}
+        <tr>
+            <td>{{ payment.id }}</td>
+            <td>{{ payment.student }}</td>
+            <td>{{ payment.enrollment }}</td>
+            <td>{{ payment.parent }}</td>
+            <td>{{ payment.payment_type }}</td>
+            <td>{{ payment.payment_method }}</td>
+            <td>{{ payment.amount }} €</td>
+            <td>{{ payment.payment_status }}</td>
+            <td>{{ payment.due_date }}</td>
+            <td>{{ payment.payment_date }}</td>
+            <td>{{ payment.concept }}</td>
+            <td>{{ payment.observations }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

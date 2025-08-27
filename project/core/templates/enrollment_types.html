@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enrollment type</title>
+</head>
+<body>
+    <h1>Enrollment type</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        {% for type in types %}
+        <tr>
+            <td>{{ type.id }}</td>
+            <td>{{ type.display_name }}</td>
+            <td>{{ type.description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

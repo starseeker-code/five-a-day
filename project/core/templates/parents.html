@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parents</title>
+</head>
+<body>
+    <h1>Parents</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>DNI</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>IBAN</th>
+        </tr>
+        {% for parent in parents %}
+        <tr>
+            <td>{{ parent.id }}</td>
+            <td>{{ parent.first_name }} {{ parent.flast_name }}</td>
+            <td>{{ parent.dni }}</td>
+            <td>{{ parent.phone }}</td>
+            <td>{{ parent.email }}</td>
+            <td>{{ parent.iban }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

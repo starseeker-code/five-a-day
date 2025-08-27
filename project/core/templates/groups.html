@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Groups</title>
+</head>
+<body>
+    <h1>Groups</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Group</th>
+            <th>Teacher</th>
+        </tr>
+        {% for group in groups %}
+        <tr>
+            <td>{{ group.id }}</td>
+            <td>{{ group.group_name }}</td>
+            <td>{{ group.teacher }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

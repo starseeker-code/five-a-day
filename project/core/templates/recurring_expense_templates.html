@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recurring expenses</title>
+</head>
+<body>
+    <h1>Recurring expenses (templates)</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default amount</th>
+            <th>Default tax amount</th>
+            <th>Frequency</th>
+            <th>Start date</th>
+            <th>End date</th>
+        </tr>
+        {% for template in templates %}
+        <tr>
+            <td>{{ template.id }}</td>
+            <td>{{ template.name }}</td>
+            <td>{{ template.description }}</td>
+            <td>{{ template.default_amount }}</td>
+            <td>{{ template.default_tax_amount }}</td>
+            <td>{{ template.frequency }}</td>
+            <td>{{ template.start_date }}</td>
+            <td>{{ template.end_date }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

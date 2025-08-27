@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense categories</title>
+</head>
+<body>
+    <h1>Expense categories</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Category type</th>
+            <th>Description</th>
+            <th>Tax deducible</th>
+            <th>Created at</th>
+        </tr>
+        {% for category in categories %}
+        <tr>
+            <td>{{ category.id }}</td>
+            <td>{{ category.category_type }}</td>
+            <td>{{ category.idescription }}</td>
+            <td>{{ category.is_tax_deducible }}</td>
+            <td>{{ category.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
