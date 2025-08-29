@@ -40,7 +40,7 @@ Estado: 🟢
 Version actual: **v0.2**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
-|--------------|---------------------|-----------------------------|
+|:-----------------:|:-------------------:|:---------------------------:|
 | Setup completo del proyecto | 2025-08-28 | Vistas y templates mínimos |
 
 ## ✅ Roadmap de Desarrollo
