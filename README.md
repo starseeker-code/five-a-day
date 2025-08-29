@@ -33,15 +33,15 @@ Servicios:
 
 URL: [Five a Day eVolution](https://five-a-day.netlify.app)
 
-Documentacion: ...
+Documentacion: [Github - readme.md](https://github.com/starseeker-code/five-a-day?tab=readme-ov-file#-descripci%C3%B3n-general)
 
 Estado: 🟢
 
-Version actual: **v0.1**
+Version actual: **v0.2**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
 |--------------|---------------------|-----------------------------|
-| Setup completo del proyecto | 2025-08-09 | Modelos |
+| Setup completo del proyecto | 2025-08-28 | Vistas y templates mínimos |
 
 ## ✅ Roadmap de Desarrollo
 
@@ -51,12 +51,12 @@ Version actual: **v0.1**
 - [X] Análisis de Google Sheets existentes
 - [X] Diseño de base de datos relacional (ER + normalización)
 - [X] Configuración inicial del proyecto (Poetry + Django + Git)
-- [ ] Modelos principales en Django
-- [ ] Django Admin personalizado
+- [X] Modelos principales en Django
+- [x] Django Admin personalizado
 - [ ] Lógica contable básica (tracking de pagos, informes)
-- [ ] Vistas básicas y templates mínimos
+- [x] Vistas básicas y templates mínimos
 - [ ] Scripts de migración de datos
-- [ ] Testing manual y ajustes
+- [x] Testing manual y ajustes
 
 </details>
 
@@ -414,7 +414,7 @@ erDiagram
     
 1. Clonar el repositorio:
 
-```bash
+```sh
 git clone https://github.com/starseeker-code/five-a-day.git
 cd five-a-day
 ```
@@ -426,19 +426,19 @@ Completa la información de base de datos, API Keys y credenciales.
 
 3. Levantar contenedores:
 
-```bash
+```sh
 docker-compose up --build
 ```
 
 4. Aplicar migraciones:
 
-```bash
+```sh
 docker-compose exec web python manage.py migrate
 ```
 
 5. Acceder a la aplicación en local:
 
-```bash
+```sh
 URL: http://localhost:8000
 ```
 
@@ -451,7 +451,7 @@ URL: http://localhost:8000
 
 1. Clonar el repositorio:
 
-```bash
+```sh
 git clone https://github.com/starseeker-code/five-a-day.git
 cd five-a-day
 ```
@@ -463,19 +463,19 @@ Completa la información de base de datos, API Keys y credenciales.
 
 3. Crear entorno virtual:
 
-```bash
+```sh
 poetry install
 ```
 
 4. Acceder al entorno virtual:
 
-```bash
+```sh
 poetry shell
 ```
 
 5. Ejecutar migraciones y lanzar servidor:
 
-```bash
+```sh
 cd project && python manage.py migrate && python manage.py runserver
 ```
 
@@ -586,3 +586,5 @@ WIP
 | celery  | 5.3.6   |
 | redis   | 5.0.1   |
 <!-- /AUTO-SECTION:DEPENDENCIAS -->
+
+
