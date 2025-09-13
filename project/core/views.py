@@ -3,8 +3,12 @@ from django.views import View
 from django.http import HttpRequest, HttpResponse
 from .models import *
 
-def test_view(request):
-    return  HttpResponse("This is the home page")
+def home(request):
+    return render(request, "home.html")
+
+def all_info(request):
+    context = {}
+    return render(request, "database.html", context)
 
 # ---------- Expense & Finance ----------
 def expense_categories(request):

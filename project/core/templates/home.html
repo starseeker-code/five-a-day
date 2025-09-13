@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Panel Principal{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg p-6 border-l-4 border-primary-500 hover:shadow-md transition-all duration-200">
+        <div class="flex justify-between items-start">
+            <div>
+                <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
+                    Estudiantes totales
+                </h4>
+                <p class="text-3xl font-bold text-neutral-800">245</p>
+            </div>
+            <span class="material-symbols-outlined text-primary-500 text-3xl">people</span>
+        </div>
+        <div class="mt-4 text-sm text-neutral-600">
+            <span class="text-green-500 font-medium">↑ 12%</span> desde el mes pasado
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-6 border-l-4 border-primary-400 hover:shadow-md transition-all duration-200">
+        <div class="flex justify-between items-start">
+            <div>
+                <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
+                    Cursos activos
+                </h4>
+                <p class="text-3xl font-bold text-neutral-800">18</p>
+            </div>
+            <span class="material-symbols-outlined text-primary-400 text-3xl">menu_book</span>
+        </div>
+        <div class="mt-4 text-sm text-neutral-600">
+            <span class="text-green-500 font-medium">↑ 5%</span> desde el mes pasado
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-6 border-l-4 border-primary-600 hover:shadow-md transition-all duration-200">
+        <div class="flex justify-between items-start">
+            <div>
+                <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
+                    Ingresos mensuales
+                </h4>
+                <p class="text-3xl font-bold text-neutral-800">€8,250</p>
+            </div>
+            <span class="material-symbols-outlined text-primary-600 text-3xl">payments</span>
+        </div>
+        <div class="mt-4 text-sm text-neutral-600">
+            <span class="text-red-500 font-medium">↓ 3%</span> desde el mes pasado
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-6 border-l-4 border-primary-300 hover:shadow-md transition-all duration-200">
+        <div class="flex justify-between items-start">
+            <div>
+                <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
+                    Satisfacción
+                </h4>
+                <p class="text-3xl font-bold text-neutral-800">94%</p>
+            </div>
+            <span class="material-symbols-outlined text-primary-300 text-3xl">sentiment_satisfied</span>
+        </div>
+        <div class="mt-4 text-sm text-neutral-600">
+            <span class="text-green-500 font-medium">↑ 2%</span> desde el mes pasado
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-6 col-span-1 md:col-span-2 lg:col-span-4">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-neutral-700">
+                Vista general del Panel
+            </h3>
+            <div class="flex space-x-2">
+                <button class="px-4 py-2 bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-all duration-200">
+                    Diario
+                </button>
+                <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                    Semanal
+                </button>
+                <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                    Mensual
+                </button>
+            </div>
+        </div>
+        <p class="text-neutral-600 mb-4">
+            ¡Supera tus límites hoy para transformar tu academia mañana!
+            Con Five a Day eVolution, cada día es una nueva oportunidad
+            para crecer y alcanzar la excelencia.
+        </p>
+        <div class="h-64 bg-neutral-100 rounded-lg flex items-center justify-center">
+            <p class="text-neutral-500">Aquí irá el gráfico principal</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Base de Datos{% endblock %}
+
+{% block page_title %}Base de Datos{% endblock %}
+{% block page_subtitle %}Gestión y visualización de tablas de datos{% endblock %}
+
+{% block header_actions %}
+<button class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+    <span class="material-symbols-outlined">refresh</span> Actualizar Datos
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Tablas de la Base de Datos</h3>
+    <p class="text-neutral-600">Vista general de todas las tablas y su información</p>
+</div>
+
+<!-- Database Tables Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    {% for table in tables %}
+    <div class="bg-white rounded-lg p-6 border hover:shadow-lg transition-all duration-200 hover:scale-105">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-primary-100 rounded-lg">
+                    <span class="material-symbols-outlined text-primary-600">table_view</span>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-neutral-800">{{ table.name }}</h4>
+                    <p class="text-sm text-neutral-500">{{ table.verbose_name|default:table.name }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-neutral-600">Total de registros:</span>
+                <span class="font-semibold text-primary-600">{{ table.count }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-neutral-600">Campos:</span>
+                <span class="font-semibold text-neutral-700">{{ table.fields_count }}</span>
+            </div>
+            
+            {% if table.last_modified %}
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-neutral-600">Última modificación:</span>
+                <span class="text-xs text-neutral-500">{{ table.last_modified|date:"d/m/Y H:i" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="mt-4 pt-4 border-t border-neutral-100">
+            <div class="flex gap-2">
+                <button class="flex-1 bg-primary-50 text-primary-700 px-3 py-2 rounded-md hover:bg-primary-100 transition-all duration-200 text-sm font-medium">
+                    Ver Datos
+                </button>
+                <button class="px-3 py-2 bg-neutral-50 text-neutral-600 rounded-md hover:bg-neutral-100 transition-all duration-200">
+                    <span class="material-symbols-outlined text-sm">more_vert</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full bg-white rounded-lg p-8 text-center">
+        <div class="mb-4">
+            <span class="material-symbols-outlined text-6xl text-neutral-300">database</span>
+        </div>
+        <h4 class="text-xl font-semibold text-neutral-600 mb-2">No hay tablas disponibles</h4>
+        <p class="text-neutral-500">No se encontraron tablas en la base de datos.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Summary Statistics -->
+<div class="bg-white rounded-lg p-6">
+    <h3 class="text-xl font-semibold text-neutral-700 mb-4">Resumen de la Base de Datos</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+            <div class="text-3xl font-bold text-primary-600 mb-2">{{ total_tables }}</div>
+            <div class="text-sm text-neutral-600">Total de Tablas</div>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-3xl font-bold text-primary-500 mb-2">{{ total_records }}</div>
+            <div class="text-sm text-neutral-600">Total de Registros</div>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-3xl font-bold text-primary-400 mb-2">{{ database_size|default:"N/A" }}</div>
+            <div class="text-sm text-neutral-600">Tamaño de BD</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
