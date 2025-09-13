@@ -1,31 +1,351 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Students</title>
-</head>
-<body>
-    <h1>Students</h1>
-    <table border="1" cellpadding="5">
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Birth date</th>
-            <th>Email</th>
-            <th>School</th>
-            <th>Group</th>
-            <th>GDPR</th>
-        </tr>
-        {% for student in students %}
-        <tr>
-            <td>{{ student.id }}</td>
-            <td>{{ student.first_name }} {{ student.last_name }}</td>
-            <td>{{ student.birth_date }}</td>
-            <td>{{ student.email }}</td>
-            <td>{{ student.school }}</td>
-            <td>{{ student.group }}</td>
-            <td>{{ student.gdpr }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Estudiantes{% endblock %}
+
+{% block page_title %}Gestión de Estudiantes{% endblock %}
+{% block page_subtitle %}Administra todos los estudiantes de la academia{% endblock %}
+
+{% block header_actions %}
+<button id="createStudentBtn" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+    <span class="material-symbols-outlined">person_add</span> Nuevo Estudiante
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Lista de Estudiantes</h3>
+            <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                <span class="material-symbols-outlined text-sm">filter_list</span>
+            </button>
+            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                <span class="material-symbols-outlined text-sm">search</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-primary-50 border-b border-primary-200">
+                <tr>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padres</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-100">
+                {% for student in students %}
+                <tr class="hover:bg-neutral-50 transition-all duration-200">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                                <span class="text-primary-600 font-semibold">{{ student.first_name.0 }}{{ student.last_name.0 }}</span>
+                            </div>
+                            <div>
+                                <div class="font-medium text-neutral-800">{{ student.full_name }}</div>
+                                {% if student.school %}
+                                <div class="text-sm text-neutral-500">{{ student.school }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-neutral-600">
+                        {{ student.age }} años
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                            {{ student.group.group_name }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-neutral-600">
+                        {% for parent in student.parents.all %}
+                            <div>{{ parent.full_name }}</div>
+                        {% empty %}
+                            <span class="text-red-500">Sin padres asignados</span>
+                        {% endfor %}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-neutral-600">
+                        {% if student.email %}
+                            {{ student.email }}
+                        {% else %}
+                            <span class="text-neutral-400">Sin email</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if student.gdpr_signed %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="material-symbols-outlined text-sm mr-1">check_circle</span>
+                                Firmado
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span class="material-symbols-outlined text-sm mr-1">cancel</span>
+                                Pendiente
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if student.active %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Activo
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                                Inactivo
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editStudent({{ student.id }})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-all duration-200">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                            <button onclick="viewStudent({{ student.id }})" class="p-2 text-neutral-600 hover:bg-neutral-50 rounded-md transition-all duration-200">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="material-symbols-outlined text-6xl text-neutral-300 mb-4">school</span>
+                            <h4 class="text-xl font-semibold text-neutral-600 mb-2">No hay estudiantes</h4>
+                            <p class="text-neutral-500">Crea el primer estudiante para comenzar.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Student Form Modal -->
+<div id="studentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-neutral-200">
+            <div class="flex justify-between items-center">
+                <h3 id="modalTitle" class="text-xl font-semibold text-neutral-800">Nuevo Estudiante</h3>
+                <button id="closeModal" class="p-2 hover:bg-neutral-100 rounded-md transition-all duration-200">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+        
+        <form id="studentForm" method="post" class="p-6">
+            {% csrf_token %}
+            <input type="hidden" id="studentId" name="student_id" value="">
+            
+            <!-- Personal Information -->
+            <div class="mb-6">
+                <h4 class="text-lg font-medium text-neutral-700 mb-4">Información Personal</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-neutral-700 mb-2">Nombre *</label>
+                        <input type="text" id="first_name" name="first_name" required 
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-neutral-700 mb-2">Apellidos *</label>
+                        <input type="text" id="last_name" name="last_name" required 
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="birth_date" class="block text-sm font-medium text-neutral-700 mb-2">Fecha de Nacimiento *</label>
+                        <input type="date" id="birth_date" name="birth_date" required 
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-neutral-700 mb-2">Email</label>
+                        <input type="email" id="email" name="email" 
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Information -->
+            <div class="mb-6">
+                <h4 class="text-lg font-medium text-neutral-700 mb-4">Información Académica</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="group" class="block text-sm font-medium text-neutral-700 mb-2">Grupo *</label>
+                        <select id="group" name="group" required 
+                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">Seleccionar grupo...</option>
+                            {% for group in groups %}
+                                <option value="{{ group.id }}">{{ group.group_name }} - {{ group.teacher }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="school" class="block text-sm font-medium text-neutral-700 mb-2">Colegio</label>
+                        <input type="text" id="school" name="school" 
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parents Information -->
+            <div class="mb-6">
+                <h4 class="text-lg font-medium text-neutral-700 mb-4">Padres/Tutores *</h4>
+                <div class="space-y-4">
+                    {% for parent in parents %}
+                    <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-md hover:bg-neutral-50 cursor-pointer">
+                        <input type="checkbox" name="parents" value="{{ parent.id }}" class="form-checkbox h-5 w-5 text-primary-600">
+                        <div class="flex-1">
+                            <div class="font-medium text-neutral-800">{{ parent.full_name }}</div>
+                            <div class="text-sm text-neutral-600">{{ parent.email }} • {{ parent.phone }}</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="mb-6">
+                <h4 class="text-lg font-medium text-neutral-700 mb-4">Información Adicional</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="allergies" class="block text-sm font-medium text-neutral-700 mb-2">Alergias</label>
+                        <textarea id="allergies" name="allergies" rows="3" 
+                                  class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="gdpr_signed" name="gdpr_signed" class="form-checkbox h-5 w-5 text-primary-600">
+                        <label for="gdpr_signed" class="text-sm font-medium text-neutral-700">GDPR Firmado</label>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="active" name="active" checked class="form-checkbox h-5 w-5 text-primary-600">
+                        <label for="active" class="text-sm font-medium text-neutral-700">Estudiante Activo</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-neutral-200">
+                <button type="button" id="cancelBtn" class="px-6 py-2 text-neutral-600 bg-neutral-100 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-6 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-all duration-200">
+                    <span id="submitBtnText">Crear Estudiante</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Modal functionality
+    const modal = document.getElementById('studentModal');
+    const createBtn = document.getElementById('createStudentBtn');
+    const closeBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const form = document.getElementById('studentForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const submitBtnText = document.getElementById('submitBtnText');
+    const studentIdInput = document.getElementById('studentId');
+
+    // Open modal for creating new student
+    createBtn.addEventListener('click', () => {
+        resetForm();
+        modalTitle.textContent = 'Nuevo Estudiante';
+        submitBtnText.textContent = 'Crear Estudiante';
+        studentIdInput.value = '';
+        form.action = '{% url "students" %}';
+        modal.classList.remove('hidden');
+    });
+
+    // Close modal
+    function closeModal() {
+        modal.classList.add('hidden');
+        resetForm();
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Reset form
+    function resetForm() {
+        form.reset();
+        // Reset checkboxes
+        document.querySelectorAll('input[name="parents"]').forEach(cb => cb.checked = false);
+        document.getElementById('active').checked = true;
+    }
+
+    // Edit student function
+    function editStudent(studentId) {
+        fetch(`/students/${studentId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Populate form with student data
+                document.getElementById('first_name').value = data.first_name;
+                document.getElementById('last_name').value = data.last_name;
+                document.getElementById('birth_date').value = data.birth_date;
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('school').value = data.school || '';
+                document.getElementById('group').value = data.group;
+                document.getElementById('allergies').value = data.allergies || '';
+                document.getElementById('gdpr_signed').checked = data.gdpr_signed;
+                document.getElementById('active').checked = data.active;
+                
+                // Set parent checkboxes
+                document.querySelectorAll('input[name="parents"]').forEach(cb => {
+                    cb.checked = data.parents.includes(parseInt(cb.value));
+                });
+
+                // Update modal
+                modalTitle.textContent = 'Editar Estudiante';
+                submitBtnText.textContent = 'Actualizar Estudiante';
+                studentIdInput.value = studentId;
+                form.action = `/students/${studentId}/update/`;
+                modal.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error loading student data:', error);
+                alert('Error al cargar los datos del estudiante');
+            });
+    }
+
+    // View student function (placeholder)
+    function viewStudent(studentId) {
+        // This would typically open a read-only modal or navigate to a detail page
+        console.log('View student:', studentId);
+        alert('Funcionalidad de visualización en desarrollo');
+    }
+
+    // Form validation
+    form.addEventListener('submit', (e) => {
+        // Check if at least one parent is selected
+        const selectedParents = document.querySelectorAll('input[name="parents"]:checked');
+        if (selectedParents.length === 0) {
+            e.preventDefault();
+            alert('Debe seleccionar al menos un padre/tutor para el estudiante.');
+            return;
+        }
+    });
+</script>
+{% endblock %}

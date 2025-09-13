@@ -26,4 +26,8 @@ urlpatterns = [
     path("groups/", groups, name="groups"),
     path("students/", students, name="students"),
     path("parents/", parents, name="parents"),
+    
+    # People.students
+    path('students/<int:student_id>/', student_detail, name='student_detail'),
+    path('students/<int:student_id>/update/', update_student, name='update_student'),
 ]
