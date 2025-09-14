@@ -16,10 +16,62 @@ admin.site.register(EnrollmentType)
 admin.site.register(Payroll)
 admin.site.register(Teacher)
 admin.site.register(Group)
-admin.site.register(Student)
-admin.site.register(Parent)
-admin.site.register(StudentParent)
 
+# Students and parents
+class StudentParentInline(admin.TabularInline):
+    model = StudentParent
+    extra = 1  # Number of empty forms to display
+    autocomplete_fields = ['parent']  # Optional: makes parent selection easier with search
+
+class ParentStudentInline(admin.TabularInline):
+    model = StudentParent
+    extra = 1
+    autocomplete_fields = ['student']  # Optional: makes student selection easier with search
+
+@admin.register(Student)
+class StudentAdmin(admin.ModelAdmin):
+    list_display = ['first_name', 'last_name', 'group', 'active', 'birth_date']
+    list_filter = ['group', 'active', 'gdpr_signed']
+    search_fields = ['first_name', 'last_name', 'email']
+    inlines = [StudentParentInline]
+    
+    fieldsets = (
+        ('Personal Information', {
+            'fields': ('first_name', 'last_name', 'birth_date', 'email')
+        }),
+        ('School Information', {
+            'fields': ('school', 'group')
+        }),
+        ('Health & Preferences', {
+            'fields': ('allergies', 'gdpr_signed')
+        }),
+        ('Status', {
+            'fields': ('active', 'withdrawal_date', 'withdrawal_reason')
+        }),
+    )
+
+@admin.register(Parent)
+class ParentAdmin(admin.ModelAdmin):
+    list_display = ['first_name', 'last_name', 'dni', 'phone', 'email']
+    search_fields = ['first_name', 'last_name', 'dni', 'email']
+    inlines = [ParentStudentInline]
+    
+    fieldsets = (
+        ('Personal Information', {
+            'fields': ('first_name', 'last_name', 'dni')
+        }),
+        ('Contact Information', {
+            'fields': ('phone', 'email', 'iban')
+        }),
+    )
+
+@admin.register(StudentParent)
+class StudentParentAdmin(admin.ModelAdmin):
+    list_display = ['student', 'parent']
+    list_filter = ['student__group']
+    autocomplete_fields = ['student', 'parent']
+    
+# Payments and enrollments
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = [
@@ -74,16 +126,31 @@ class PaymentAdmin(admin.ModelAdmin):
     
     def student_link(self, obj):
         if obj.student:
-            url = reverse('admin:your_app_student_change', args=[obj.student.id])
-            return format_html('<a href="{}">{}</a>', url, obj.student.full_name)
+            try:
+                # Get the model meta to construct the correct URL name
+                app_label = obj.student._meta.app_label
+                model_name = obj.student._meta.model_name
+                url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.student.id])
+                return format_html('<a href="{}">{}</a>', url, obj.student.full_name)
+            except:
+                # Fallback if URL reverse fails
+                return obj.student.full_name
         return '-'
     student_link.short_description = 'Student'
     student_link.admin_order_field = 'student__last_name'
     
     def parent_link(self, obj):
         if obj.parent:
-            url = reverse('admin:your_app_parent_change', args=[obj.parent.id])
-            return format_html('<a href="{}">{}</a>', url, obj.parent.full_name)
+            try:
+                # Get the model meta to construct the correct URL name
+                app_label = obj.parent._meta.app_label
+                model_name = obj.parent._meta.model_name
+                url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.parent.id])
+                return format_html('<a href="{}">{}</a>', url, obj.parent.full_name)
+            except:
+                # Fallback if URL reverse fails
+                return obj.parent.full_name
+            
         return '-'
     parent_link.short_description = 'Parent'
     parent_link.admin_order_field = 'parent__last_name'
@@ -115,12 +182,7 @@ class PaymentAdmin(admin.ModelAdmin):
     status_display.admin_order_field = 'payment_status'
     
     def is_overdue_display(self, obj):
-        if obj.is_overdue:
-            return format_html(
-                '<span style="color: red;">Yes ({}d)</span>',
-                obj.days_overdue
-            )
-        return format_html('<span style="color: green;">No</span>')
+        return obj.is_overdue
     is_overdue_display.short_description = 'Overdue'
     is_overdue_display.boolean = True
     

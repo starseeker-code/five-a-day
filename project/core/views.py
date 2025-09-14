@@ -48,12 +48,6 @@ def enrollments(request):
     return render(request, "enrollments.html", {"enrollments": enrollments})
 
 
-# ---------- Payments ----------
-def payments(request):
-    payments = Payment.objects.all()
-    return render(request, "payments.html", {"payments": payments})
-
-
 # ---------- Payroll ----------
 def payrolls(request):
     payrolls = Payroll.objects.all()

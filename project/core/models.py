@@ -577,6 +577,7 @@ class Payment(models.Model):
         """Check if payment is overdue"""
         return (
             self.payment_status == 'pending' and 
+            self.due_date is not None and
             self.due_date < date.today()
         )
 
@@ -598,7 +599,7 @@ class Payment(models.Model):
         self.save()
         
     # Manager
-    active_objects = ActivePaymentManager()  # Usage: Payment.active_objects.all()
+    #active_objects = ActivePaymentManager()
 
 class Payroll(models.Model):
     """

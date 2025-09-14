@@ -15,9 +15,6 @@ urlpatterns = [
     path("enrollment-types/", enrollment_types, name="enrollment-types"),
     path("enrollments/", enrollments, name="enrollments"),
 
-    # Payments
-    path("payments/", payments, name="payments"),
-
     # Payroll
     path("payrolls/", payrolls, name="payrolls"),
 
@@ -30,6 +27,9 @@ urlpatterns = [
     # People.students
     path('students/<int:student_id>/', student_detail, name='student_detail'),
     path('students/<int:student_id>/update/', update_student, name='update_student'),
+    
+    # Payments
+    path('payments/', payments_list, name='payments'),
     
     # Payments.payment
     path('payments/create/', create_payment, name='create_payment'),
