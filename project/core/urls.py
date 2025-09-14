@@ -30,4 +30,20 @@ urlpatterns = [
     # People.students
     path('students/<int:student_id>/', student_detail, name='student_detail'),
     path('students/<int:student_id>/update/', update_student, name='update_student'),
+    
+    # Payments.payment
+    path('payments/create/', create_payment, name='create_payment'),
+    path('payments/<int:payment_id>/', payment_detail, name='payment_detail'),
+    path('payments/<int:payment_id>/update/', update_payment, name='update_payment'),
+    path('payments/<int:payment_id>/detail/', payment_detail_view, name='payment_detail_view'),
+    path('payments/<int:payment_id>/deactivate/', deactivate_payment, name='deactivate_payment'),
+    
+    # Payments.payment.rest
+    path('api/search/students/', search_students, name='search_students'),
+    path('api/search/parents/', search_parents, name='search_parents'),
+    path('api/validate/student-parent/', validate_student_parent, name='validate_student_parent'),
+    
+    # Payments.payment.utils
+    path('api/payments/statistics/', payment_statistics, name='payment_statistics'),
+    path('payments/export/', export_payments, name='export_payments'),
 ]

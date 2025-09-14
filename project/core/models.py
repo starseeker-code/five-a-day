@@ -7,6 +7,12 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 
 
+# Manager for active payments only
+class ActivePaymentManager(models.Manager):
+    """Manager that returns only active payments"""
+    def get_queryset(self):
+        return super().get_queryset().filter(active=True)
+
 class ExpenseCategory(models.Model):
     """
     Categories for organizing expenses
@@ -521,6 +527,11 @@ class Payment(models.Model):
     due_date = models.DateField()  # When payment is expected
     payment_date = models.DateField(null=True, blank=True)  # When payment was actually made
     
+    active = models.BooleanField(
+        default=True,
+        help_text="Set to False to hide payment from main views (soft delete)"
+    )
+    
     concept = models.CharField(max_length=200)
     reference_number = models.CharField(max_length=50, blank=True)  # Bank reference, receipt number, etc.
     
@@ -539,6 +550,7 @@ class Payment(models.Model):
             models.Index(fields=['due_date']),
             models.Index(fields=['payment_date']),
             models.Index(fields=['enrollment']),
+            models.Index(fields=['active']),
         ]
 
     def __str__(self):
@@ -554,6 +566,11 @@ class Payment(models.Model):
         # Payment date should not be in the future for completed payments
         if self.payment_status == 'completed' and self.payment_date and self.payment_date > date.today():
             raise ValidationError("Payment date cannot be in the future for completed payments.")
+        
+        # Validate student-parent relationship
+        if self.student and self.parent:
+            if not self.student.parents.filter(id=self.parent.id).exists():
+                raise ValidationError("The selected parent is not associated with this student.")
 
     @property
     def is_overdue(self):
@@ -569,6 +586,19 @@ class Payment(models.Model):
         if self.is_overdue:
             return (date.today() - self.due_date).days
         return 0
+    
+    def soft_delete(self):
+        """Soft delete the payment"""
+        self.active = False
+        self.save()
+    
+    def restore(self):
+        """Restore a soft-deleted payment"""
+        self.active = True
+        self.save()
+        
+    # Manager
+    active_objects = ActivePaymentManager()  # Usage: Payment.active_objects.all()
 
 class Payroll(models.Model):
     """
@@ -802,6 +832,46 @@ class StudentParent(models.Model):
     def __str__(self):
         return f"{self.parent} -> {self.student}"
 
+
+"""
+# Optional: Model for tracking payment history/changes
+class PaymentHistory(models.Model):
+    '''
+    Track '''changes to payments for audit purposes
+    '''
+    payment = models.ForeignKey(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='history'
+    )
+    changed_by = models.ForeignKey(
+        'auth.User',  # or your custom user model
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    change_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('created', 'Created'),
+            ('updated', 'Updated'),
+            ('status_changed', 'Status Changed'),
+            ('deactivated', 'Deactivated'),
+            ('restored', 'Restored'),
+        ]
+    )
+    old_values = models.JSONField(default=dict, blank=True)
+    new_values = models.JSONField(default=dict, blank=True)
+    change_reason = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'payment_history'
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.payment} - {self.get_change_type_display()} - {self.timestamp}"
+"""
 
 # =============================================================================
 # TO BE DONE AND CONSIDERED

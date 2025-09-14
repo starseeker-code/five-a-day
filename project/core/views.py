@@ -6,6 +6,12 @@ from django.contrib import messages
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.db.models import Q, Sum
+from django.views.decorators.http import require_http_methods
+from decimal import Decimal
+import json
+from datetime import date
 
 def home(request):
     return render(request, "home.html")
@@ -277,4 +283,384 @@ def update_student(request, student_id):
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
+
+
+def payments_list(request):
+    """
+    Main payments list view with pagination
+    Shows active payments only (not deactivated ones)
+    """
+    # Get all active payments ordered by most recent first
+    payments_queryset = Payment.objects.filter(
+        active=True  # Assuming you add this field to the model
+    ).select_related(
+        'student', 'parent', 'enrollment'
+    ).order_by('-created_at', '-due_date')
+    
+    # Add search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        payments_queryset = payments_queryset.filter(
+            Q(student__first_name__icontains=search_query) |
+            Q(student__last_name__icontains=search_query) |
+            Q(parent__first_name__icontains=search_query) |
+            Q(parent__last_name__icontains=search_query) |
+            Q(concept__icontains=search_query) |
+            Q(reference_number__icontains=search_query)
+        )
+    
+    # Pagination - 10 payments per page, max 100 total
+    paginator = Paginator(payments_queryset[:100], 10)
+    page_number = request.GET.get('page', 1)
+    payments = paginator.get_page(page_number)
+    
+    context = {
+        'payments': payments,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'payments/payments_list.html', context)
+
+
+@require_http_methods(["GET", "POST"])
+def create_payment(request):
+    """
+    Create new payment
+    """
+    if request.method == 'POST':
+        try:
+            # Get form data
+            student_id = request.POST.get('student_id')
+            parent_id = request.POST.get('parent_id')
+            
+            # Validate student and parent exist
+            student = get_object_or_404(Student, id=student_id)
+            parent = get_object_or_404(Parent, id=parent_id)
+            
+            # Validate relationship
+            if not student.parents.filter(id=parent_id).exists():
+                messages.error(request, 'El padre/tutor seleccionado no está asociado con este estudiante.')
+                return redirect('payments')
+            
+            # Get enrollment if exists
+            enrollment = student.enrollments.filter(status='active').first()
+            
+            # Create payment
+            payment = Payment.objects.create(
+                student=student,
+                parent=parent,
+                enrollment=enrollment,
+                payment_type=request.POST.get('payment_type'),
+                payment_method=request.POST.get('payment_method'),
+                amount=Decimal(request.POST.get('amount')),
+                currency=request.POST.get('currency', 'EUR'),
+                payment_status=request.POST.get('payment_status', 'pending'),
+                due_date=request.POST.get('due_date'),
+                payment_date=request.POST.get('payment_date') or None,
+                concept=request.POST.get('concept'),
+                reference_number=request.POST.get('reference_number', ''),
+                observations=request.POST.get('observations', ''),
+                active=True  # New field to handle soft deletes
+            )
+            
+            messages.success(request, f'Pago creado exitosamente para {student.full_name}.')
+            return redirect('payments')
+            
+        except Exception as e:
+            messages.error(request, f'Error al crear el pago: {str(e)}')
+            return redirect('payments')
+    
+    return redirect('payments')
+
+
+def payment_detail(request, payment_id):
+    """
+    Get payment details as JSON for editing
+    """
+    payment = get_object_or_404(Payment, id=payment_id, active=True)
+    
+    data = {
+        'id': payment.id,
+        'student': {
+            'id': payment.student.id,
+            'full_name': payment.student.full_name,
+            'school': payment.student.school or ''
+        },
+        'parent': {
+            'id': payment.parent.id,
+            'full_name': payment.parent.full_name,
+            'email': payment.parent.email
+        },
+        'enrollment': {
+            'id': payment.enrollment.id if payment.enrollment else None,
+            'enrollment_type': payment.enrollment.enrollment_type.display_name if payment.enrollment else None
+        } if payment.enrollment else None,
+        'payment_type': payment.payment_type,
+        'payment_method': payment.payment_method,
+        'amount': str(payment.amount),
+        'currency': payment.currency,
+        'payment_status': payment.payment_status,
+        'due_date': payment.due_date.isoformat() if payment.due_date else None,
+        'payment_date': payment.payment_date.isoformat() if payment.payment_date else None,
+        'concept': payment.concept,
+        'reference_number': payment.reference_number,
+        'observations': payment.observations,
+        'is_overdue': payment.is_overdue,
+        'days_overdue': payment.days_overdue if payment.is_overdue else 0
+    }
+    
+    return JsonResponse(data)
+
+
+@require_http_methods(["POST"])
+def update_payment(request, payment_id):
+    """
+    Update existing payment
+    """
+    payment = get_object_or_404(Payment, id=payment_id, active=True)
+    
+    try:
+        # Get form data
+        student_id = request.POST.get('student_id')
+        parent_id = request.POST.get('parent_id')
+        
+        # Validate student and parent exist
+        student = get_object_or_404(Student, id=student_id)
+        parent = get_object_or_404(Parent, id=parent_id)
+        
+        # Validate relationship
+        if not student.parents.filter(id=parent_id).exists():
+            messages.error(request, 'El padre/tutor seleccionado no está asociado con este estudiante.')
+            return redirect('payments')
+        
+        # Update payment fields
+        payment.student = student
+        payment.parent = parent
+        payment.payment_type = request.POST.get('payment_type')
+        payment.payment_method = request.POST.get('payment_method')
+        payment.amount = Decimal(request.POST.get('amount'))
+        payment.currency = request.POST.get('currency', 'EUR')
+        payment.payment_status = request.POST.get('payment_status')
+        payment.due_date = request.POST.get('due_date')
+        payment.payment_date = request.POST.get('payment_date') or None
+        payment.concept = request.POST.get('concept')
+        payment.reference_number = request.POST.get('reference_number', '')
+        payment.observations = request.POST.get('observations', '')
+        
+        payment.save()
+        
+        messages.success(request, f'Pago actualizado exitosamente para {student.full_name}.')
+        
+    except Exception as e:
+        messages.error(request, f'Error al actualizar el pago: {str(e)}')
+    
+    return redirect('payments')
+
+
+def payment_detail_view(request, payment_id):
+    """
+    Detailed view of a payment (read-only)
+    """
+    payment = get_object_or_404(Payment, id=payment_id, active=True)
+    
+    context = {
+        'payment': payment,
+    }
+    
+    return render(request, 'payments/payment_detail.html', context)
+
+
+@require_http_methods(["POST"])
+def deactivate_payment(request, payment_id):
+    """
+    Soft delete - deactivate payment instead of deleting
+    """
+    try:
+        payment = get_object_or_404(Payment, id=payment_id, active=True)
+        payment.active = False  # Soft delete
+        payment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Pago desactivado exitosamente.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al desactivar el pago: {str(e)}'
+        }, status=400)
+
+
+# API Endpoints for AJAX functionality
+
+def search_students(request):
+    """
+    AJAX endpoint to search students
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+    
+    students = Student.objects.filter(
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query) |
+        Q(school__icontains=query),
+        active=True
+    ).select_related('group')[:10]  # Limit to 10 results
+    
+    results = []
+    for student in students:
+        results.append({
+            'id': student.id,
+            'full_name': student.full_name,
+            'school': student.school or '',
+            'group': student.group.group_name if student.group else '',
+            'age': student.age
+        })
+    
+    return JsonResponse({'results': results})
+
+
+def search_parents(request):
+    """
+    AJAX endpoint to search parents
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+    
+    parents = Parent.objects.filter(
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query) |
+        Q(email__icontains=query)
+    )[:10]  # Limit to 10 results
+    
+    results = []
+    for parent in parents:
+        results.append({
+            'id': parent.id,
+            'full_name': parent.full_name,
+            'email': parent.email,
+            'phone': parent.phone or ''
+        })
+    
+    return JsonResponse({'results': results})
+
+
+@require_http_methods(["POST"])
+def validate_student_parent(request):
+    """
+    AJAX endpoint to validate student-parent relationship
+    """
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id')
+        parent_id = data.get('parent_id')
+        
+        if not student_id or not parent_id:
+            return JsonResponse({'valid': False, 'message': 'Missing student or parent ID'})
+        
+        # Check if relationship exists
+        student = get_object_or_404(Student, id=student_id)
+        parent = get_object_or_404(Parent, id=parent_id)
+        
+        is_valid = student.parents.filter(id=parent_id).exists()
+        
+        response_data = {
+            'valid': is_valid,
+            'message': 'Valid relationship' if is_valid else 'Invalid relationship'
+        }
+        
+        # If valid, include enrollment info
+        if is_valid:
+            active_enrollment = student.enrollments.filter(status='active').first()
+            if active_enrollment:
+                response_data['enrollment'] = {
+                    'id': active_enrollment.id,
+                    'enrollment_type': active_enrollment.enrollment_type.display_name,
+                    'remaining_amount': str(active_enrollment.remaining_amount),
+                    'schedule_type': active_enrollment.get_schedule_type_display(),
+                    'is_paid': active_enrollment.is_paid
+                }
+        
+        return JsonResponse(response_data)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'valid': False, 'message': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'valid': False, 'message': str(e)}, status=400)
+
+
+# Additional utility views
+
+def payment_statistics(request):
+    """
+    Get payment statistics for dashboard
+    """
+    today = date.today()
+    
+    stats = {
+        'total_payments': Payment.objects.filter(active=True).count(),
+        'completed_payments': Payment.objects.filter(
+            active=True, payment_status='completed'
+        ).count(),
+        'pending_payments': Payment.objects.filter(
+            active=True, payment_status='pending'
+        ).count(),
+        'overdue_payments': Payment.objects.filter(
+            active=True, payment_status='pending', due_date__lt=today
+        ).count(),
+        'total_amount_pending': Payment.objects.filter(
+            active=True, payment_status='pending'
+        ).aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0.00'),
+        'total_amount_completed': Payment.objects.filter(
+            active=True, payment_status='completed'
+        ).aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0.00')
+    }
+    
+    return JsonResponse(stats)
+
+
+def export_payments(request):
+    """
+    Export payments to CSV
+    """
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="pagos.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'ID', 'Estudiante', 'Padre/Tutor', 'Concepto', 'Cantidad', 
+        'Método', 'Estado', 'Fecha Vencimiento', 'Fecha Pago', 'Creado'
+    ])
+    
+    payments = Payment.objects.filter(active=True).select_related(
+        'student', 'parent'
+    ).order_by('-created_at')
+    
+    for payment in payments:
+        writer.writerow([
+            payment.id,
+            payment.student.full_name,
+            payment.parent.full_name,
+            payment.concept,
+            payment.amount,
+            payment.get_payment_method_display(),
+            payment.get_payment_status_display(),
+            payment.due_date.strftime('%d/%m/%Y') if payment.due_date else '',
+            payment.payment_date.strftime('%d/%m/%Y') if payment.payment_date else '',
+            payment.created_at.strftime('%d/%m/%Y %H:%M')
+        ])
+    
+    return response
 
