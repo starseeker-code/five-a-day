@@ -288,6 +288,7 @@ class FinancialPeriod(models.Model):
         }
 
 class EnrollmentType(models.Model):
+    # !ELIMINATE
     """
     Defines different enrollment types with their base pricing
     This makes pricing more maintainable and auditable
@@ -332,15 +333,21 @@ class Enrollment(models.Model):
     """
     Improved enrollment model with better structure and logic
     """
+    ENROLLMENT_COST = [
+        ('children_enrollment', 40),
+        ('adult_enrollment', 60),
+    ]
+    
     SCHEDULE_TYPES = [
-        ('full_time', 'Full-time (2 classes/week)'),
-        ('part_time', 'Part-time (1 class/week)'),
+        ('full_time', 'Full-time (2 classes/week)'),  # 54€
+        ('part_time', 'Part-time (1 class/week)'),  # 36€
+        ('adult_group', 'Part-time (1 class/week)')  # 60€
     ]
 
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('active', 'Active'),
-        ('completed', 'Completed'),
+        ('finished', 'Finished'),
         ('cancelled', 'Cancelled'),
         ('suspended', 'Suspended'),
     ]
@@ -359,7 +366,7 @@ class Enrollment(models.Model):
     enrollment_period_start = models.DateField()
     enrollment_period_end = models.DateField()
     schedule_type = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=SCHEDULE_TYPES,
         default='full_time'
     )
@@ -459,10 +466,22 @@ class Payment(models.Model):
     """
     Improved payment model with better structure and validation
     """
+    # !IMPORTANT payments could be partial (divorced parents)
     PAYMENT_METHODS = [
         ('cash', 'In Cash'),
         ('transfer', 'Transference'),
         ('credit_card', 'Credit Card'),
+    ]
+
+    DISCOUNTS = [
+        {"language_cheque": (20, "flat")},
+        {"quartely_enrollment": (0.05, "percentage")},  # x3 months
+        {"old_student_enrollment": (10, "flat")},
+        {"full_year_bonus": (20, "flat")},  # NO adultos, en abril trimestrales tambien se aplica
+        {"sibling_discount": (0.05, "percentage")},  # each month
+        {"half-month_discount": (0.5, "percentage")},  # sept
+        {"only_one_week_discount": (0.75, "percentage")},  # we should automate this with a calendar system (first month)
+        {"only_three_week_discount": (0.25, "percentage")},
     ]
 
     PAYMENT_STATUS = [
@@ -715,6 +734,7 @@ class Teacher(models.Model):
     admin = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # TODO iban for payrolls
 
     class Meta:
         db_table = 'teachers'
@@ -776,10 +796,11 @@ class Parent(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 class Student(models.Model):
+    # !IMPORTANT ADULTS DO NOT NEED FK WITH PARENTS (new table for adult_students?)
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
     birth_date = models.DateField()
-    email = models.EmailField(blank=True)  # Students might not have email
+    email = models.EmailField(blank=True)  # TODO remove
     school = models.CharField(max_length=200, blank=True)
     allergies = models.TextField(blank=True)
     gdpr_signed = models.BooleanField(default=False)
