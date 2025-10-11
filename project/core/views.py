@@ -20,6 +20,12 @@ def all_info(request):
     return render(request, "database.html")
 
 
+# TESTING CODE ("testing/")
+def testing(request):
+    pass
+
+
+# TESTING CODE
 
 
 def students(request):

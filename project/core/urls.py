@@ -4,6 +4,10 @@ from core.views import *
 urlpatterns = [
     path("", home, name="home"),  # type: ignore
     path("database/", all_info, name="all_info"),
+
+# TESTING CODE
+    path("testing/", testing, name="testing"),
+# TESTING CODE
     
     # Expense & Finance
     path("expense-categories/", expense_categories, name="expense-categories"),
