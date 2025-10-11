@@ -334,14 +334,14 @@ class Enrollment(models.Model):
     Improved enrollment model with better structure and logic
     """
     ENROLLMENT_COST = [
-        ('children_enrollment', 40),
-        ('adult_enrollment', 60),
+        ('children_enrollment', 40),  # enrollment (1 year)
+        ('adult_enrollment', 20),  # enrollment (1 year)
     ]
     
     SCHEDULE_TYPES = [
-        ('full_time', 'Full-time (2 classes/week)'),  # 54€
-        ('part_time', 'Part-time (1 class/week)'),  # 36€
-        ('adult_group', 'Part-time (1 class/week)')  # 60€
+        ('full_time', 'Full-time (2 classes/week)'),  # 54€ / month
+        ('part_time', 'Part-time (1 class/week)'),  # 36€ / month
+        ('adult_group', 'Part-time (1 class/week)')  # 60€ / month
     ]
 
     STATUS_CHOICES = [
@@ -479,6 +479,7 @@ class Payment(models.Model):
         {"old_student_enrollment": (10, "flat")},
         {"full_year_bonus": (20, "flat")},  # NO adultos, en abril trimestrales tambien se aplica
         {"sibling_discount": (0.05, "percentage")},  # each month
+        # ---- let's see first
         {"half-month_discount": (0.5, "percentage")},  # sept
         {"only_one_week_discount": (0.75, "percentage")},  # we should automate this with a calendar system (first month)
         {"only_three_week_discount": (0.25, "percentage")},
