@@ -17,59 +17,9 @@ def home(request):
     return render(request, "home.html")
 
 def all_info(request):
-    context = {}
-    return render(request, "database.html", context)
-
-# ---------- Expense & Finance ----------
-def expense_categories(request):
-    categories = ExpenseCategory.objects.all()
-    return render(request, "expense_categories.html", {"categories": categories})
-
-def expenses(request):
-    expenses = Expense.objects.all()
-    return render(request, "expenses.html", {"expenses": expenses})
-
-def recurring_expense_templates(request):
-    templates = RecurringExpenseTemplate.objects.all()
-    return render(request, "recurring_expense_templates.html", {"templates": templates})
-
-def financial_periods(request):
-    periods = FinancialPeriod.objects.all()
-    return render(request, "financial_periods.html", {"periods": periods})
+    return render(request, "database.html")
 
 
-# ---------- Enrollment ----------
-def enrollment_types(request):
-    types = EnrollmentType.objects.all()
-    return render(request, "enrollment_types.html", {"types": types})
-
-def enrollments(request):
-    enrollments = Enrollment.objects.all()
-    return render(request, "enrollments.html", {"enrollments": enrollments})
-
-
-# ---------- Payroll ----------
-def payrolls(request):
-    payrolls = Payroll.objects.all()
-    return render(request, "payrolls.html", {"payrolls": payrolls})
-
-
-# ---------- People ----------
-def teachers(request):
-    teachers = Teacher.objects.all()
-    return render(request, "teachers.html", {"teachers": teachers})
-
-def groups(request):
-    groups = Group.objects.all()
-    return render(request, "groups.html", {"groups": groups})
-
-def students(request):
-    students = Student.objects.all()
-    return render(request, "students.html", {"students": students})
-
-def parents(request):
-    parents = Parent.objects.all()
-    return render(request, "parents.html", {"parents": parents})
 
 
 def students(request):
@@ -315,7 +265,6 @@ def payments_list(request):
     
     return render(request, 'payments/payments_list.html', context)
 
-
 @require_http_methods(["GET", "POST"])
 def create_payment(request):
     """
@@ -366,7 +315,6 @@ def create_payment(request):
     
     return redirect('payments')
 
-
 def payment_detail(request, payment_id):
     """
     Get payment details as JSON for editing
@@ -404,7 +352,6 @@ def payment_detail(request, payment_id):
     }
     
     return JsonResponse(data)
-
 
 @require_http_methods(["POST"])
 def update_payment(request, payment_id):
@@ -450,7 +397,6 @@ def update_payment(request, payment_id):
     
     return redirect('payments')
 
-
 def payment_detail_view(request, payment_id):
     """
     Detailed view of a payment (read-only)
@@ -462,7 +408,6 @@ def payment_detail_view(request, payment_id):
     }
     
     return render(request, 'payments/payment_detail.html', context)
-
 
 @require_http_methods(["POST"])
 def deactivate_payment(request, payment_id):
@@ -516,7 +461,6 @@ def search_students(request):
     
     return JsonResponse({'results': results})
 
-
 def search_parents(request):
     """
     AJAX endpoint to search parents
@@ -542,7 +486,6 @@ def search_parents(request):
         })
     
     return JsonResponse({'results': results})
-
 
 @require_http_methods(["POST"])
 def validate_student_parent(request):
@@ -620,7 +563,6 @@ def payment_statistics(request):
     }
     
     return JsonResponse(stats)
-
 
 def export_payments(request):
     """
