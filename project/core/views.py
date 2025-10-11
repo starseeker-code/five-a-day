@@ -12,17 +12,18 @@ from django.views.decorators.http import require_http_methods
 from decimal import Decimal
 import json
 from datetime import date
+from core.transactions import all_students, all_payments
 
 def home(request):
     return render(request, "home.html")
 
-def all_info(request):
-    return render(request, "database.html")
+def all_info(request):  # Estudiantes (Padres, Matricula, Grupo) + Pagos
+    return render(request, "test.html", {"students": all_students, "payments": all_payments})
 
-
+# ---> BD | Estudiantes | Pagos || DASHBOARDS (Home + Info) | Aplicaciones | Facturacion | UI! || Gastos | Renta | UI!! || Configuracion | Contacto y ayuda
 # TESTING CODE ("testing/")
 def testing(request):
-    pass
+    return render(request, "test.html", {"students": all_students, "payments": all_payments})
 
 
 # TESTING CODE

@@ -55,7 +55,7 @@ Version actual: **v0.2**
 - [x] Django Admin personalizado
 - [ ] Lógica contable básica (tracking de pagos, informes)
 - [x] Vistas básicas y templates mínimos
-- [ ] Scripts de migración de datos
+- [ ] Scripts de migración de datos a csv/excel
 - [x] Testing manual y ajustes
 
 </details>
@@ -153,6 +153,20 @@ Version actual: **v0.2**
 - Pasarela de pagos con Stripe.
 - Sistema multiusuario con permisos.
 - Auditoría y mejoras de seguridad.
+
+## 📈 UI y funconalidades básicas
+
+ - Home
+ - Info
+ - Estudiantes
+ - Pagos
+ - Facturacion
+ - Aplicaciones
+ - Gastos
+ - Renta
+ - Base de datos
+ - Configuracion
+ - Ayuda / Contacto
 
 ## 📈 Planificación y Diagrama de Gantt
 

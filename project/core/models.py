@@ -547,11 +547,6 @@ class Payment(models.Model):
     due_date = models.DateField()  # When payment is expected
     payment_date = models.DateField(null=True, blank=True)  # When payment was actually made
     
-    active = models.BooleanField(
-        default=True,
-        help_text="Set to False to hide payment from main views (soft delete)"
-    )
-    
     concept = models.CharField(max_length=200)
     reference_number = models.CharField(max_length=50, blank=True)  # Bank reference, receipt number, etc.
     
@@ -570,7 +565,6 @@ class Payment(models.Model):
             models.Index(fields=['due_date']),
             models.Index(fields=['payment_date']),
             models.Index(fields=['enrollment']),
-            models.Index(fields=['active']),
         ]
 
     def __str__(self):
@@ -607,16 +601,6 @@ class Payment(models.Model):
         if self.is_overdue:
             return (date.today() - self.due_date).days
         return 0
-    
-    def soft_delete(self):
-        """Soft delete the payment"""
-        self.active = False
-        self.save()
-    
-    def restore(self):
-        """Restore a soft-deleted payment"""
-        self.active = True
-        self.save()
         
     # Manager
     #active_objects = ActivePaymentManager()

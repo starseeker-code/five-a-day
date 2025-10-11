@@ -77,11 +77,11 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = [
         'id', 'student_link', 'parent_link', 'concept', 'amount_display', 
         'payment_method', 'status_display', 'due_date', 'payment_date', 
-        'is_overdue_display', 'active'
+        'is_overdue_display'
     ]
     list_filter = [
         'payment_status', 'payment_method', 'payment_type', 'currency',
-        'active', 'due_date', 'payment_date', 'created_at'
+        'due_date', 'payment_date', 'created_at'
     ]
     search_fields = [
         'student__first_name', 'student__last_name',
@@ -105,7 +105,7 @@ class PaymentAdmin(admin.ModelAdmin):
             'fields': ('due_date', 'payment_date')
         }),
         ('Additional Information', {
-            'fields': ('observations', 'document_url', 'active'),
+            'fields': ('observations', 'document_url'),
             'classes': ('collapse',)
         }),
         ('System Information', {
@@ -223,7 +223,7 @@ class PaymentAdmin(admin.ModelAdmin):
         writer.writerow([
             'ID', 'Student', 'Parent', 'Concept', 'Amount', 'Currency',
             'Payment Method', 'Status', 'Due Date', 'Payment Date',
-            'Reference', 'Created', 'Active'
+            'Reference', 'Created'
         ])
         
         for payment in queryset:
@@ -239,8 +239,7 @@ class PaymentAdmin(admin.ModelAdmin):
                 payment.due_date.strftime('%Y-%m-%d') if payment.due_date else '',
                 payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
                 payment.reference_number,
-                payment.created_at.strftime('%Y-%m-%d %H:%M'),
-                payment.active
+                payment.created_at.strftime('%Y-%m-%d %H:%M')
             ])
         
         return response
@@ -292,8 +291,10 @@ class EnrollmentAdmin(admin.ModelAdmin):
     
     def is_paid_display(self, obj):
         if obj.is_paid:
+            return True  # TODO: Still testing!
             return format_html('<span style="color: green;">✓ Paid</span>')
         else:
+            return False  # TODO: Still testing!
             remaining = obj.remaining_amount
             return format_html(
                 '<span style="color: red;">✗ Pending (€{})</span>',
