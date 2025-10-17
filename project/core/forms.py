@@ -38,7 +38,6 @@ class StudentForm(ModelForm):
             raise forms.ValidationError('La fecha de nacimiento no puede ser futura')
         return birth_date
 
-
 class ParentForm(forms.ModelForm):
     class Meta:
         model = Parent
@@ -68,7 +67,6 @@ class ParentForm(forms.ModelForm):
         if dni and len(dni) < 8:
             raise forms.ValidationError('El DNI debe tener al menos 8 caracteres')
         return dni
-
 
 class EnrollmentForm(forms.ModelForm):
     class Meta:
@@ -111,7 +109,6 @@ class EnrollmentForm(forms.ModelForm):
             )
         
         return cleaned_data
-
 
 # Formset - Herencia de forms
 ParentFormSet = inlineformset_factory(

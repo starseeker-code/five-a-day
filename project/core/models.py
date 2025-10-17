@@ -828,82 +828,8 @@ class StudentParent(models.Model):
         return f"{self.parent} -> {self.student}"
 
 
-"""
-# Optional: Model for tracking payment history/changes
-class PaymentHistory(models.Model):
-    '''
-    Track '''changes to payments for audit purposes
-    '''
-    payment = models.ForeignKey(
-        Payment,
-        on_delete=models.CASCADE,
-        related_name='history'
-    )
-    changed_by = models.ForeignKey(
-        'auth.User',  # or your custom user model
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-    change_type = models.CharField(
-        max_length=20,
-        choices=[
-            ('created', 'Created'),
-            ('updated', 'Updated'),
-            ('status_changed', 'Status Changed'),
-            ('deactivated', 'Deactivated'),
-            ('restored', 'Restored'),
-        ]
-    )
-    old_values = models.JSONField(default=dict, blank=True)
-    new_values = models.JSONField(default=dict, blank=True)
-    change_reason = models.TextField(blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'payment_history'
-        ordering = ['-timestamp']
-    
-    def __str__(self):
-        return f"{self.payment} - {self.get_change_type_display()} - {self.timestamp}"
-"""
 
-# =============================================================================
-# TO BE DONE AND CONSIDERED
-# =============================================================================
-
-"""
-ENROLLMENT IMPROVEMENTS:
-✅ Added EnrollmentType model for better pricing management
-✅ Added schedule_type (full-time/part-time) as requested
-✅ Added status tracking (pending, active, completed, etc.)
-✅ Added discount handling
-✅ Auto-calculation of final_amount
-✅ Added constraint to prevent multiple active enrollments
-✅ Better on_delete choices (PROTECT for financial records)
-
-PAYMENT IMPROVEMENTS:
-✅ Better payment status tracking (pending, completed, failed, etc.)
-✅ Separated due_date from actual payment_date
-✅ Added reference_number for bank transfers
-✅ Added currency field for international students
-✅ Added validation for payment dates
-✅ Added overdue calculation methods
-✅ Used your exact payment method names
-
-PAYROLL IMPROVEMENTS:
-✅ Added payroll types (salary, hourly, bonus, etc.)
-✅ Added period tracking (start/end dates)
-✅ Added gross/net amount calculation with deductions
-✅ Added status tracking
-✅ Added constraint to prevent duplicate payrolls
-✅ Better financial record keeping
-
-ON_DELETE STRATEGY:
-✅ Used PROTECT for all financial models to prevent accidental data loss
-✅ Financial records (payments, enrollments, payrolls) should never be cascade deleted
-✅ This ensures audit trail and legal compliance
-"""
+# TODO: Cleanup is this needed?
 
 class FinancialReport:
     """
@@ -957,34 +883,3 @@ class FinancialReport:
         ).annotate(
             total=Sum('total_amount')
         ).order_by('-total')
-
-
-# =============================================================================
-# DESIGN CONSIDERATIONS
-# =============================================================================
-
-"""
-EXPENSE MANAGEMENT FEATURES:
-✅ ExpenseCategory - Organize expenses for better reporting
-✅ Supplier - Track vendors and payment terms
-✅ Expense - Main expense tracking with full lifecycle
-✅ RecurringExpenseTemplate - Handle monthly rent, utilities, etc.
-✅ FinancialPeriod - Formal period reporting
-✅ Approval workflow - Expenses need approval before payment
-✅ Overdue tracking - Know when payments are late
-✅ Auto-numbering - Unique expense numbers for audit trail
-✅ Tax handling - Separate tax amounts for compliance
-✅ Recurring expense automation - Auto-generate monthly bills
-
-FINANCIAL REPORTING:
-✅ Period-based profit/loss calculation
-✅ Income vs Expenses tracking  
-✅ Category-based expense analysis
-✅ Supplier payment analysis
-✅ Overdue payment tracking
-
-ON_DELETE STRATEGY:
-✅ PROTECT for all financial relationships - preserve audit trail
-✅ SET_NULL only for approval relationships (if approver leaves)
-✅ Financial data integrity is paramount
-"""

@@ -25,12 +25,12 @@ admin.site.register(Group)
 class StudentParentInline(admin.TabularInline):
     model = StudentParent
     extra = 1  # Number of empty forms to display
-    autocomplete_fields = ['parent']  # Optional: makes parent selection easier with search
+    autocomplete_fields = ['parent']
 
 class ParentStudentInline(admin.TabularInline):
     model = StudentParent
     extra = 1
-    autocomplete_fields = ['student']  # Optional: makes student selection easier with search
+    autocomplete_fields = ['student']
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -131,14 +131,12 @@ class PaymentAdmin(admin.ModelAdmin):
     def student_link(self, obj):
         if obj.student:
             try:
-                # Get the model meta to construct the correct URL name
                 app_label = obj.student._meta.app_label
                 model_name = obj.student._meta.model_name
                 url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.student.id])
                 return format_html('<a href="{}">{}</a>', url, obj.student.full_name)
             except:
-                # Fallback if URL reverse fails
-                return obj.student.full_name
+                return obj.student.full_name  # Fallback
         return '-'
     student_link.short_description = 'Student'
     student_link.admin_order_field = 'student__last_name'
@@ -146,13 +144,11 @@ class PaymentAdmin(admin.ModelAdmin):
     def parent_link(self, obj):
         if obj.parent:
             try:
-                # Get the model meta to construct the correct URL name
                 app_label = obj.parent._meta.app_label
                 model_name = obj.parent._meta.model_name
                 url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.parent.id])
                 return format_html('<a href="{}">{}</a>', url, obj.parent.full_name)
             except:
-                # Fallback if URL reverse fails
                 return obj.parent.full_name
             
         return '-'
@@ -306,67 +302,3 @@ class EnrollmentAdmin(admin.ModelAdmin):
             )
     is_paid_display.short_description = 'Payment Status'
     is_paid_display.boolean = True
-
-
-"""
-@admin.register(PaymentHistory)
-class PaymentHistoryAdmin(admin.ModelAdmin):
-    list_display = [
-        'payment', 'change_type', 'changed_by', 'timestamp'
-    ]
-    list_filter = ['change_type', 'timestamp']
-    search_fields = ['payment__concept', 'payment__student__first_name', 'payment__student__last_name']
-    readonly_fields = ['payment', 'changed_by', 'change_type', 'old_values', 'new_values', 'timestamp']
-    
-    def has_add_permission(self, request):
-        return False  # History entries should only be created programmatically
-    
-    def has_change_permission(self, request, obj=None):
-        return False  # History entries should be immutable
-
-
-@admin.register(EnrollmentType)
-class EnrollmentTypeAdmin(admin.ModelAdmin):
-    list_display = [
-        'name', 'display_name', 'base_amount_full_time', 
-        'base_amount_part_time', 'active', 'created_at'
-    ]
-    list_filter = ['active', 'name']
-    search_fields = ['display_name', 'description']
-    readonly_fields = ['created_at', 'updated_at']
-"""
-
-"""
-# Custom admin site configuration (optional)
-class PaymentAdminSite(admin.AdminSite):
-    site_header = "Five a Day - Payment Administration"
-    site_title = "Payment Admin"
-    index_title = "Payment Management"
-    
-    def index(self, request, extra_context=None):
-        # Add custom dashboard statistics
-        today = date.today()
-        last_30_days = today - timedelta(days=30)
-        
-        stats = {
-            'total_payments': Payment.objects.filter(active=True).count(),
-            'pending_payments': Payment.objects.filter(
-                active=True, payment_status='pending'
-            ).count(),
-            'overdue_payments': Payment.objects.filter(
-                active=True, payment_status='pending', due_date__lt=today
-            ).count(),
-            'completed_this_month': Payment.objects.filter(
-                active=True, payment_status='completed', 
-                payment_date__gte=last_30_days
-            ).count(),
-            'total_amount_pending': Payment.objects.filter(
-                active=True, payment_status='pending'
-            ).aggregate(total=Sum('amount'))['total'] or 0,
-        }
-        
-        extra_context = extra_context or {}
-        extra_context['payment_stats'] = stats
-        
-        return super().index(request, extra_context)
-"""
