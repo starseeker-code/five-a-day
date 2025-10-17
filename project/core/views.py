@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views import View
+from django.contrib import messages
+#from django.views import View
+from django.views.generic import FormView, DetailView, ListView, UpdateView, CreateView
 from django.http import HttpRequest, HttpResponse
 from .models import *
 from django.contrib import messages
@@ -9,10 +11,12 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.views.decorators.http import require_http_methods
+from django.urls import reverse_lazy
 from decimal import Decimal
 import json
 from datetime import date
 from core.transactions import all_students, all_payments
+from core.forms import StudentForm, ParentForm, EnrollmentForm, ParentFormSet
 
 def home(request):
     return render(request, "home.html")
@@ -25,6 +29,297 @@ def all_info(request):  # Estudiantes (Padres, Matricula, Grupo) + Pagos
 def testing(request):
     return render(request, "test.html", {"students": all_students, "payments": all_payments})
 
+
+# ---
+
+
+class StudentCreateView(CreateView):
+    model = Student
+    form_class = StudentForm
+    template_name = 'student_create.html'
+
+    success_url = reverse_lazy('student_create')  # TODO: Volver al mismo lugar para crear
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'parent_form' not in context:
+            context['parent_form'] = ParentForm(self.request.POST or None)
+        if 'enrollment_form' not in context:
+            context['enrollment_form'] = EnrollmentForm(self.request.POST or None)
+        return context
+
+    def form_valid(self, form):
+        parent_form = ParentForm(self.request.POST)
+        enrollment_form = EnrollmentForm(self.request.POST)
+        if not (parent_form.is_valid() and enrollment_form.is_valid()):
+            return self.form_invalid(form)
+        try:
+            with transaction.atomic():
+                parent_dni = parent_form.cleaned_data.get('dni')
+                if parent_dni:
+                    parent_dni = parent_dni.strip().upper()
+                parent, created = Parent.objects.get_or_create(
+                    dni=parent_dni,
+                    defaults={
+                        'first_name': parent_form.cleaned_data.get('first_name'),
+                        'last_name': parent_form.cleaned_data.get('last_name'),
+                        'phone': parent_form.cleaned_data.get('phone'),
+                        'email': parent_form.cleaned_data.get('email'),
+                        'iban': parent_form.cleaned_data.get('iban', '') or '',
+                    }
+                )
+                if not created:
+                    for field in ('first_name', 'last_name', 'phone', 'email', 'iban'):
+                        val = parent_form.cleaned_data.get(field)
+                        if val is not None:
+                            setattr(parent, field, val)
+                    parent.save()
+                self.object = form.save()
+                self.object.parents.add(parent)
+                enrollment = enrollment_form.save(commit=False)
+                enrollment.student = self.object
+                enrollment.save()
+                messages.success(
+                    self.request,
+                    f'¡Estudiante {self.object.full_name} creado exitosamente!'
+                )
+
+        except Exception as e:
+            messages.error(self.request, f'Error al crear el estudiante: {str(e)}')
+            return self.form_invalid(form)
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+
+        context['parent_form'] = ParentForm(self.request.POST or None)
+        context['enrollment_form'] = EnrollmentForm(self.request.POST or None)
+        return self.render_to_response(context)
+
+
+# NO ES NECESARIO - SOLO CREATE (MISMA VISTA PARA TODO)
+
+"""
+class StudentUpdateView(UpdateView):
+    model = Student
+    form_class = StudentForm
+    template_name = 'student_update.html'
+
+    def get_success_url(self):
+        return reverse_lazy('student_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Buscar la matrícula activa (si existe)
+        try:
+            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
+        except Enrollment.DoesNotExist:
+            enrollment = None
+
+        # Si no viene el enrollment_form en el contexto, lo añadimos (podemos pasar POST para re-render con errores)
+        if 'enrollment_form' not in context:
+            context['enrollment_form'] = EnrollmentForm(self.request.POST or None, instance=enrollment)
+
+        # Lista de padres asociados
+        context['parents'] = self.object.parents.all()
+        return context
+
+    def form_valid(self, form):
+        # Recuperamos la matrícula activa (si existe)
+        try:
+            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
+        except Enrollment.DoesNotExist:
+            enrollment = None
+
+        enrollment_form = EnrollmentForm(self.request.POST or None, instance=enrollment)
+
+        if not enrollment_form.is_valid():
+            return self.form_invalid(form)
+
+        try:
+            with transaction.atomic():
+                student = form.save()
+                # Guardamos/creamos la matrícula
+                enrollment = enrollment_form.save(commit=False)
+                enrollment.student = student
+                enrollment.save()
+
+                messages.success(self.request, '¡Estudiante actualizado exitosamente!')
+        except Exception as e:
+            messages.error(self.request, f'Error al actualizar: {str(e)}')
+            return self.form_invalid(form)
+
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Aseguramos que el enrollment_form (con errores) esté en el contexto para re-render
+        context = self.get_context_data(form=form)
+        try:
+            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
+        except Enrollment.DoesNotExist:
+            enrollment = None
+        context['enrollment_form'] = EnrollmentForm(self.request.POST or None, instance=enrollment)
+        return self.render_to_response(context)
+
+class StudentDetailView(DetailView):
+    model = Student
+    template_name = 'student_detail.html'
+    context_object_name = 'student'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Padres asociados y matrículas ordenadas
+        context['parents'] = self.object.parents.all()
+        context['enrollments'] = self.object.enrollments.all().order_by('-created_at')
+        return context
+
+class StudentListView(ListView):
+    model = Student
+    template_name = 'student_list.html'
+    context_object_name = 'students'
+    paginate_by = 20
+
+    def get_queryset(self):
+        # Select/prefetch para evitar N+1
+        return Student.objects.filter(active=True).select_related('group').prefetch_related('parents')
+
+class StudentCreateView(FormView):
+    template_name = 'student_create.html'
+    form_class = StudentForm
+    success_url = reverse_lazy('student_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'parent_form' not in context:
+            context['parent_form'] = ParentForm(self.request.POST or None)
+        if 'enrollment_form' not in context:
+            context['enrollment_form'] = EnrollmentForm(self.request.POST or None)
+        return context
+    
+    def form_valid(self, form):
+        parent_form = ParentForm(self.request.POST)
+        enrollment_form = EnrollmentForm(self.request.POST)
+        if not (parent_form.is_valid() and enrollment_form.is_valid()):
+            return self.form_invalid(form)
+        
+        try:
+            with transaction.atomic():  # 1 - Encontrar o crear el padre
+                parent_dni = parent_form.cleaned_data['dni']
+                parent, created = Parent.objects.get_or_create(
+                    dni=parent_dni,
+                    defaults={
+                        'first_name': parent_form.cleaned_data['first_name'],
+                        'last_name': parent_form.cleaned_data['last_name'],
+                        'phone': parent_form.cleaned_data['phone'],
+                        'email': parent_form.cleaned_data['email'],
+                        'iban': parent_form.cleaned_data.get('iban', ''),
+                    }
+                )
+                
+                if not created:
+                    for field, value in parent_form.cleaned_data.items():
+                        if field != 'dni':
+                            setattr(parent, field, value)  # Otra forma de setear funciones
+                    parent.save()  # Se crea el padre
+                
+                student = form.save()  # Se crea el Student
+                
+                student.parents.add(parent)  # Relacion con el Padre
+                
+                enrollment = enrollment_form.save(commit=False)
+                enrollment.student = student
+                enrollment.save()  # Se crea la Matricula
+                
+                messages.success(
+                    self.request,
+                    f'¡Estudiante {student.full_name} creado exitosamente!'
+                )
+                
+                self.success_url = reverse_lazy('student_detail', kwargs={'pk': student.pk})
+                
+        except Exception as e:
+            messages.error(self.request, f'Error al crear el estudiante: {str(e)}')
+            return self.form_invalid(form)
+        
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+        context['parent_form'] = ParentForm(self.request.POST)
+        context['enrollment_form'] = EnrollmentForm(self.request.POST)
+        return self.render_to_response(context)
+
+class StudentUpdateView(UpdateView):
+    model = Student
+    form_class = StudentForm
+    template_name = 'students/student_update.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('student_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
+        except Enrollment.DoesNotExist:
+            enrollment = None
+        if 'enrollment_form' not in context:
+            context['enrollment_form'] = EnrollmentForm(
+                self.request.POST or None,
+                instance=enrollment
+            )
+        context['parents'] = self.object.parents.all()
+        return context
+    
+    def form_valid(self, form):
+        try:
+            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
+        except Enrollment.DoesNotExist:
+            enrollment = None
+        enrollment_form = EnrollmentForm(self.request.POST, instance=enrollment)
+        if enrollment_form.is_valid():
+            with transaction.atomic():
+                student = form.save()
+                enrollment = enrollment_form.save(commit=False)
+                enrollment.student = student
+                enrollment.save()
+                messages.success(self.request, f'¡Estudiante actualizado exitosamente!')
+        else:
+            return self.form_invalid(form)
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+        try:
+            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
+        except Enrollment.DoesNotExist:
+            enrollment = None
+        context['enrollment_form'] = EnrollmentForm(self.request.POST, instance=enrollment)
+        return self.render_to_response(context)
+
+class StudentDetailView(DetailView):
+    model = Student
+    template_name = 'students/student_detail.html'
+    context_object_name = 'student'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['parents'] = self.object.parents.all()
+        context['enrollments'] = self.object.enrollments.all().order_by('-created_at')
+        return context
+
+class StudentListView(ListView):
+    model = Student
+    template_name = 'students/student_list.html'
+    context_object_name = 'students'
+    paginate_by = 20  # TODO: Test de paginacion!
+    
+    def get_queryset(self):
+        return Student.objects.filter(
+            active=True
+        ).select_related('group').prefetch_related('parents')
+"""
 
 # TESTING CODE
 

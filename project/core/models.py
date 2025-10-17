@@ -7,16 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 
 
-# Manager for active payments only
-class ActivePaymentManager(models.Manager):
-    """Manager that returns only active payments"""
-    def get_queryset(self):
-        return super().get_queryset().filter(active=True)
-
 class ExpenseCategory(models.Model):
-    """
-    Categories for organizing expenses
-    """
     CATEGORY_TYPES = [
         ('operational', 'Operational'),
         ('administrative', 'Administrative'),
@@ -42,9 +33,6 @@ class ExpenseCategory(models.Model):
         return f"{self.name} ({self.get_category_type_display()})"
 
 class Expense(models.Model):
-    """
-    Main expense tracking model
-    """
     EXPENSE_STATUS = [
         ('pending', 'Pending Approval'),
         ('approved', 'Approved'),

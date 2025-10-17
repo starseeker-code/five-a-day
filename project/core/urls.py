@@ -7,6 +7,9 @@ urlpatterns = [
 
 # TESTING CODE
     path("testing/", testing, name="testing"),
+    
+    path('students/', StudentListView.as_view(), name='student_list'),
+
 # TESTING CODE
     
     # Expense & Finance

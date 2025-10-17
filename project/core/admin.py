@@ -8,6 +8,10 @@ from datetime import date, timedelta
 import csv
 from .models import *
 
+admin.site.site_header = "Five a Day eVolution"
+admin.site.site_title = "Five a Day eVolution"
+admin.site.index_title = "Five a Day eVolution - Contruyendo un mejor futuro!\nProyecto de las Manitas: Claudia Penelope y Silvia Yubitza"
+
 admin.site.register(ExpenseCategory)
 admin.site.register(Expense)
 admin.site.register(RecurringExpenseTemplate)
