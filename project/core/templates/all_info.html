@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Base de Datos{% endblock %}
+
+{% block content %}
+
+<div id="panel-container" class="px-4 py-6">
+  <div class="grid gap-6">
+    <div class="p-6 bg-white rounded-lg shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4">Estudiantes</h2>
+      <div class="overflow-auto">
+        <table class="panel-table w-full" cellpadding="5" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Birth Date</th>
+              <th>Age</th>
+              <th>School</th>
+              <th>Allergies</th>
+              <th>GDPR Signed x2</th>
+              <th>Group</th>
+              <th>Enrollment Type</th>
+              <th>Teacher</th>
+              <th>Parent Phone</th>
+              <th>Parent Email</th>
+              <th>Parent IBAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+              <tr>
+                <td>{{ student.id }}</td>
+                <td>{{ student.first_name }}</td>
+                <td>{{ student.last_name }}</td>
+                <td>{{ student.birth_date }}</td>
+                <td>{{ student.age }}</td>
+                <td>{{ student.school }}</td>
+                <td>{{ student.allergies }}</td>
+                <td>{{ student.gdpr_signed }}</td>
+                <td>
+                  {% if student.group %}
+                    {{ student.group.group_name }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  {% for enrollment in student.enrollments.all %}
+                    {{ enrollment.get_schedule_type_display }}<br>
+                  {% empty %}
+                    No enrollments
+                  {% endfor %}
+                </td>
+                <td>
+                  {% if student.group and student.group.teacher %}
+                    {{ student.group.teacher.first_name }} {{ student.group.teacher.last_name }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student.parents.all %}
+                    {% for parent in student.parents.all %}
+                      {{ parent.phone }}<br>
+                    {% empty %}
+                      No parents linked
+                    {% endfor %}
+                  {% else %}
+                    No parents
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student.parents.all %}
+                    {% for parent in student.parents.all %}
+                      {{ parent.email }}<br>
+                    {% empty %}
+                      No parents linked
+                    {% endfor %}
+                  {% else %}
+                    No parents
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student.parents.all %}
+                    {% for parent in student.parents.all %}
+                      {{ parent.iban }}<br>
+                    {% empty %}
+                      No parents linked
+                    {% endfor %}
+                  {% else %}
+                    No parents
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="14">No active students found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="p-6 bg-white rounded-lg shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4">Pagos</h2>
+      <div class="overflow-auto">
+        <table class="panel-table w-full" cellpadding="5" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Student</th>
+              <th>Parent Phone Number</th>
+              <th>Enrollment Type</th>
+              <th>Payment Type</th>
+              <th>Payment Method</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th>Payment Date</th>
+              <th>Concept</th>
+              <th>Reference Number</th>
+              <th>Observations</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+              <tr>
+                <td>{{ payment.id }}</td>
+                <td>
+                  {% if payment.student %}
+                    {{ payment.student.first_name }} {{ payment.student.last_name }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  {% if payment.parent %}
+                    {{ payment.parent.phone }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  {% if payment.enrollment %}
+                    {{ payment.enrollment.enrollment_type.display_name }}<br>
+                    ({{ payment.enrollment.get_schedule_type_display }})
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ payment.get_payment_type_display }}</td>
+                <td>{{ payment.get_payment_method_display }}</td>
+                <td>{{ payment.amount }}</td>
+                <td>{{ payment.get_payment_status_display }}</td>
+                <td>{{ payment.due_date }}</td>
+                <td>{{ payment.payment_date }}</td>
+                <td>{{ payment.concept }}</td>
+                <td>{{ payment.reference_number }}</td>
+                <td>{{ payment.observations }}</td>
+                <td>{{ payment.created_at }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="14">No payments found for the selected period.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -21,19 +21,13 @@ from core.forms import StudentForm, ParentForm, EnrollmentForm, ParentFormSet
 def home(request):
     return render(request, "home.html")
 
-def all_info(request):  # Estudiantes (Padres, Matricula, Grupo) + Pagos
-    return render(request, "test.html", {"students": all_students, "payments": all_payments})
+def all_info(request):
+    return render(request, "all_info.html", {"students": all_students, "payments": all_payments})
 
-# ---> BD | Estudiantes | Pagos || DASHBOARDS (Home + Info) | Aplicaciones | Facturacion | UI! || Gastos | Renta | UI!! || Configuracion | Contacto y ayuda
+# ---> Estudiantes | Pagos || DASHBOARDS (Home + Info) | Aplicaciones | Facturacion | UI! || Gastos | Renta | UI!! || Configuracion | Contacto y ayuda
 # TESTING CODE ("testing/")
-def testing(request):
-    return render(request, "test.html", {"students": all_students, "payments": all_payments})
 
-
-# ---
-
-
-class StudentCreateView(CreateView):
+class StudentsView(CreateView):
     model = Student
     form_class = StudentForm
     template_name = 'student_create.html'
@@ -323,7 +317,7 @@ class StudentListView(ListView):
 
 # TESTING CODE
 
-
+# TODO: Remove
 def students(request):
     """
     Students list view - displays all students and handles create/update operations

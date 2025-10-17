@@ -857,3 +857,285 @@ body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+
+/* ==========================================================
+   Extra styles for tables (database)
+   ========================================================== */
+
+/* General table structure */
+.panel-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  min-width: 900px; /* Allows horizontal scrolling on smaller screens */
+  font-size: 14px;
+}
+
+/* Sticky header for better usability */
+.panel-table thead th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 2;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+  font-weight: 600;
+}
+
+/* Table cell styling */
+.panel-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  vertical-align: middle;
+}
+
+/* Zebra striping for readability */
+.panel-table tbody tr:nth-child(odd) {
+  background: rgba(249, 250, 251, 0.6);
+}
+
+/* Placeholder for empty cells */
+.panel-table td:empty::after {
+  content: "—";
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Ensure text wraps nicely in cells */
+.panel-table td {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Horizontal scroll on smaller screens */
+.overflow-auto {
+  overflow-x: auto;
+}
+
+/* Card visual refinement (safety override if needed) */
+#panel-container .bg-white {
+  background: #ffffff;
+}
+
+/* Headings spacing adjustment */
+#panel-container h2 {
+  margin: 0 0 8px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .panel-table {
+    min-width: 700px;
+  }
+}
+
+/* Hover row highlight */
+.panel-table tbody tr:hover {
+  background: rgba(241, 245, 249, 0.7);
+}
+
+
+/* =======================================================
+   Extended styles for forms (students)
+   ======================================================= */
+
+
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: linear-gradient(180deg, #ffffff, #fbfbfc);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.form-card .page-header {
+  margin-bottom: 16px;
+}
+
+.form-card .page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.form-card .page-header .subtitle {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.form-card .messages .alert {
+  background: linear-gradient(180deg,#ffffff,#fbfbfc);
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+  color: #0f172a;
+  margin-bottom: 14px;
+}
+
+/* Form grid */
+.form-card .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card-col {
+  background: linear-gradient(180deg, #ffffff, #fbfbfc);
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid rgba(15,23,42,0.06);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.card-col:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(15,23,42,0.08);
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: #0f172a;
+}
+
+/* Form groups */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group.has-error .form-label {
+  color: #ef4444; /* red for errors */
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+/* Field wrapper for inputs/selects/textareas */
+.field-wrapper input,
+.field-wrapper select,
+.field-wrapper textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #0f172a;
+  background: linear-gradient(180deg,#fff,#fcfdff);
+  border: 1px solid rgba(15,23,42,0.06);
+  border-radius: 10px;
+  outline: none;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  box-shadow: 0 2px 6px rgba(15,23,42,0.03) inset;
+  font-family: inherit;
+}
+
+.field-wrapper textarea {
+  min-height: 100px;
+  resize: vertical;
+  padding-top: 10px;
+}
+
+/* Focus states */
+.field-wrapper input:focus,
+.field-wrapper select:focus,
+.field-wrapper textarea:focus {
+  border-color: #f9467a;
+  box-shadow: 0 8px 30px rgba(249,70,122,0.07);
+  transform: translateY(-1px);
+}
+
+/* Help text & errors */
+.form-help {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.field-error {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+/* Horizontal rules */
+.section-sep,
+.muted-sep {
+  border: none;
+  height: 1px;
+  background: rgba(15,23,42,0.06);
+  margin: 16px 0;
+}
+
+/* Form actions buttons */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #f9467a 0%, #e42a63 100%);
+  color: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 10px 26px rgba(228,42,99,0.12);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(228,42,99,0.14);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid rgba(15,23,42,0.06);
+  box-shadow: 0 6px 18px rgba(15,23,42,0.03);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+}
+
+/* Note paragraph */
+.note {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 920px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-col {
+    padding: 16px;
+    border-radius: 12px;
+  }
+}

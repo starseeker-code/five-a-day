@@ -6,9 +6,8 @@ urlpatterns = [
     path("database/", all_info, name="all_info"),
 
 # TESTING CODE
-    path("testing/", testing, name="testing"),
-    
-    path('students/', StudentListView.as_view(), name='student_list'),
+   
+    path('students-test/', StudentsView.as_view(), name='student_list'),
 
 # TESTING CODE
     
