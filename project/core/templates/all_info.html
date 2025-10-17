@@ -6,26 +6,26 @@
 
 <div id="panel-container" class="px-4 py-6">
   <div class="grid gap-6">
-    <div class="p-6 bg-white rounded-lg shadow-lg">
+    <div class="database p-6 bg-white rounded-lg shadow-lg">
       <h2 class="text-2xl font-semibold mb-4">Estudiantes</h2>
       <div class="overflow-auto">
         <table class="panel-table w-full" cellpadding="5" cellspacing="0">
           <thead>
             <tr>
-              <th>Student ID</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Birth Date</th>
-              <th>Age</th>
-              <th>School</th>
-              <th>Allergies</th>
-              <th>GDPR Signed x2</th>
-              <th>Group</th>
-              <th>Enrollment Type</th>
-              <th>Teacher</th>
-              <th>Parent Phone</th>
-              <th>Parent Email</th>
-              <th>Parent IBAN</th>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Fecha de nacimiento</th>
+              <th>Edad</th>
+              <th>Colegio</th>
+              <th>Alergias</th>
+              <th>GDPR</th>
+              <th>Grupo</th>
+              <th>Matricula</th>
+              <th>Profesora</th>
+              <th>Movil</th>
+              <th>Email</th>
+              <th>IBAN</th>
             </tr>
           </thead>
           <tbody>
@@ -50,7 +50,7 @@
                   {% for enrollment in student.enrollments.all %}
                     {{ enrollment.get_schedule_type_display }}<br>
                   {% empty %}
-                    No enrollments
+                    No hay matriculas!
                   {% endfor %}
                 </td>
                 <td>
@@ -65,10 +65,10 @@
                     {% for parent in student.parents.all %}
                       {{ parent.phone }}<br>
                     {% empty %}
-                      No parents linked
+                      Ningun padre relacionado!
                     {% endfor %}
                   {% else %}
-                    No parents
+                    No hay padres!
                   {% endif %}
                 </td>
                 <td>
@@ -76,10 +76,10 @@
                     {% for parent in student.parents.all %}
                       {{ parent.email }}<br>
                     {% empty %}
-                      No parents linked
+                      No hay padres relacionados!
                     {% endfor %}
                   {% else %}
-                    No parents
+                    No hay padres!
                   {% endif %}
                 </td>
                 <td>
@@ -87,16 +87,16 @@
                     {% for parent in student.parents.all %}
                       {{ parent.iban }}<br>
                     {% empty %}
-                      No parents linked
+                      No hay padres relacionados!
                     {% endfor %}
                   {% else %}
-                    No parents
+                    No hay padres!
                   {% endif %}
                 </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="14">No active students found.</td>
+                <td colspan="14">No hay estudiantes todavia! D:</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -104,26 +104,26 @@
       </div>
     </div>
 
-    <div class="p-6 bg-white rounded-lg shadow-lg">
+    <div class="database p-6 bg-white rounded-lg shadow-lg">
       <h2 class="text-2xl font-semibold mb-4">Pagos</h2>
       <div class="overflow-auto">
         <table class="panel-table w-full" cellpadding="5" cellspacing="0">
           <thead>
             <tr>
-              <th>Payment ID</th>
-              <th>Student</th>
-              <th>Parent Phone Number</th>
-              <th>Enrollment Type</th>
-              <th>Payment Type</th>
-              <th>Payment Method</th>
-              <th>Amount</th>
+              <th>ID</th>
+              <th>Estudiante</th>
+              <th>Telefono</th>
+              <th>Matricula</th>
+              <th>Tipo de pago</th>
+              <th>Metodo de pago</th>
+              <th>Cantidad</th>
               <th>Status</th>
-              <th>Due Date</th>
-              <th>Payment Date</th>
-              <th>Concept</th>
-              <th>Reference Number</th>
-              <th>Observations</th>
-              <th>Created At</th>
+              <th>Fecha vencimiento</th>
+              <th>Fecha pago</th>
+              <th>Concepto</th>
+              <th>Numero referencia</th>
+              <th>Notas</th>
+              <th>Creado</th>
             </tr>
           </thead>
           <tbody>
@@ -165,7 +165,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="14">No payments found for the selected period.</td>
+                <td colspan="14">No hay pagos todavia!</td>
               </tr>
             {% endfor %}
           </tbody>

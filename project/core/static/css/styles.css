@@ -1139,3 +1139,9 @@ body {
     border-radius: 12px;
   }
 }
+
+.database {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap
+}
