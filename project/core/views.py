@@ -725,7 +725,7 @@ def deactivate_payment(request, payment_id):
         }, status=400)
 
 
-# API Endpoints for AJAX functionality
+# API Endpoints for AJAX functionality (Student)
 
 def search_students(request):
     """
@@ -823,6 +823,263 @@ def validate_student_parent(request):
         return JsonResponse({'valid': False, 'message': 'Invalid JSON data'}, status=400)
     except Exception as e:
         return JsonResponse({'valid': False, 'message': str(e)}, status=400)
+
+
+# API Endpoints for AJAX functionality (Payment)
+
+def search_payments(request):
+    """
+    AJAX endpoint to search payments
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+    
+    payments = Payment.objects.filter(
+        Q(student__first_name__icontains=query) |
+        Q(student__last_name__icontains=query) |
+        Q(parent__first_name__icontains=query) |
+        Q(parent__last_name__icontains=query) |
+        Q(concept__icontains=query) |
+        Q(reference_number__icontains=query)
+    ).select_related('student', 'parent', 'enrollment').order_by('-created_at')[:10]
+    
+    results = []
+    for payment in payments:
+        results.append({
+            'id': payment.id,
+            'student_name': payment.student.full_name,
+            'parent_name': payment.parent.full_name,
+            'amount': str(payment.amount),
+            'currency': payment.currency,
+            'payment_type': payment.get_payment_type_display(),
+            'payment_status': payment.get_payment_status_display(),
+            'due_date': payment.due_date.strftime('%Y-%m-%d') if payment.due_date else '',
+            'payment_date': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
+            'concept': payment.concept,
+            'reference_number': payment.reference_number
+        })
+    
+    return JsonResponse({'results': results})
+
+@require_http_methods(["POST"])
+def create_payment(request):
+    """
+    AJAX endpoint to create new payment
+    """
+    try:
+        # Parse form data (works with both FormData and JSON)
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Get required data
+        student_id = data.get('student_id')
+        parent_id = data.get('parent_id')
+        
+        print(f"=== CREATE PAYMENT DEBUG ===")
+        print(f"Student ID: {student_id}")
+        print(f"Parent ID: {parent_id}")
+        print(f"Data: {data}")
+        
+        # Validate required fields
+        if not student_id or not parent_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Student ID and Parent ID are required'
+            }, status=400)
+        
+        # Validate student and parent exist
+        student = get_object_or_404(Student, id=student_id)
+        parent = get_object_or_404(Parent, id=parent_id)
+        
+        # Validate relationship
+        if not student.parents.filter(id=parent_id).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'El padre/tutor seleccionado no está asociado con este estudiante.'
+            }, status=400)
+        
+        # Get enrollment if exists
+        enrollment = student.enrollments.filter(status='active').first()
+        
+        # Get payment_date, handle empty string
+        payment_date = data.get('payment_date')
+        if payment_date == '':
+            payment_date = None
+        
+        # Create payment
+        print("Creating payment...")
+        payment = Payment.objects.create(
+            student=student,
+            parent=parent,
+            enrollment=enrollment,
+            payment_type=data.get('payment_type'),
+            payment_method=data.get('payment_method'),
+            amount=Decimal(data.get('amount')),
+            currency=data.get('currency', 'EUR'),
+            payment_status=data.get('payment_status', 'pending'),
+            due_date=data.get('due_date'),
+            payment_date=payment_date,
+            concept=data.get('concept'),
+            reference_number=data.get('reference_number', ''),
+            observations=data.get('observations', '')
+        )
+        
+        print(f"Payment created successfully: {payment.id}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Pago creado exitosamente para {student.full_name}.',
+            'payment': {
+                'id': payment.id,
+                'student_name': payment.student.full_name,
+                'parent_name': payment.parent.full_name,
+                'amount': str(payment.amount),
+                'currency': payment.currency,
+                'payment_status': payment.get_payment_status_display(),
+                'due_date': payment.due_date.strftime('%Y-%m-%d') if payment.due_date else '',
+                'concept': payment.concept
+            }
+        })
+        
+    except Decimal.InvalidOperation:
+        return JsonResponse({
+            'success': False,
+            'error': 'Monto inválido. Por favor ingrese un número válido.'
+        }, status=400)
+    except Exception as e:
+        print(f"ERROR creating payment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al crear el pago: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["POST"])
+def update_payment(request, payment_id):
+    """
+    AJAX endpoint to update existing payment
+    """
+    try:
+        payment = get_object_or_404(Payment, id=payment_id)
+        
+        # Parse data
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Update fields
+        if 'payment_type' in data:
+            payment.payment_type = data['payment_type']
+        if 'payment_method' in data:
+            payment.payment_method = data['payment_method']
+        if 'amount' in data:
+            payment.amount = Decimal(data['amount'])
+        if 'currency' in data:
+            payment.currency = data['currency']
+        if 'payment_status' in data:
+            payment.payment_status = data['payment_status']
+        if 'due_date' in data:
+            payment.due_date = data['due_date']
+        if 'payment_date' in data:
+            payment.payment_date = data['payment_date'] if data['payment_date'] else None
+        if 'concept' in data:
+            payment.concept = data['concept']
+        if 'reference_number' in data:
+            payment.reference_number = data['reference_number']
+        if 'observations' in data:
+            payment.observations = data['observations']
+        
+        payment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Pago actualizado exitosamente.',
+            'payment': {
+                'id': payment.id,
+                'payment_status': payment.get_payment_status_display(),
+                'amount': str(payment.amount)
+            }
+        })
+        
+    except Exception as e:
+        print(f"ERROR updating payment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al actualizar el pago: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["POST"])
+def delete_payment(request, payment_id):
+    """
+    AJAX endpoint to delete payment
+    """
+    try:
+        payment = get_object_or_404(Payment, id=payment_id)
+        student_name = payment.student.full_name
+        
+        payment.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Pago de {student_name} eliminado exitosamente.'
+        })
+        
+    except Exception as e:
+        print(f"ERROR deleting payment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al eliminar el pago: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["GET"])
+def get_payment_details(request, payment_id):
+    """
+    AJAX endpoint to get payment details
+    """
+    try:
+        payment = get_object_or_404(Payment, id=payment_id)
+        
+        return JsonResponse({
+            'success': True,
+            'payment': {
+                'id': payment.id,
+                'student_id': payment.student.id,
+                'student_name': payment.student.full_name,
+                'parent_id': payment.parent.id,
+                'parent_name': payment.parent.full_name,
+                'enrollment_id': payment.enrollment.id if payment.enrollment else None,
+                'payment_type': payment.payment_type,
+                'payment_method': payment.payment_method,
+                'amount': str(payment.amount),
+                'currency': payment.currency,
+                'payment_status': payment.payment_status,
+                'due_date': payment.due_date.strftime('%Y-%m-%d') if payment.due_date else '',
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
+                'concept': payment.concept,
+                'reference_number': payment.reference_number,
+                'observations': payment.observations,
+                'created_at': payment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener los detalles del pago: {str(e)}'
+        }, status=500)
 
 
 # Additional utility views

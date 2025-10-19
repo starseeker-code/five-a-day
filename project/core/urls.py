@@ -44,7 +44,7 @@ urlpatterns = [
     path('payments/<int:payment_id>/detail/', payment_detail_view, name='payment_detail_view'),
     path('payments/<int:payment_id>/deactivate/', deactivate_payment, name='deactivate_payment'),
     
-    # Payments.payment.rest
+    # Students.rest (AJAX)
     path('api/search/students/', search_students, name='search_students'),
     path('api/search/parents/', search_parents, name='search_parents'),
     path('api/validate/student-parent/', validate_student_parent, name='validate_student_parent'),
