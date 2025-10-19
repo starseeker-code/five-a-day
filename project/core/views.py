@@ -531,11 +531,7 @@ def payments_list(request):
     Shows active payments only (not deactivated ones)
     """
     # Get all active payments ordered by most recent first
-    payments_queryset = Payment.objects.filter(
-        active=True  # Assuming you add this field to the model
-    ).select_related(
-        'student', 'parent', 'enrollment'
-    ).order_by('-created_at', '-due_date')
+    payments_queryset = Payment.objects.select_related('student', 'parent', 'enrollment').order_by('-created_at', '-due_date')
     
     # Add search functionality
     search_query = request.GET.get('search', '')
@@ -582,9 +578,10 @@ def create_payment(request):
                 return redirect('payments')
             
             # Get enrollment if exists
-            enrollment = student.enrollments.filter(status='active').first()
+            enrollment = student.enrollments.first()
             
             # Create payment
+            print("Se crea pago")
             payment = Payment.objects.create(
                 student=student,
                 parent=parent,
@@ -598,11 +595,11 @@ def create_payment(request):
                 payment_date=request.POST.get('payment_date') or None,
                 concept=request.POST.get('concept'),
                 reference_number=request.POST.get('reference_number', ''),
-                observations=request.POST.get('observations', ''),
-                active=True  # New field to handle soft deletes
+                observations=request.POST.get('observations', '')
             )
-            
+            print("Terminado de crear pago")
             messages.success(request, f'Pago creado exitosamente para {student.full_name}.')
+            print("Se redirecciona!")
             return redirect('payments')
             
         except Exception as e:
@@ -615,7 +612,7 @@ def payment_detail(request, payment_id):
     """
     Get payment details as JSON for editing
     """
-    payment = get_object_or_404(Payment, id=payment_id, active=True)
+    payment = get_object_or_404(Payment, id=payment_id)
     
     data = {
         'id': payment.id,
@@ -654,7 +651,7 @@ def update_payment(request, payment_id):
     """
     Update existing payment
     """
-    payment = get_object_or_404(Payment, id=payment_id, active=True)
+    payment = get_object_or_404(Payment, id=payment_id)
     
     try:
         # Get form data
@@ -697,7 +694,7 @@ def payment_detail_view(request, payment_id):
     """
     Detailed view of a payment (read-only)
     """
-    payment = get_object_or_404(Payment, id=payment_id, active=True)
+    payment = get_object_or_404(Payment, id=payment_id)
     
     context = {
         'payment': payment,
@@ -705,6 +702,7 @@ def payment_detail_view(request, payment_id):
     
     return render(request, 'payments/payment_detail.html', context)
 
+# Soft delete!
 @require_http_methods(["POST"])
 def deactivate_payment(request, payment_id):
     """

@@ -44,21 +44,21 @@
                         </div>
                         <!--span class="hidden group-hover:flex bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-md">25</span-->
                     </a>
-                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">person</span>
-                        <span class="hidden group-hover:block">Profesores</span>
+                    <a href=""{% url 'payments' %}"" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">payment_arrow_down</span>
+                        <span class="hidden group-hover:block">Pagos</span>
                     </a>
-                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">menu_book</span>
-                        <span class="hidden group-hover:block">Cursos</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto group-hover:mx-0">calendar_month</span>
                         <span class="hidden group-hover:block">Horario</span>
                     </a>
-                    <a href="{% url 'payments' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">payments</span>
-                        <span class="hidden group-hover:block">Pagos</span>
+                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">manufacturing</span>
+                        <span class="hidden group-hover:block">Aplicaciones</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">currency_exchange</span>
+                        <span class="hidden group-hover:block">Gestion</span>
                     </a>
                     <!--url database en class-->
                     <a href="{% url 'all_info' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md {% if request.resolver_match.url_name == 'database' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
