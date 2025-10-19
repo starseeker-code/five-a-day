@@ -37,12 +37,12 @@ urlpatterns = [
     # Payments
     path('payments/', payments_list, name='payments'),
     
-    # Payments.payment
+    # Payments.payment (Usa REST AJAX)
     path('payments/create/', create_payment, name='create_payment'),
-    path('payments/<int:payment_id>/', payment_detail, name='payment_detail'),
     path('payments/<int:payment_id>/update/', update_payment, name='update_payment'),
-    path('payments/<int:payment_id>/detail/', payment_detail_view, name='payment_detail_view'),
-    path('payments/<int:payment_id>/deactivate/', deactivate_payment, name='deactivate_payment'),
+    path('payments/<int:payment_id>/delete/', delete_payment, name='delete_payment'),
+    path('payments/<int:payment_id>/details/', get_payment_details, name='get_payment_details'),
+    path('payments/<int:payment_id>/detail/', payment_detail, name='payment_detail'),  # Vista de solo lectura
     
     # Students.rest (AJAX)
     path('api/search/students/', search_students, name='search_students'),

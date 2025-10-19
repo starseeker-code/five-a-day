@@ -1,5 +1,7 @@
 // payments.js
 
+console.log("JavaScript cargado correctamente");
+
 // Obtener el CSRF token
 function getCookie(name) {
     let cookieValue = null;
