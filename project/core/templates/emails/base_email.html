@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Five a Day{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/email.css' %}">
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-content">
+            {% block content %}
+
+
+
+            {% endblock %}
+        </div>
+        <div class="email-footer">
+            {% block footer %}
+            &copy; {{ year|default:2025 }} Five a Day. Todos los derechos reservados.
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>
