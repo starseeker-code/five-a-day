@@ -1,14 +1,19 @@
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-y%)ravzlnz4o0*5my)t(c7m+op*12nswl%&_jp9h)nyj5b+jfv'
+SECRET_KEY = os.getenv("DJANGO_SECRET")
+EMAIL_SECRET = os.getenv("EMAIL_SECRET")
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG_MODE", False)
 
 ALLOWED_HOSTS = []
 
-# Installed packages: httpx celery gspread pytest pandas markdown 
+# Installed packages: httpx celery gspread pytest pandas markdown dotenv
 INSTALLED_APPS = [  # https://www.djangoproject.com/
     'django.contrib.admin',
     'django.contrib.auth',
