@@ -268,7 +268,7 @@
         modalTitle.textContent = 'Nuevo Estudiante';
         submitBtnText.textContent = 'Crear Estudiante';
         studentIdInput.value = '';
-        form.action = '{% url "students" %}';
+        form.action = '{% url "students_list" %}';
         modal.classList.remove('hidden');
     });
 

@@ -377,32 +377,32 @@ def handle_student_form(request):
         # Validation
         if not first_name or not last_name:
             messages.error(request, 'El nombre y apellidos son obligatorios.')
-            return redirect('students')
+            return redirect('students_list')
         
         if not birth_date:
             messages.error(request, 'La fecha de nacimiento es obligatoria.')
-            return redirect('students')
+            return redirect('students_list')
             
         if not group_id:
             messages.error(request, 'Debe seleccionar un grupo.')
-            return redirect('students')
+            return redirect('students_list')
             
         if not parent_ids:
             messages.error(request, 'Debe seleccionar al menos un padre/tutor.')
-            return redirect('students')
+            return redirect('students_list')
         
         # Get the group
         try:
             group = Group.objects.get(id=group_id, active=True)
         except Group.DoesNotExist:
             messages.error(request, 'El grupo seleccionado no existe.')
-            return redirect('students')
+            return redirect('students_list')
         
         # Get parents
         parents = Parent.objects.filter(id__in=parent_ids)
         if len(parents) != len(parent_ids):
             messages.error(request, 'Algunos padres seleccionados no existen.')
-            return redirect('students')
+            return redirect('students_list')
         
         # Use transaction to ensure data consistency
         with transaction.atomic():
@@ -435,7 +435,7 @@ def handle_student_form(request):
                     
                 except Student.DoesNotExist:
                     messages.error(request, 'El estudiante a actualizar no existe.')
-                    return redirect('students')
+                    return redirect('students_list')
                     
             else:  # Create new student
                 student = Student(
@@ -458,7 +458,7 @@ def handle_student_form(request):
                 
                 messages.success(request, f'Estudiante {student.full_name} creado correctamente.')
         
-        return redirect('students')
+        return redirect('students_list')
         
     except ValidationError as e:
         if hasattr(e, 'message_dict'):
@@ -467,11 +467,11 @@ def handle_student_form(request):
                     messages.error(request, f'{field}: {error}')
         else:
             messages.error(request, f'Error de validación: {e.message}')
-        return redirect('students')
+        return redirect('students_list')
         
     except Exception as e:
         messages.error(request, f'Error al procesar el formulario: {str(e)}')
-        return redirect('students')
+        return redirect('students_list')
 
 def student_detail(request, student_id):
     """
@@ -592,7 +592,7 @@ def create_payment(request):
             # Validate relationship
             if not student.parents.filter(id=parent_id).exists():
                 messages.error(request, 'El padre/tutor seleccionado no está asociado con este estudiante.')
-                return redirect('payments')
+                return redirect('payments_list')
             
             # Get enrollment if exists
             enrollment = student.enrollments.first()
@@ -617,13 +617,13 @@ def create_payment(request):
             print("Terminado de crear pago")
             messages.success(request, f'Pago creado exitosamente para {student.full_name}.')
             print("Se redirecciona!")
-            return redirect('payments')
+            return redirect('payments_list')
             
         except Exception as e:
             messages.error(request, f'Error al crear el pago: {str(e)}')
-            return redirect('payments')
+            return redirect('payments_list')
     
-    return redirect('payments')
+    return redirect('payments_list')
 
 def payment_detail(request, payment_id):
     """
@@ -682,7 +682,7 @@ def update_payment(request, payment_id):
         # Validate relationship
         if not student.parents.filter(id=parent_id).exists():
             messages.error(request, 'El padre/tutor seleccionado no está asociado con este estudiante.')
-            return redirect('payments')
+            return redirect('payments_list')
         
         # Update payment fields
         payment.student = student
@@ -705,7 +705,7 @@ def update_payment(request, payment_id):
     except Exception as e:
         messages.error(request, f'Error al actualizar el pago: {str(e)}')
     
-    return redirect('payments')
+    return redirect('payments_list')
 
 def payment_detail_view(request, payment_id):
     """

@@ -368,7 +368,7 @@
         modalTitle.textContent = 'Nuevo Pago';
         submitBtnText.textContent = 'Crear Pago';
         paymentIdInput.value = '';
-        form.action = '{% url "payments" %}';
+        form.action = '{% url "payments_list" %}';
         modal.classList.remove('hidden');
     });
 
