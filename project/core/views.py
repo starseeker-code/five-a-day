@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 #from django.views import View
 from django.views.generic import FormView, DetailView, ListView, UpdateView, CreateView
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from .models import *
 from django.contrib import messages
 from django.db import transaction
@@ -92,178 +92,196 @@ class StudentsView(CreateView):
         return self.render_to_response(context)
 
 
-# NO ES NECESARIO - SOLO CREATE (MISMA VISTA PARA TODO)
+# ============================================================================
+# PARENT AND STUDENT MANAGEMENT - Parent-First Flow
+# ============================================================================
 
-"""
-class StudentUpdateView(UpdateView):
-    model = Student
-    form_class = StudentForm
-    template_name = 'student_update.html'
-
+class ParentCreateView(CreateView):
+    """Vista para crear un nuevo padre/tutor"""
+    model = Parent
+    form_class = ParentForm
+    template_name = 'parent_create.html'
+    
     def get_success_url(self):
-        return reverse_lazy('student_detail', kwargs={'pk': self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Buscar la matrícula activa (si existe)
-        try:
-            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
-        except Enrollment.DoesNotExist:
-            enrollment = None
-
-        # Si no viene el enrollment_form en el contexto, lo añadimos (podemos pasar POST para re-render con errores)
-        if 'enrollment_form' not in context:
-            context['enrollment_form'] = EnrollmentForm(self.request.POST or None, instance=enrollment)
-
-        # Lista de padres asociados
-        context['parents'] = self.object.parents.all()
-        return context
-
+        # Después de crear el padre, redirigir a crear estudiante con el parent_id
+        return reverse_lazy('student_create') + f'?parent_id={self.object.id}'
+    
     def form_valid(self, form):
-        # Recuperamos la matrícula activa (si existe)
         try:
-            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
-        except Enrollment.DoesNotExist:
-            enrollment = None
-
-        enrollment_form = EnrollmentForm(self.request.POST or None, instance=enrollment)
-
-        if not enrollment_form.is_valid():
-            return self.form_invalid(form)
-
-        try:
-            with transaction.atomic():
-                student = form.save()
-                # Guardamos/creamos la matrícula
-                enrollment = enrollment_form.save(commit=False)
-                enrollment.student = student
-                enrollment.save()
-
-                messages.success(self.request, '¡Estudiante actualizado exitosamente!')
+            # Verificar si ya existe un padre con ese DNI
+            dni = form.cleaned_data.get('dni')
+            existing_parent = Parent.objects.filter(dni=dni).first()
+            
+            if existing_parent:
+                messages.info(
+                    self.request,
+                    f'El padre/tutor {existing_parent.full_name} ya existe. '
+                    f'Serás redirigido para crear un estudiante.'
+                )
+                self.object = existing_parent
+                return HttpResponseRedirect(self.get_success_url())
+            
+            # Si no existe, crear el nuevo padre
+            self.object = form.save()
+            messages.success(
+                self.request,
+                f'Padre/tutor {self.object.full_name} creado exitosamente. '
+                f'Ahora crea un estudiante para este padre.'
+            )
+            return HttpResponseRedirect(self.get_success_url())
+            
         except Exception as e:
-            messages.error(self.request, f'Error al actualizar: {str(e)}')
+            messages.error(self.request, f'Error al crear el padre: {str(e)}')
             return self.form_invalid(form)
 
-        return super().form_valid(form)
 
-    def form_invalid(self, form):
-        # Aseguramos que el enrollment_form (con errores) esté en el contexto para re-render
-        context = self.get_context_data(form=form)
-        try:
-            enrollment = self.object.enrollments.filter(status='active').latest('created_at')
-        except Enrollment.DoesNotExist:
-            enrollment = None
-        context['enrollment_form'] = EnrollmentForm(self.request.POST or None, instance=enrollment)
-        return self.render_to_response(context)
-
-class StudentDetailView(DetailView):
+class StudentCreateView(CreateView):
+    """
+    Vista para crear un nuevo estudiante.
+    Puede recibir un parent_id como parámetro GET para pre-vincular al padre.
+    """
     model = Student
-    template_name = 'student_detail.html'
-    context_object_name = 'student'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Padres asociados y matrículas ordenadas
-        context['parents'] = self.object.parents.all()
-        context['enrollments'] = self.object.enrollments.all().order_by('-created_at')
-        return context
-
-class StudentListView(ListView):
-    model = Student
-    template_name = 'student_list.html'
-    context_object_name = 'students'
-    paginate_by = 20
-
-    def get_queryset(self):
-        # Select/prefetch para evitar N+1
-        return Student.objects.filter(active=True).select_related('group').prefetch_related('parents')
-
-class StudentCreateView(FormView):
-    template_name = 'student_create.html'
     form_class = StudentForm
-    success_url = reverse_lazy('student_list')
+    template_name = 'student_create.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if 'parent_form' not in context:
-            context['parent_form'] = ParentForm(self.request.POST or None)
+        
+        # Obtener el parent_id de los parámetros GET si existe
+        parent_id = self.request.GET.get('parent_id')
+        
+        if parent_id:
+            try:
+                parent = Parent.objects.get(id=parent_id)
+                context['parent'] = parent
+                context['parent_id'] = parent_id
+            except Parent.DoesNotExist:
+                messages.error(self.request, 'El padre especificado no existe')
+        
+        # Agregar el formulario de matrícula
         if 'enrollment_form' not in context:
             context['enrollment_form'] = EnrollmentForm(self.request.POST or None)
+        
+        # Agregar grupos disponibles
+        context['groups'] = Group.objects.filter(active=True)
+        
         return context
     
     def form_valid(self, form):
-        parent_form = ParentForm(self.request.POST)
         enrollment_form = EnrollmentForm(self.request.POST)
-        if not (parent_form.is_valid() and enrollment_form.is_valid()):
+        
+        if not enrollment_form.is_valid():
             return self.form_invalid(form)
         
         try:
-            with transaction.atomic():  # 1 - Encontrar o crear el padre
-                parent_dni = parent_form.cleaned_data['dni']
-                parent, created = Parent.objects.get_or_create(
-                    dni=parent_dni,
-                    defaults={
-                        'first_name': parent_form.cleaned_data['first_name'],
-                        'last_name': parent_form.cleaned_data['last_name'],
-                        'phone': parent_form.cleaned_data['phone'],
-                        'email': parent_form.cleaned_data['email'],
-                        'iban': parent_form.cleaned_data.get('iban', ''),
-                    }
-                )
+            with transaction.atomic():
+                # Crear el estudiante
+                student = form.save()
                 
-                if not created:
-                    for field, value in parent_form.cleaned_data.items():
-                        if field != 'dni':
-                            setattr(parent, field, value)  # Otra forma de setear funciones
-                    parent.save()  # Se crea el padre
+                # Obtener el parent_id del POST o GET
+                parent_id = self.request.POST.get('parent_id') or self.request.GET.get('parent_id')
                 
-                student = form.save()  # Se crea el Student
+                if not parent_id:
+                    messages.error(self.request, 'Debe especificar un padre para el estudiante')
+                    student.delete()
+                    return self.form_invalid(form)
                 
-                student.parents.add(parent)  # Relacion con el Padre
+                # Vincular al padre
+                try:
+                    parent = Parent.objects.get(id=parent_id)
+                    student.parents.add(parent)
+                except Parent.DoesNotExist:
+                    messages.error(self.request, 'El padre especificado no existe')
+                    student.delete()
+                    return self.form_invalid(form)
                 
+                # Crear la matrícula
                 enrollment = enrollment_form.save(commit=False)
                 enrollment.student = student
-                enrollment.save()  # Se crea la Matricula
+                enrollment.save()
                 
                 messages.success(
                     self.request,
                     f'¡Estudiante {student.full_name} creado exitosamente!'
                 )
                 
-                self.success_url = reverse_lazy('student_detail', kwargs={'pk': student.pk})
+                # Verificar si el usuario quiere crear otro hermano
+                if 'create_sibling' in self.request.POST:
+                    # Redirigir a crear otro estudiante con el mismo padre
+                    return HttpResponseRedirect(
+                        reverse_lazy('student_create') + f'?parent_id={parent_id}'
+                    )
+                else:
+                    # Redirigir a la lista de estudiantes
+                    return HttpResponseRedirect(reverse_lazy('students_list'))
                 
         except Exception as e:
             messages.error(self.request, f'Error al crear el estudiante: {str(e)}')
             return self.form_invalid(form)
-        
-        return super().form_valid(form)
     
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
-        context['parent_form'] = ParentForm(self.request.POST)
         context['enrollment_form'] = EnrollmentForm(self.request.POST)
         return self.render_to_response(context)
 
-class StudentUpdateView(UpdateView):
+
+class StudentListView(ListView):
+    """Vista para listar todos los estudiantes"""
     model = Student
-    form_class = StudentForm
-    template_name = 'students/student_update.html'
+    template_name = 'students.html'
+    context_object_name = 'students'
+    paginate_by = 20
     
-    def get_success_url(self):
-        return reverse_lazy('student_detail', kwargs={'pk': self.object.pk})
+    def get_queryset(self):
+        queryset = Student.objects.filter(active=True).select_related('group').prefetch_related('parents')
+        
+        # Búsqueda opcional
+        search_query = self.request.GET.get('search', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+        
+        return queryset.order_by('last_name', 'first_name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        context['groups'] = Group.objects.filter(active=True)
+        context['parents'] = Parent.objects.all()
+        return context
+
+
+class StudentUpdateView(UpdateView):
+    """Vista para actualizar un estudiante existente"""
+    model = Student
+    form_class = StudentForm
+    template_name = 'student_update.html'
+    pk_url_kwarg = 'student_id'
+    
+    def get_success_url(self):
+        return reverse_lazy('students_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Obtener la matrícula activa
         try:
             enrollment = self.object.enrollments.filter(status='active').latest('created_at')
         except Enrollment.DoesNotExist:
             enrollment = None
+        
         if 'enrollment_form' not in context:
             context['enrollment_form'] = EnrollmentForm(
                 self.request.POST or None,
                 instance=enrollment
             )
+        
         context['parents'] = self.object.parents.all()
+        context['groups'] = Group.objects.filter(active=True)
+        
         return context
     
     def form_valid(self, form):
@@ -271,17 +289,27 @@ class StudentUpdateView(UpdateView):
             enrollment = self.object.enrollments.filter(status='active').latest('created_at')
         except Enrollment.DoesNotExist:
             enrollment = None
+        
         enrollment_form = EnrollmentForm(self.request.POST, instance=enrollment)
-        if enrollment_form.is_valid():
+        
+        if not enrollment_form.is_valid():
+            return self.form_invalid(form)
+        
+        try:
             with transaction.atomic():
                 student = form.save()
+                
                 enrollment = enrollment_form.save(commit=False)
                 enrollment.student = student
                 enrollment.save()
-                messages.success(self.request, f'¡Estudiante actualizado exitosamente!')
-        else:
+                
+                messages.success(self.request, f'Estudiante {student.full_name} actualizado exitosamente')
+                
+        except Exception as e:
+            messages.error(self.request, f'Error al actualizar el estudiante: {str(e)}')
             return self.form_invalid(form)
-        return super().form_valid(form)
+        
+        return HttpResponseRedirect(self.get_success_url())
     
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
@@ -292,38 +320,27 @@ class StudentUpdateView(UpdateView):
         context['enrollment_form'] = EnrollmentForm(self.request.POST, instance=enrollment)
         return self.render_to_response(context)
 
+
 class StudentDetailView(DetailView):
+    """Vista para ver detalles de un estudiante"""
     model = Student
-    template_name = 'students/student_detail.html'
+    template_name = 'student_detail.html'
     context_object_name = 'student'
+    pk_url_kwarg = 'student_id'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['parents'] = self.object.parents.all()
         context['enrollments'] = self.object.enrollments.all().order_by('-created_at')
+        context['payments'] = Payment.objects.filter(student=self.object).order_by('-payment_date')
         return context
 
-class StudentListView(ListView):
-    model = Student
-    template_name = 'students/student_list.html'
-    context_object_name = 'students'
-    paginate_by = 20  # TODO: Test de paginacion!
-    
-    def get_queryset(self):
-        return Student.objects.filter(
-            active=True
-        ).select_related('group').prefetch_related('parents')
-"""
 
-# TESTING CODE
+# ============================================================================
+# PAYMENT SEARCH AND HELPER APIs (keeping for compatibility)
+# ============================================================================
 
-# TODO: Remove
-def students(request):
-    """
-    Students list view - displays all students and handles create/update operations
-    """
-    if request.method == 'POST':
-        return handle_student_form(request)
+def search_students(request):
     
     # Get all students with related data
     students = Student.objects.select_related('group', 'group__teacher').prefetch_related('parents').filter(active=True)

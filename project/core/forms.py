@@ -6,6 +6,13 @@ from django.forms import inlineformset_factory
 from decimal import Decimal
 from .models import Student, Parent, Enrollment, EnrollmentType, Group
 
+# Clases de Tailwind para inputs consistentes
+TAILWIND_INPUT_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+TAILWIND_SELECT_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+TAILWIND_TEXTAREA_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+TAILWIND_CHECKBOX_CLASSES = 'form-checkbox h-5 w-5 text-primary-600'
+
+
 class StudentForm(ModelForm):
     class Meta:
         model = Student

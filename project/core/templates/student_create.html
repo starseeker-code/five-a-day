@@ -1,10 +1,228 @@
 {% extends 'base.html' %}
 
-{% load static %}
+{% block title %}Five a Day - Crear Estudiante{% endblock %}
 
-{% block title %}Crear estudiante{% endblock %}
+{% block page_title %}Crear Estudiante{% endblock %}
+{% block page_subtitle %}
+    {% if parent %}
+        Crear estudiante para {{ parent.full_name }}
+    {% else %}
+        Completa la información del estudiante
+    {% endif %}
+{% endblock %}
 
 {% block content %}
+<div class="max-w-4xl mx-auto">
+    {% if parent %}
+    <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary-600">person</span>
+            <div>
+                <p class="font-medium text-primary-800">Padre/Tutor: {{ parent.full_name }}</p>
+                <p class="text-sm text-primary-600">{{ parent.email }} • {{ parent.phone }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="parent_id" value="{{ parent_id }}">
+            
+            <!-- Información Personal -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Personal</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.first_name.label }} *
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.last_name.label }} *
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.birth_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.birth_date.label }} *
+                        </label>
+                        {{ form.birth_date }}
+                        {% if form.birth_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.email.label }}
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información Académica -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Académica</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.group.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.group.label }} *
+                        </label>
+                        {{ form.group }}
+                        {% if form.group.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.group.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.school.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.school.label }}
+                        </label>
+                        {{ form.school }}
+                        {% if form.school.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.school.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información de Matrícula -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información de Matrícula</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ enrollment_form.enrollment_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.enrollment_type.label }} *
+                        </label>
+                        {{ enrollment_form.enrollment_type }}
+                        {% if enrollment_form.enrollment_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ enrollment_form.schedule_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.schedule_type.label }} *
+                        </label>
+                        {{ enrollment_form.schedule_type }}
+                        {% if enrollment_form.schedule_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.schedule_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ enrollment_form.enrollment_period_start.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.enrollment_period_start.label }} *
+                        </label>
+                        {{ enrollment_form.enrollment_period_start }}
+                        {% if enrollment_form.enrollment_period_start.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_period_start.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ enrollment_form.enrollment_period_end.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.enrollment_period_end.label }} *
+                        </label>
+                        {{ enrollment_form.enrollment_period_end }}
+                        {% if enrollment_form.enrollment_period_end.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_period_end.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ enrollment_form.discount_percentage.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.discount_percentage.label }}
+                        </label>
+                        {{ enrollment_form.discount_percentage }}
+                        {% if enrollment_form.discount_percentage.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.discount_percentage.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ enrollment_form.enrollment_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.enrollment_date.label }} *
+                        </label>
+                        {{ enrollment_form.enrollment_date }}
+                        {% if enrollment_form.enrollment_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información Adicional -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Adicional</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="{{ form.allergies.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.allergies.label }}
+                        </label>
+                        {{ form.allergies }}
+                        {% if form.allergies.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.allergies.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        {{ form.gdpr_signed }}
+                        <label for="{{ form.gdpr_signed.id_for_label }}" class="text-sm font-medium text-neutral-700">
+                            {{ form.gdpr_signed.label }}
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        {{ form.active }}
+                        <label for="{{ form.active.id_for_label }}" class="text-sm font-medium text-neutral-700">
+                            {{ form.active.label }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de Acción -->
+            <div class="flex justify-between items-center pt-4 border-t border-neutral-200">
+                <a href="{% url 'students_list' %}" class="px-6 py-2 text-neutral-600 bg-neutral-100 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                    Cancelar
+                </a>
+                <div class="flex gap-3">
+                    {% if parent %}
+                    <button type="submit" name="create_sibling" value="true" class="px-6 py-2 bg-neutral-600 text-white rounded-md hover:bg-neutral-700 transition-all duration-200">
+                        Crear y Añadir Hermano
+                    </button>
+                    {% endif %}
+                    <button type="submit" class="px-6 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-all duration-200">
+                        Crear Estudiante
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
 
 <div class="container mx-auto" style="max-width:1100px;">
 
