@@ -37,6 +37,16 @@
                         <span class="material-symbols-outlined mx-auto group-hover:mx-0">dashboard</span>
                         <span class="hidden group-hover:block">Panel Principal</span>
                     </a>
+                    
+                    <!-- Sección de Acciones Rápidas -->
+                    <div class="my-4 pt-4 border-t border-primary-200 hidden group-hover:block">
+                        <p class="text-xs uppercase tracking-wider text-primary-400 px-5 mb-2">Acciones Rápidas</p>
+                        <a href="{% url 'parent_create' %}" class="flex items-center gap-3 px-5 py-3 rounded-md bg-primary-500 text-white font-medium hover:bg-primary-600 transition-all duration-200 shadow-sm">
+                            <span class="material-symbols-outlined">person_add</span>
+                            <span>Nuevo Estudiante</span>
+                        </a>
+                    </div>
+                    
                     <a href="{% url 'students_list' %}" class="flex items-center justify-between px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <div class="flex items-center gap-3 w-full">
                             <span class="material-symbols-outlined mx-auto group-hover:mx-0">people</span>
@@ -100,9 +110,9 @@
                             <span class="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full"></span>
                         </button>
                         {% block header_actions %}
-                        <button class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                        <a href="{% url 'parent_create' %}" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
                             <span class="material-symbols-outlined">add</span> Nuevo Estudiante
-                        </button>
+                        </a>
                         {% endblock %}
                     </div>
                 </header>

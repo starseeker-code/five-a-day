@@ -6,9 +6,9 @@
 {% block page_subtitle %}Administra todos los estudiantes de la academia{% endblock %}
 
 {% block header_actions %}
-<button id="createStudentBtn" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+<a href="{% url 'parent_create' %}" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
     <span class="material-symbols-outlined">person_add</span> Nuevo Estudiante
-</button>
+</a>
 {% endblock %}
 
 {% block content %}
@@ -254,23 +254,12 @@
 <script>
     // Modal functionality
     const modal = document.getElementById('studentModal');
-    const createBtn = document.getElementById('createStudentBtn');
     const closeBtn = document.getElementById('closeModal');
     const cancelBtn = document.getElementById('cancelBtn');
     const form = document.getElementById('studentForm');
     const modalTitle = document.getElementById('modalTitle');
     const submitBtnText = document.getElementById('submitBtnText');
     const studentIdInput = document.getElementById('studentId');
-
-    // Open modal for creating new student
-    createBtn.addEventListener('click', () => {
-        resetForm();
-        modalTitle.textContent = 'Nuevo Estudiante';
-        submitBtnText.textContent = 'Crear Estudiante';
-        studentIdInput.value = '';
-        form.action = '{% url "students_list" %}';
-        modal.classList.remove('hidden');
-    });
 
     // Close modal
     function closeModal() {
