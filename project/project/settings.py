@@ -6,12 +6,21 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET")
+# ============================================================================
+# SECURITY SETTINGS
+# ============================================================================
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", os.getenv("DJANGO_SECRET", "dev-secret-key-change-in-production"))
 EMAIL_SECRET = os.getenv("EMAIL_SECRET")
 
-DEBUG = os.getenv("DEBUG_MODE", False)
+DEBUG = os.getenv("DJANGO_DEBUG", os.getenv("DEBUG_MODE", "False")).lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = []
+# Parse ALLOWED_HOSTS from comma-separated string
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+# ============================================================================
+# ENVIRONMENT
+# ============================================================================
+ENVIRONMENT = os.getenv("DJANGO_ENV", "development")
 
 # Installed packages: httpx celery gspread pytest pandas markdown dotenv
 INSTALLED_APPS = [  # https://www.djangoproject.com/
@@ -61,12 +70,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
+# Usar PostgreSQL si DATABASE=postgres, sino SQLite (desarrollo local)
+if os.getenv("DATABASE") == "postgres":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv("POSTGRES_DB", "fiveaday_db"),
+            'USER': os.getenv("POSTGRES_USER", "fiveaday_user"),
+            'PASSWORD': os.getenv("POSTGRES_PASSWORD", ""),
+            'HOST': os.getenv("POSTGRES_HOST", "localhost"),
+            'PORT': os.getenv("POSTGRES_PORT", "5432"),
+            'CONN_MAX_AGE': 600,  # Reutilizar conexiones
+            'OPTIONS': {
+                'connect_timeout': 10,
+            }
+        }
     }
-}
+else:
+    # SQLite para desarrollo local sin Docker
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -85,12 +115,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# ============================================================================
+# STATIC AND MEDIA FILES
+# ============================================================================
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR.parent, 'staticfiles')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'mediafiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
