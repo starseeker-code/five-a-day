@@ -1,9 +1,9 @@
 
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
-[![Versión](https://img.shields.io/badge/versión-v0.1-brightgreen?style=for-the-badge)](#)
-[![Última actualización](https://img.shields.io/badge/última%20actualización-2025--08--09-blue?style=for-the-badge)](#)
-[![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange?style=for-the-badge)](#)
+[![Versión](https://img.shields.io/badge/versión-v0.9.0-brightgreen?style=for-the-badge)](#)
+[![Última actualización](https://img.shields.io/badge/última%20actualización-2025--01--09-blue?style=for-the-badge)](#)
+[![Estado](https://img.shields.io/badge/estado-pre--producción-yellow?style=for-the-badge)](#)
 
 ![Logo](https://github.com/starseeker-code/five-a-day/blob/main/docs/resources/logo.png)
 
@@ -558,11 +558,44 @@ Stripe: Pagos online y conciliación automática.
 
 ## 🚀 Despliegue en Producción
 
-Configurar servidor con Nginx + Gunicorn.
-Instalar Docker y docker-compose.
-Configurar backups automáticos de base de datos.
-Configurar SSL/HTTPS.
-Activar tareas programadas con Celery Beat.
+### 📘 Documentación Completa
+
+**Ver guía detallada**: [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md)
+
+### Resumen Rápido
+
+**Five a Day v0.9.0** está listo para desplegarse en **Render.com** con PostgreSQL.
+
+**Requisitos previos**:
+- Cuenta en [Render.com](https://render.com)
+- Repositorio Git conectado
+- App Password de Gmail para emails
+
+**Pasos básicos**:
+1. **Push código** a GitHub/GitLab
+2. **Crear Blueprint** en Render (detecta `render.yaml` automáticamente)
+3. **Configurar variables de entorno** en Render Dashboard:
+   - `SECRET_KEY`, `DJANGO_SUPERUSER_*`, `LOGIN_*`, `EMAIL_*`
+4. **Desplegar** y esperar 5-10 minutos
+5. **Verificar** health check: `https://tu-app.onrender.com/health/`
+
+**Archivos clave**:
+- `render.yaml` - Configuración de servicios (PostgreSQL + Web)
+- `entrypoint.sh` - Script de inicialización unificado (Docker + Render)
+- `.env.render` - Plantilla de variables de entorno
+
+**Costos estimados**: 
+- PostgreSQL Starter: €7/mes
+- Web Service Starter: €7/mes
+- **Total**: ~€14/mes
+
+**Tecnología**:
+- Servidor: Gunicorn (4 workers, 120s timeout)
+- Archivos estáticos: WhiteNoise
+- Base de datos: PostgreSQL 16 con `dj-database-url`
+- Health check: `/health/` endpoint
+
+📖 **Consulta la documentación completa para troubleshooting, seguridad y configuración avanzada.**
 
 ## Futuras mejoras
 

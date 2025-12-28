@@ -1,0 +1,99 @@
+# ============================================================================
+# RENDER.COM DEPLOYMENT CONFIGURATION
+# ============================================================================
+# Este archivo define todos los servicios necesarios para desplegar Five a Day
+# en Render.com de forma automática usando Blueprint Specification v2
+
+services:
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  - type: pserv
+    name: fiveaday-db
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    ipAllowList: []
+    
+  # ==========================================================================
+  # Django Web Application
+  # ==========================================================================
+  - type: web
+    name: fiveaday-web
+    runtime: python
+    plan: starter
+    region: frankfurt
+    branch: production-render
+    
+    # Comando de construcción
+    buildCommand: pip install poetry && poetry config virtualenvs.create false && poetry install --no-dev && python project/manage.py collectstatic --noinput
+    
+    # Comando de inicio
+    startCommand: chmod +x entrypoint.sh && ./entrypoint.sh
+    
+    # Variables de entorno
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      
+      - key: DJANGO_DEBUG
+        value: "False"
+      
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fiveaday-db
+          property: connectionString
+      
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      
+      - key: EMAIL_HOST_USER
+        sync: false
+      
+      - key: EMAIL_SECRET
+        sync: false
+      
+      - key: LOGIN_USERNAME
+        sync: false
+      
+      - key: LOGIN_PASSWORD
+        sync: false
+      
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://fiveaday-web.onrender.com
+      
+      - key: PYTHON_VERSION
+        value: 3.12.0
+    
+    # Health check
+    healthCheckPath: /health/
+    
+    # Auto-deploy desde la rama especificada
+    autoDeploy: true
+    
+    # Disco persistente para archivos estáticos y media
+    disk:
+      name: fiveaday-storage
+      mountPath: /opt/render/project/staticfiles
+      sizeGB: 1

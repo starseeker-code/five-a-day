@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse_lazy
 from decimal import Decimal
 import json
@@ -20,6 +21,19 @@ from core.forms import StudentForm, ParentForm, EnrollmentForm, ParentFormSet
 from core.email import email_service
 from django.conf import settings
 import os
+
+@csrf_exempt
+def health_check(request):
+    """
+    Endpoint de salud para Render.com y otros servicios de monitoreo.
+    Retorna 200 OK si la aplicación está funcionando.
+    """
+    return JsonResponse({
+        'status': 'healthy',
+        'service': 'fiveaday',
+        'version': '0.9.0',
+        'environment': settings.ENVIRONMENT
+    }, status=200)
 
 def login_view(request):
     """Vista de login con credenciales desde .env"""

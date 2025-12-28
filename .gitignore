@@ -218,6 +218,7 @@ __marimo__/
 .env.local
 .env.production
 .env.staging
+.env.render
 
 # Mantener el ejemplo
 !.env.example

@@ -1,6 +1,7 @@
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import dj_database_url
 
 load_dotenv()
 
@@ -91,6 +92,7 @@ INSTALLED_APPS = [  # https://www.djangoproject.com/
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Debe ir después de SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -122,8 +124,23 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # ============================================================================
 # DATABASE CONFIGURATION
 # ============================================================================
-# Usar PostgreSQL si DATABASE=postgres, sino SQLite (desarrollo local)
-if os.getenv("DATABASE") == "postgres":
+# Prioridad:
+# 1. DATABASE_URL (Render, Heroku, etc.)
+# 2. PostgreSQL con variables de entorno individuales
+# 3. SQLite (desarrollo local)
+
+if os.getenv("DATABASE_URL"):
+    # Render, Heroku u otro servicio que use DATABASE_URL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True if not DEBUG else False,
+        )
+    }
+elif os.getenv("DATABASE") == "postgres":
+    # Docker o servidor PostgreSQL local
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -132,7 +149,7 @@ if os.getenv("DATABASE") == "postgres":
             'PASSWORD': os.getenv("POSTGRES_PASSWORD", ""),
             'HOST': os.getenv("POSTGRES_HOST", "localhost"),
             'PORT': os.getenv("POSTGRES_PORT", "5432"),
-            'CONN_MAX_AGE': 600,  # Reutilizar conexiones
+            'CONN_MAX_AGE': 600,
             'OPTIONS': {
                 'connect_timeout': 10,
             }
@@ -169,15 +186,6 @@ TIME_ZONE = 'Europe/Madrid'
 USE_I18N = True
 
 USE_TZ = True
-
-# ============================================================================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SECRET", "")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'proyecto_noether@outlook.com'
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -230,10 +238,20 @@ LOGGING = {
 # STATIC AND MEDIA FILES
 # ============================================================================
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR.parent, 'staticfiles')
+STATIC_ROOT = BASE_DIR.parent / 'staticfiles'
+
+# Configuración de WhiteNoise para producción
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'mediafiles')
+MEDIA_ROOT = BASE_DIR.parent / 'mediafiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
