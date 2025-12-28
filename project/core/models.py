@@ -5,306 +5,12 @@ from datetime import date
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
-
-
-# Manager for active payments only
-class ActivePaymentManager(models.Manager):
-    """Manager that returns only active payments"""
-    def get_queryset(self):
-        return super().get_queryset().filter(active=True)
-
-class ExpenseCategory(models.Model):
-    """
-    Categories for organizing expenses
-    """
-    CATEGORY_TYPES = [
-        ('operational', 'Operational'),
-        ('administrative', 'Administrative'),
-        ('marketing', 'Marketing'),
-        ('infrastructure', 'Infrastructure'),
-        ('legal', 'Legal & Compliance'),
-        ('other', 'Other'),
-    ]
-    
-    name = models.CharField(max_length=100, unique=True)
-    category_type = models.CharField(max_length=20, choices=CATEGORY_TYPES)
-    description = models.TextField(blank=True)
-    is_tax_deductible = models.BooleanField(default=True)
-    active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'expense_categories'
-        verbose_name_plural = 'Expense Categories'
-
-    def __str__(self):
-        return f"{self.name} ({self.get_category_type_display()})"
-
-class Expense(models.Model):
-    """
-    Main expense tracking model
-    """
-    EXPENSE_STATUS = [
-        ('pending', 'Pending Approval'),
-        ('approved', 'Approved'),
-        ('paid', 'Paid'),
-        ('rejected', 'Rejected'),
-        ('cancelled', 'Cancelled'),
-    ]
-
-    PAYMENT_METHODS = [
-        ('cash', 'Cash'),
-        ('transfer', 'Bank Transfer'),
-        ('credit_card', 'Credit Card'),
-        ('debit_card', 'Debit Card'),
-        ('check', 'Check'),
-        ('direct_debit', 'Direct Debit'),
-    ]
-
-    EXPENSE_TYPES = [
-        ('recurring', 'Recurring'),  # Monthly rent, utilities, etc.
-        ('one_time', 'One-time'),    # Equipment purchase, repairs, etc.
-        ('reimbursement', 'Reimbursement'),  # Staff expense reimbursements
-    ]
-
-    expense_number = models.CharField(max_length=20, unique=True)  # Auto-generated
-    description = models.CharField(max_length=300)
-    category = models.ForeignKey(
-        ExpenseCategory,
-        on_delete=models.PROTECT,
-        related_name='expenses'
-    )
-    
-    vendor_name = models.CharField(max_length=200, blank=True)
-    vendor_tax_id = models.CharField(max_length=50, blank=True)  # CIF/NIF for tax purposes
-    
-    amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
-    )
-    tax_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=Decimal('0.00')
-    )
-    total_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
-    )
-    currency = models.CharField(max_length=3, default='EUR')
-    
-    expense_type = models.CharField(max_length=15, choices=EXPENSE_TYPES, default='one_time')
-    expense_date = models.DateField()  # When the expense occurred
-    due_date = models.DateField(null=True, blank=True)  # When payment is due
-    payment_date = models.DateField(null=True, blank=True)  # When actually paid
-    status = models.CharField(max_length=15, choices=EXPENSE_STATUS, default='pending')
-    payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, blank=True)
-    
-    invoice_number = models.CharField(max_length=100, blank=True)
-    receipt_url = models.URLField(blank=True)
-    approved_by = models.ForeignKey(
-        'Teacher',  # Assuming teachers can be administrators
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='approved_expenses'
-    )
-    approval_date = models.DateField(null=True, blank=True)
-    
-    notes = models.TextField(blank=True)
-    is_recurring = models.BooleanField(default=False)
-    recurring_frequency = models.CharField(
-        max_length=20,
-        choices=[
-            ('monthly', 'Monthly'),
-            ('quarterly', 'Quarterly'),
-            ('annually', 'Annually'),
-        ],
-        blank=True
-    )
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'expenses'
-        indexes = [
-            models.Index(fields=['expense_date']),
-            models.Index(fields=['status']),
-            models.Index(fields=['category']),
-            models.Index(fields=['vendor_name']),
-            models.Index(fields=['due_date']),
-            models.Index(fields=['expense_number']),
-        ]
-
-    def __str__(self):
-        vendor_info = f" - {self.vendor_name}" if self.vendor_name else ""
-        return f"{self.expense_number} - {self.description}{vendor_info} - €{self.total_amount}"
-
-    def save(self, *args, **kwargs):
-        # Auto-generate expense number if not provided
-        if not self.expense_number:
-            year = timezone.now().year
-            last_expense = Expense.objects.filter(
-                expense_number__startswith=f'EXP{year}'
-            ).order_by('expense_number').last()
-            
-            if last_expense:
-                last_number = int(last_expense.expense_number[-4:])
-                new_number = last_number + 1
-            else:
-                new_number = 1
-                
-            self.expense_number = f'EXP{year}{new_number:04d}'
-        
-        # Auto-calculate total_amount if not provided
-        if not self.total_amount:
-            self.total_amount = self.amount + self.tax_amount
-        
-        super().save(*args, **kwargs)
-
-    def clean(self):
-        """Validation logic"""
-        if self.status == 'paid' and not self.payment_date:
-            self.payment_date = date.today()
-        
-        if self.status == 'approved' and not self.approval_date:
-            self.approval_date = date.today()
-
-    @property
-    def is_overdue(self):
-        """Check if expense payment is overdue"""
-        return (
-            self.status in ['approved'] and 
-            self.due_date and 
-            self.due_date < date.today()
-        )
-
-    @property
-    def days_overdue(self):
-        """Calculate days overdue for payment"""
-        if self.is_overdue:
-            return (date.today() - self.due_date).days
-        return 0
-
-class RecurringExpenseTemplate(models.Model):
-    """
-    Templates for recurring expenses
-    """
-    name = models.CharField(max_length=200)
-    description = models.TextField()
-    category = models.ForeignKey(
-        ExpenseCategory,
-        on_delete=models.PROTECT,
-        related_name='recurring_templates'
-    )
-    
-    vendor_name = models.CharField(max_length=200)
-    vendor_tax_id = models.CharField(max_length=50, blank=True)
-    
-    default_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    default_tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
-    
-    frequency = models.CharField(
-        max_length=20,
-        choices=[
-            ('monthly', 'Monthly'),
-            ('quarterly', 'Quarterly'),
-            ('annually', 'Annually'),
-        ]
-    )
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)  # For contracts with end dates
-    
-    auto_generate = models.BooleanField(default=True)  # Auto-create expenses
-    active = models.BooleanField(default=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'recurring_expense_templates'
-
-    def __str__(self):
-        return f"{self.name} - {self.get_frequency_display()} - €{self.default_amount}"
-
-class FinancialPeriod(models.Model):
-    """
-    Financial periods for reporting (monthly, quarterly, annual reports)
-    """
-    PERIOD_TYPES = [
-        ('monthly', 'Monthly'),
-        ('quarterly', 'Quarterly'),
-        ('annual', 'Annual'),
-    ]
-
-    name = models.CharField(max_length=100)  # "January 2024", "Q1 2024", etc.
-    period_type = models.CharField(max_length=10, choices=PERIOD_TYPES)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    
-    total_income = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    total_expenses = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    net_profit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    
-    is_closed = models.BooleanField(default=False)  # Once closed, no more changes
-    notes = models.TextField(blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'financial_periods'
-        unique_together = ('period_type', 'start_date', 'end_date')
-
-    def __str__(self):
-        return f"{self.name} - Net: €{self.net_profit}"
-
-    def calculate_financials(self):
-        """Calculate income, expenses, and profit for this period"""
-        
-        income = Payment.objects.filter(
-            payment_status='completed',
-            payment_date__range=[self.start_date, self.end_date]
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-        
-        expenses = Expense.objects.filter(
-            status='paid',
-            payment_date__range=[self.start_date, self.end_date]
-        ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-        
-        self.total_income = income
-        self.total_expenses = expenses
-        self.net_profit = income - expenses
-        self.save()
-        
-        return {
-            'income': self.total_income,
-            'expenses': self.total_expenses,
-            'profit': self.net_profit
-        }
+from . import constants
 
 class EnrollmentType(models.Model):
-    # !ELIMINATE
-    """
-    Defines different enrollment types with their base pricing
-    This makes pricing more maintainable and auditable
-    """
-    ENROLLMENT_TYPES = [
-        ('adults', 'Adults'),
-        ('special', 'Special'),
-        ('languages_ticket', 'Languages Ticket'),
-        ('monthly', 'Monthly'),
-        ('half_month', 'Half-month'),
-        ('quarterly', 'Quarterly'),
-    ]
-    
     name = models.CharField(
         max_length=20, 
-        choices=ENROLLMENT_TYPES,
+        choices=constants.ENROLLMENT_TYPE_CHOICES,
         unique=True
     )
     display_name = models.CharField(max_length=50)
@@ -330,36 +36,14 @@ class EnrollmentType(models.Model):
         return self.display_name
 
 class Enrollment(models.Model):
-    """
-    Improved enrollment model with better structure and logic
-    """
-    ENROLLMENT_COST = [
-        ('children_enrollment', 40),  # enrollment (1 year)
-        ('adult_enrollment', 20),  # enrollment (1 year)
-    ]
-    
-    SCHEDULE_TYPES = [
-        ('full_time', 'Full-time (2 classes/week)'),  # 54€ / month
-        ('part_time', 'Part-time (1 class/week)'),  # 36€ / month
-        ('adult_group', 'Part-time (1 class/week)')  # 60€ / month
-    ]
-
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('active', 'Active'),
-        ('finished', 'Finished'),
-        ('cancelled', 'Cancelled'),
-        ('suspended', 'Suspended'),
-    ]
-
     student = models.ForeignKey(
         'Student',
-        on_delete=models.PROTECT,  # Keep - enrollments are too important to cascade delete
+        on_delete=models.PROTECT,
         related_name='enrollments'
     )
     enrollment_type = models.ForeignKey(
         EnrollmentType,
-        on_delete=models.PROTECT,  # Don't allow deletion of enrollment types with active enrollments
+        on_delete=models.PROTECT,
         related_name='enrollments'
     )
     
@@ -367,14 +51,14 @@ class Enrollment(models.Model):
     enrollment_period_end = models.DateField()
     schedule_type = models.CharField(
         max_length=20,
-        choices=SCHEDULE_TYPES,
+        choices=constants.SCHEDULE_TYPE_CHOICES,
         default='full_time'
     )
     
     enrollment_amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
     )
     discount_percentage = models.DecimalField(
         max_digits=5,
@@ -385,12 +69,12 @@ class Enrollment(models.Model):
     final_amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
     )
     
     status = models.CharField(
         max_length=10,
-        choices=STATUS_CHOICES,
+        choices=constants.ENROLLMENT_STATUS_CHOICES,
         default='pending'
     )
     enrollment_date = models.DateField()
@@ -463,94 +147,49 @@ class Enrollment(models.Model):
         return max(self.final_amount - total_payments, Decimal('0.00'))
 
 class Payment(models.Model):
-    """
-    Improved payment model with better structure and validation
-    """
-    # !IMPORTANT payments could be partial (divorced parents)
-    PAYMENT_METHODS = [
-        ('cash', 'In Cash'),
-        ('transfer', 'Transference'),
-        ('credit_card', 'Credit Card'),
-    ]
-
-    DISCOUNTS = [
-        {"language_cheque": (20, "flat")},
-        {"quartely_enrollment": (0.05, "percentage")},  # x3 months
-        {"old_student_enrollment": (10, "flat")},
-        {"full_year_bonus": (20, "flat")},  # NO adultos, en abril trimestrales tambien se aplica
-        {"sibling_discount": (0.05, "percentage")},  # each month
-        # ---- let's see first
-        {"half-month_discount": (0.5, "percentage")},  # sept
-        {"only_one_week_discount": (0.75, "percentage")},  # we should automate this with a calendar system (first month)
-        {"only_three_week_discount": (0.25, "percentage")},
-    ]
-
-    PAYMENT_STATUS = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-        ('cancelled', 'Cancelled'),
-        ('refunded', 'Refunded'),
-    ]
-
-    PAYMENT_TYPES = [
-        ('enrollment', 'Enrollment Fee'),
-        ('monthly', 'Monthly Fee'),
-        ('materials', 'Materials'),
-        ('registration', 'Registration'),
-        ('exam', 'Exam Fee'),
-        ('other', 'Other'),
-    ]
-
-    # Core relationships
     student = models.ForeignKey(
         'Student',
-        on_delete=models.PROTECT,  # Payments are critical financial records
+        on_delete=models.PROTECT,
         related_name='payments'
     )
     enrollment = models.ForeignKey(
         Enrollment,
-        on_delete=models.PROTECT,  # Keep payment history even if enrollment changes
+        on_delete=models.PROTECT,
         related_name='payments',
         null=True,
-        blank=True  # Some payments might not be tied to specific enrollment
+        blank=True
     )
     parent = models.ForeignKey(
         'Parent',
-        on_delete=models.PROTECT,  # Keep payment history
+        on_delete=models.PROTECT,
         related_name='payments'
     )
 
     payment_type = models.CharField(
         max_length=20,
-        choices=PAYMENT_TYPES,
+        choices=constants.PAYMENT_TYPE_CHOICES,
         default='monthly'
     )
     payment_method = models.CharField(
         max_length=15,
-        choices=PAYMENT_METHODS,
+        choices=constants.PAYMENT_METHOD_CHOICES,
         default='transfer'
     )
     
     amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(constants.MIN_PAYMENT_AMOUNT)]
     )
-    currency = models.CharField(max_length=3, default='EUR')
+    currency = models.CharField(max_length=3, default=constants.DEFAULT_CURRENCY)
     
     payment_status = models.CharField(
         max_length=10,
-        choices=PAYMENT_STATUS,
+        choices=constants.PAYMENT_STATUS_CHOICES,
         default='pending'
     )
     due_date = models.DateField()  # When payment is expected
     payment_date = models.DateField(null=True, blank=True)  # When payment was actually made
-    
-    active = models.BooleanField(
-        default=True,
-        help_text="Set to False to hide payment from main views (soft delete)"
-    )
     
     concept = models.CharField(max_length=200)
     reference_number = models.CharField(max_length=50, blank=True)  # Bank reference, receipt number, etc.
@@ -570,7 +209,6 @@ class Payment(models.Model):
             models.Index(fields=['due_date']),
             models.Index(fields=['payment_date']),
             models.Index(fields=['enrollment']),
-            models.Index(fields=['active']),
         ]
 
     def __str__(self):
@@ -607,124 +245,6 @@ class Payment(models.Model):
         if self.is_overdue:
             return (date.today() - self.due_date).days
         return 0
-    
-    def soft_delete(self):
-        """Soft delete the payment"""
-        self.active = False
-        self.save()
-    
-    def restore(self):
-        """Restore a soft-deleted payment"""
-        self.active = True
-        self.save()
-        
-    # Manager
-    #active_objects = ActivePaymentManager()
-
-class Payroll(models.Model):
-    """
-    Improved payroll model with better tracking
-    """
-    PAYROLL_STATUS = [
-        ('pending', 'Pending'),
-        ('paid', 'Paid'),
-        ('cancelled', 'Cancelled'),
-    ]
-
-    PAYROLL_TYPES = [
-        ('monthly_salary', 'Monthly Salary'),
-        ('hourly_payment', 'Hourly Payment'),
-        ('bonus', 'Bonus'),
-        ('commission', 'Commission'),
-        ('reimbursement', 'Reimbursement'),
-        ('other', 'Other'),
-    ]
-
-    teacher = models.ForeignKey(
-        'Teacher',
-        on_delete=models.PROTECT,  # Keep payroll history for tax and audit purposes
-        related_name='payrolls'
-    )
-    
-    payroll_type = models.CharField(
-        max_length=20,
-        choices=PAYROLL_TYPES,
-        default='monthly_salary'
-    )
-    
-    period_start = models.DateField()
-    period_end = models.DateField()
-    
-    gross_amount = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
-    )
-    tax_deductions = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        default=Decimal('0.00')
-    )
-    other_deductions = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        default=Decimal('0.00')
-    )
-    net_amount = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
-    )
-    
-    status = models.CharField(
-        max_length=10,
-        choices=PAYROLL_STATUS,
-        default='pending'
-    )
-    payment_date = models.DateField(null=True, blank=True)
-    
-    document_url = models.URLField(blank=True)
-    notes = models.TextField(blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'payrolls'
-        indexes = [
-            models.Index(fields=['teacher']),
-            models.Index(fields=['status']),
-            models.Index(fields=['payment_date']),
-            models.Index(fields=['period_start']),
-        ]
-        # Prevent duplicate payrolls for same teacher and period
-        constraints = [
-            models.UniqueConstraint(
-                fields=['teacher', 'period_start', 'period_end', 'payroll_type'],
-                name='unique_payroll_per_teacher_period'
-            )
-        ]
-
-    def __str__(self):
-        return f"{self.teacher} - {self.get_payroll_type_display()} - {self.period_start} to {self.period_end} - €{self.net_amount}"
-
-    def save(self, *args, **kwargs):
-        """
-        Auto-calculate net_amount if not provided
-        """
-        if not self.net_amount:
-            self.net_amount = self.gross_amount - self.tax_deductions - self.other_deductions
-        
-        super().save(*args, **kwargs)
-
-    def clean(self):
-        """Validation logic"""
-        
-        if self.period_start and self.period_end and self.period_start > self.period_end:
-            raise ValidationError("Period start date must be before period end date.")
-        
-        if self.status == 'paid' and not self.payment_date:
-            self.payment_date = date.today()
 
 class Teacher(models.Model):
     last_name = models.CharField(max_length=100)
@@ -735,7 +255,6 @@ class Teacher(models.Model):
     admin = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # TODO iban for payrolls
 
     class Meta:
         db_table = 'teachers'
@@ -755,7 +274,7 @@ class Group(models.Model):
     group_name = models.CharField(max_length=100, unique=True)
     teacher = models.ForeignKey(
         Teacher, 
-        on_delete=models.PROTECT,  # Prevent deletion if group exists
+        on_delete=models.PROTECT,
         related_name='groups'
     )
     active = models.BooleanField(default=True)
@@ -775,7 +294,7 @@ class Group(models.Model):
 class Parent(models.Model):
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
-    dni = models.CharField(max_length=20, unique=True)  # Spanish ID number
+    dni = models.CharField(max_length=20, unique=True)
     phone = models.CharField(max_length=20)
     email = models.EmailField()
     iban = models.CharField(max_length=34, blank=True)  # International Bank Account Number
@@ -797,11 +316,9 @@ class Parent(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 class Student(models.Model):
-    # !IMPORTANT ADULTS DO NOT NEED FK WITH PARENTS (new table for adult_students?)
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
     birth_date = models.DateField()
-    email = models.EmailField(blank=True)  # TODO remove
     school = models.CharField(max_length=200, blank=True)
     allergies = models.TextField(blank=True)
     gdpr_signed = models.BooleanField(default=False)
@@ -854,165 +371,3 @@ class StudentParent(models.Model):
 
     def __str__(self):
         return f"{self.parent} -> {self.student}"
-
-
-"""
-# Optional: Model for tracking payment history/changes
-class PaymentHistory(models.Model):
-    '''
-    Track '''changes to payments for audit purposes
-    '''
-    payment = models.ForeignKey(
-        Payment,
-        on_delete=models.CASCADE,
-        related_name='history'
-    )
-    changed_by = models.ForeignKey(
-        'auth.User',  # or your custom user model
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-    change_type = models.CharField(
-        max_length=20,
-        choices=[
-            ('created', 'Created'),
-            ('updated', 'Updated'),
-            ('status_changed', 'Status Changed'),
-            ('deactivated', 'Deactivated'),
-            ('restored', 'Restored'),
-        ]
-    )
-    old_values = models.JSONField(default=dict, blank=True)
-    new_values = models.JSONField(default=dict, blank=True)
-    change_reason = models.TextField(blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'payment_history'
-        ordering = ['-timestamp']
-    
-    def __str__(self):
-        return f"{self.payment} - {self.get_change_type_display()} - {self.timestamp}"
-"""
-
-# =============================================================================
-# TO BE DONE AND CONSIDERED
-# =============================================================================
-
-"""
-ENROLLMENT IMPROVEMENTS:
-✅ Added EnrollmentType model for better pricing management
-✅ Added schedule_type (full-time/part-time) as requested
-✅ Added status tracking (pending, active, completed, etc.)
-✅ Added discount handling
-✅ Auto-calculation of final_amount
-✅ Added constraint to prevent multiple active enrollments
-✅ Better on_delete choices (PROTECT for financial records)
-
-PAYMENT IMPROVEMENTS:
-✅ Better payment status tracking (pending, completed, failed, etc.)
-✅ Separated due_date from actual payment_date
-✅ Added reference_number for bank transfers
-✅ Added currency field for international students
-✅ Added validation for payment dates
-✅ Added overdue calculation methods
-✅ Used your exact payment method names
-
-PAYROLL IMPROVEMENTS:
-✅ Added payroll types (salary, hourly, bonus, etc.)
-✅ Added period tracking (start/end dates)
-✅ Added gross/net amount calculation with deductions
-✅ Added status tracking
-✅ Added constraint to prevent duplicate payrolls
-✅ Better financial record keeping
-
-ON_DELETE STRATEGY:
-✅ Used PROTECT for all financial models to prevent accidental data loss
-✅ Financial records (payments, enrollments, payrolls) should never be cascade deleted
-✅ This ensures audit trail and legal compliance
-"""
-
-class FinancialReport:
-    """
-    Helper class for generating financial reports
-    """
-    
-    @staticmethod
-    def get_monthly_summary(year, month):
-        """Get financial summary for a specific month"""
-        from datetime import datetime
-        from calendar import monthrange
-        
-        start_date = datetime(year, month, 1).date()
-        end_date = datetime(year, month, monthrange(year, month)[1]).date()
-        
-        # Income from payments
-        income = Payment.objects.filter(
-            payment_status='completed',
-            payment_date__range=[start_date, end_date]
-        ).aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0.00')
-        
-        # Expenses
-        expenses = Expense.objects.filter(
-            status='paid',
-            payment_date__range=[start_date, end_date]
-        ).aggregate(
-            total=models.Sum('total_amount')
-        )['total'] or Decimal('0.00')
-        
-        return {
-            'period': f"{year}-{month:02d}",
-            'income': income,
-            'expenses': expenses,
-            'profit': income - expenses,
-            'start_date': start_date,
-            'end_date': end_date
-        }
-    
-    @staticmethod
-    def get_expense_breakdown_by_category(start_date, end_date):
-        """Get expense breakdown by category for a period"""
-        
-        return Expense.objects.filter(
-            status='paid',
-            payment_date__range=[start_date, end_date]
-        ).values(
-            'category__name',
-            'category__category_type'
-        ).annotate(
-            total=Sum('total_amount')
-        ).order_by('-total')
-
-
-# =============================================================================
-# DESIGN CONSIDERATIONS
-# =============================================================================
-
-"""
-EXPENSE MANAGEMENT FEATURES:
-✅ ExpenseCategory - Organize expenses for better reporting
-✅ Supplier - Track vendors and payment terms
-✅ Expense - Main expense tracking with full lifecycle
-✅ RecurringExpenseTemplate - Handle monthly rent, utilities, etc.
-✅ FinancialPeriod - Formal period reporting
-✅ Approval workflow - Expenses need approval before payment
-✅ Overdue tracking - Know when payments are late
-✅ Auto-numbering - Unique expense numbers for audit trail
-✅ Tax handling - Separate tax amounts for compliance
-✅ Recurring expense automation - Auto-generate monthly bills
-
-FINANCIAL REPORTING:
-✅ Period-based profit/loss calculation
-✅ Income vs Expenses tracking  
-✅ Category-based expense analysis
-✅ Supplier payment analysis
-✅ Overdue payment tracking
-
-ON_DELETE STRATEGY:
-✅ PROTECT for all financial relationships - preserve audit trail
-✅ SET_NULL only for approval relationships (if approver leaves)
-✅ Financial data integrity is paramount
-"""

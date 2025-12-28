@@ -1,0 +1,316 @@
+# ============================================================================
+# DOCKER COMPOSE - Five a Day Application
+# ============================================================================
+# Este archivo orquesta todos los servicios necesarios para la aplicación.
+# Servicios actuales: PostgreSQL + Django
+# Servicios futuros (comentados): Redis, Celery, Frontend, Nginx
+
+
+# ============================================================================
+# SERVICIOS
+# ============================================================================
+services:
+  
+  # ==========================================================================
+  # PostgreSQL - Base de datos principal
+  # ==========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: fiveaday_postgres
+    restart: unless-stopped
+    
+    # Variables de entorno para PostgreSQL
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
+      POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    
+    # Persistencia de datos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+      - ./backups:/backups  # Para backups de base de datos
+    
+    # Puerto expuesto (solo para desarrollo local)
+    ports:
+      - "5432:5432"
+    
+    # Healthcheck para verificar que PostgreSQL está listo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fiveaday_user} -d ${POSTGRES_DB:-fiveaday_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    # Red interna
+    networks:
+      - fiveaday_network
+
+  # ==========================================================================
+  # Django Application - Backend
+  # ==========================================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fiveaday_django
+    restart: unless-stopped
+    
+    # Comando para desarrollo (usa runserver en lugar de gunicorn)
+    # Para producción, comentar esta línea y usar el CMD del Dockerfile
+    command: python project/manage.py runserver 0.0.0.0:8000
+    
+    # Variables de entorno
+    environment:
+      # Django
+      DJANGO_ENV: ${DJANGO_ENV:-development}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      
+      # Database
+      DATABASE: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
+      POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      
+      # Superuser (desarrollo y producción)
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@fiveaday.com}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+      
+      # Email Configuration
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_SECRET: ${EMAIL_SECRET:-}
+      
+      # Authentication (temporal)
+      LOGIN_USERNAME: ${LOGIN_USERNAME:-admin}
+      LOGIN_PASSWORD: ${LOGIN_PASSWORD:-admin123}
+    
+    # Volúmenes para desarrollo (hot reload)
+    volumes:
+      - ./project:/app/project
+      - ./docs:/app/docs
+      - ./scripts:/app/scripts
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    
+    # Puerto expuesto
+    ports:
+      - "8000:8000"
+    
+    # Dependencias
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    # Red interna
+    networks:
+      - fiveaday_network
+
+  # ==========================================================================
+  # REDIS - Cache y Message Broker (FUTURO)
+  # ==========================================================================
+  # Descomenta cuando necesites implementar cache o tareas asíncronas
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: fiveaday_redis
+  #   restart: unless-stopped
+  #   
+  #   # Persistencia de datos Redis
+  #   volumes:
+  #     - redis_data:/data
+  #   
+  #   # Puerto expuesto (opcional para desarrollo)
+  #   ports:
+  #     - "6379:6379"
+  #   
+  #   # Comando con persistencia
+  #   command: redis-server --appendonly yes
+  #   
+  #   # Healthcheck
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   
+  #   networks:
+  #     - fiveaday_network
+
+  # ==========================================================================
+  # CELERY WORKER - Tareas asíncronas (FUTURO)
+  # ==========================================================================
+  # Descomenta cuando necesites procesar tareas en segundo plano
+  # celery_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: fiveaday_celery_worker
+  #   restart: unless-stopped
+  #   
+  #   command: celery -A project worker -l info
+  #   
+  #   environment:
+  #     # Mismas variables que 'web'
+  #     DJANGO_ENV: ${DJANGO_ENV:-development}
+  #     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+  #     DATABASE: postgres
+  #     POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
+  #     POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+  #     POSTGRES_HOST: db
+  #     POSTGRES_PORT: 5432
+  #     CELERY_BROKER_URL: redis://redis:6379/0
+  #     CELERY_RESULT_BACKEND: redis://redis:6379/0
+  #   
+  #   volumes:
+  #     - ./project:/app/project
+  #   
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   
+  #   networks:
+  #     - fiveaday_network
+
+  # ==========================================================================
+  # CELERY BEAT - Tareas programadas (FUTURO)
+  # ==========================================================================
+  # Descomenta cuando necesites tareas periódicas (ej: enviar emails diarios)
+  # celery_beat:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: fiveaday_celery_beat
+  #   restart: unless-stopped
+  #   
+  #   command: celery -A project beat -l info
+  #   
+  #   environment:
+  #     # Mismas variables que 'web'
+  #     DJANGO_ENV: ${DJANGO_ENV:-development}
+  #     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+  #     DATABASE: postgres
+  #     POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
+  #     POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+  #     POSTGRES_HOST: db
+  #     POSTGRES_PORT: 5432
+  #     CELERY_BROKER_URL: redis://redis:6379/0
+  #     CELERY_RESULT_BACKEND: redis://redis:6379/0
+  #   
+  #   volumes:
+  #     - ./project:/app/project
+  #   
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   
+  #   networks:
+  #     - fiveaday_network
+
+  # ==========================================================================
+  # NGINX - Reverse Proxy y servidor de archivos estáticos (FUTURO/PRODUCCIÓN)
+  # ==========================================================================
+  # Descomenta para producción. Sirve archivos estáticos y hace proxy a Django
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: fiveaday_nginx
+  #   restart: unless-stopped
+  #   
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/conf.d:/etc/nginx/conf.d:ro
+  #     - static_volume:/app/staticfiles:ro
+  #     - media_volume:/app/mediafiles:ro
+  #     - ./certbot/conf:/etc/letsencrypt:ro
+  #     - ./certbot/www:/var/www/certbot:ro
+  #   
+  #   depends_on:
+  #     - web
+  #   
+  #   networks:
+  #     - fiveaday_network
+
+  # ==========================================================================
+  # FRONTEND - React/Vue/Next.js (FUTURO)
+  # ==========================================================================
+  # Descomenta cuando desarrolles el frontend separado
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: fiveaday_frontend
+  #   restart: unless-stopped
+  #   
+  #   environment:
+  #     REACT_APP_API_URL: http://web:8000
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #   
+  #   volumes:
+  #     - ./frontend/src:/app/src
+  #     - ./frontend/public:/app/public
+  #   
+  #   ports:
+  #     - "3000:3000"
+  #   
+  #   depends_on:
+  #     - web
+  #   
+  #   networks:
+  #     - fiveaday_network
+
+  # ==========================================================================
+  # PGADMIN - Herramienta de administración PostgreSQL (OPCIONAL/DESARROLLO)
+  # ==========================================================================
+  # Descomenta si quieres una interfaz gráfica para gestionar PostgreSQL
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: fiveaday_pgadmin
+  #   restart: unless-stopped
+  #   
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fiveaday.com}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+  #   
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   
+  #   ports:
+  #     - "5050:80"
+  #   
+  #   depends_on:
+  #     - db
+  #   
+  #   networks:
+  #     - fiveaday_network
+
+# ============================================================================
+# VOLÚMENES PERSISTENTES
+# ============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  # redis_data:
+  #   driver: local
+  # pgadmin_data:
+  #   driver: local
+
+# ============================================================================
+# REDES
+# ============================================================================
+networks:
+  fiveaday_network:
+    driver: bridge

@@ -2,48 +2,50 @@ from django.urls import path
 from core.views import *
 
 urlpatterns = [
-    path("", home, name="home"),  # type: ignore
+    # ============================================================================
+    # AUTHENTICATION - Autenticación
+    # ============================================================================
+    path("login/", login_view, name="login"),
+    path("logout/", logout_view, name="logout"),
+    
+    # ============================================================================
+    # HOME AND DASHBOARD
+    # ============================================================================
+    path("", home, name="home"),
     path("database/", all_info, name="all_info"),
+    path("email/", email_test, name="email_test"),  # Prueba de emails
     
-    # Expense & Finance
-    path("expense-categories/", expense_categories, name="expense-categories"),
-    path("expenses/", expenses, name="expenses"),
-    path("recurring-expense-templates/", recurring_expense_templates, name="recurring-expense-templates"),
-    path("financial-periods/", financial_periods, name="financial-periods"),
-
-    # Enrollment
-    path("enrollment-types/", enrollment_types, name="enrollment-types"),
-    path("enrollments/", enrollments, name="enrollments"),
-
-    # Payroll
-    path("payrolls/", payrolls, name="payrolls"),
-
-    # People
-    path("teachers/", teachers, name="teachers"),
-    path("groups/", groups, name="groups"),
-    path("students/", students, name="students"),
-    path("parents/", parents, name="parents"),
+    # ============================================================================
+    # PARENT MANAGEMENT - Gestión de Padres
+    # ============================================================================
+    path('parents/create/', ParentCreateView.as_view(), name='parent_create'),
     
-    # People.students
-    path('students/<int:student_id>/', student_detail, name='student_detail'),
-    path('students/<int:student_id>/update/', update_student, name='update_student'),
+    # ============================================================================
+    # STUDENT MANAGEMENT - Gestión de Estudiantes
+    # ============================================================================
+    path('students/', StudentListView.as_view(), name='students_list'),
+    path('students/create/', StudentCreateView.as_view(), name='student_create'),
+    path('students/<int:student_id>/', StudentDetailView.as_view(), name='student_detail'),
+    path('students/<int:student_id>/update/', StudentUpdateView.as_view(), name='student_update'),
     
-    # Payments
-    path('payments/', payments_list, name='payments'),
-    
-    # Payments.payment
+    # ============================================================================
+    # PAYMENT MANAGEMENT - Gestión de Pagos
+    # ============================================================================
+    path('payments/', payments_list, name='payments_list'),
     path('payments/create/', create_payment, name='create_payment'),
-    path('payments/<int:payment_id>/', payment_detail, name='payment_detail'),
+    path('payments/<int:payment_id>/', payment_detail_view, name='payment_detail_view'),
     path('payments/<int:payment_id>/update/', update_payment, name='update_payment'),
-    path('payments/<int:payment_id>/detail/', payment_detail_view, name='payment_detail_view'),
+    path('payments/<int:payment_id>/delete/', delete_payment, name='delete_payment'),
     path('payments/<int:payment_id>/deactivate/', deactivate_payment, name='deactivate_payment'),
     
-    # Payments.payment.rest
+    # ============================================================================
+    # API ENDPOINTS - AJAX Helper Functions
+    # ============================================================================
     path('api/search/students/', search_students, name='search_students'),
     path('api/search/parents/', search_parents, name='search_parents'),
     path('api/validate/student-parent/', validate_student_parent, name='validate_student_parent'),
-    
-    # Payments.payment.utils
+    path('api/search/payments/', search_payments, name='search_payments'),
+    path('api/payments/<int:payment_id>/details/', get_payment_details, name='get_payment_details'),
     path('api/payments/statistics/', payment_statistics, name='payment_statistics'),
     path('payments/export/', export_payments, name='export_payments'),
 ]

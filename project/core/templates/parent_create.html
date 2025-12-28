@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Crear Padre/Tutor{% endblock %}
+
+{% block page_title %}Crear Padre/Tutor{% endblock %}
+{% block page_subtitle %}Primero crea el padre, luego podrás crear estudiantes para él{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Información Personal -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información del Padre/Tutor</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.first_name.label }} *
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.last_name.label }} *
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.dni.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.dni.label }} *
+                        </label>
+                        {{ form.dni }}
+                        {% if form.dni.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.dni.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.phone.label }} *
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.email.label }} *
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.iban.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ form.iban.label }}
+                        </label>
+                        {{ form.iban }}
+                        {% if form.iban.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.iban.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de Acción -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-neutral-200">
+                <a href="{% url 'students_list' %}" class="px-6 py-2 text-neutral-600 bg-neutral-100 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-all duration-200">
+                    Siguiente: Crear Estudiante
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

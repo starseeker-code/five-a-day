@@ -16,7 +16,7 @@
     <div class="flex justify-between items-center">
         <div>
             <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Lista de Pagos</h3>
-            <p class="text-neutral-600">Total: {{ payments.count }} pagos registrados</p>
+            <p class="text-neutral-600">Total: {{ payments.paginator.count }} pagos registrados</p>
         </div>
         <div class="flex gap-2">
             <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
@@ -135,8 +135,8 @@
                             <button onclick="viewPayment({{ payment.id }})" class="p-2 text-neutral-600 hover:bg-neutral-50 rounded-md transition-all duration-200">
                                 <span class="material-symbols-outlined text-sm">visibility</span>
                             </button>
-                            <button onclick="deactivatePayment({{ payment.id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">close</span>
+                            <button onclick="deletePayment({{ payment.id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-all duration-200">
+                                <span class="material-symbols-outlined text-sm">delete</span>
                             </button>
                         </div>
                     </td>
@@ -200,7 +200,7 @@
             </div>
         </div>
         
-        <form id="paymentForm" method="post" class="p-6">
+        <form id="paymentForm" class="p-6">
             {% csrf_token %}
             <input type="hidden" id="paymentId" name="payment_id" value="">
             
@@ -208,24 +208,24 @@
             <div class="mb-6">
                 <h4 class="text-lg font-medium text-neutral-700 mb-4">Información del Pago</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div class="relative">
                         <label for="student_search" class="block text-sm font-medium text-neutral-700 mb-2">Estudiante *</label>
-                        <input type="text" id="student_search" name="student_search" required 
+                        <input type="text" id="student_search" autocomplete="off" required 
                                placeholder="Buscar estudiante por nombre..."
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <input type="hidden" id="student_id" name="student_id" value="">
-                        <div id="student_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto"></div>
+                        <div id="student_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label for="parent_search" class="block text-sm font-medium text-neutral-700 mb-2">Padre/Tutor *</label>
-                        <input type="text" id="parent_search" name="parent_search" required 
+                        <input type="text" id="parent_search" autocomplete="off" required 
                                placeholder="Buscar padre/tutor por nombre..."
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <input type="hidden" id="parent_id" name="parent_id" value="">
-                        <div id="parent_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto"></div>
+                        <div id="parent_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
                     </div>
                 </div>
-                <div id="validation_message" class="mt-2 text-sm text-red-600 hidden"></div>
+                <div id="validation_message" class="mt-2 text-sm hidden"></div>
             </div>
 
             <!-- Payment Details -->
@@ -342,350 +342,402 @@
 
 {% block extra_js %}
 <script>
-    // Modal functionality
-    const modal = document.getElementById('paymentModal');
-    const createBtn = document.getElementById('createPaymentBtn');
-    const closeBtn = document.getElementById('closeModal');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const form = document.getElementById('paymentForm');
-    const modalTitle = document.getElementById('modalTitle');
-    const submitBtnText = document.getElementById('submitBtnText');
-    const paymentIdInput = document.getElementById('paymentId');
+console.log("=== PAYMENTS.JS CARGADO ===");
 
-    // Search functionality
-    const studentSearch = document.getElementById('student_search');
-    const parentSearch = document.getElementById('parent_search');
-    const studentSuggestions = document.getElementById('student_suggestions');
-    const parentSuggestions = document.getElementById('parent_suggestions');
-    const validationMessage = document.getElementById('validation_message');
-
-    let selectedStudent = null;
-    let selectedParent = null;
-
-    // Open modal for creating new payment
-    createBtn.addEventListener('click', () => {
-        resetForm();
-        modalTitle.textContent = 'Nuevo Pago';
-        submitBtnText.textContent = 'Crear Pago';
-        paymentIdInput.value = '';
-        form.action = '{% url "payments" %}';
-        modal.classList.remove('hidden');
-    });
-
-    // Close modal
-    function closeModal() {
-        modal.classList.add('hidden');
-        resetForm();
-    }
-
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
-
-    // Reset form
-    function resetForm() {
-        form.reset();
-        selectedStudent = null;
-        selectedParent = null;
-        document.getElementById('student_id').value = '';
-        document.getElementById('parent_id').value = '';
-        studentSuggestions.classList.add('hidden');
-        parentSuggestions.classList.add('hidden');
-        validationMessage.classList.add('hidden');
-        document.getElementById('currency').value = 'EUR';
-        document.getElementById('payment_status').value = 'pending';
-    }
-
-    // Student search functionality
-    let studentSearchTimeout;
-    studentSearch.addEventListener('input', function() {
-        clearTimeout(studentSearchTimeout);
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-            studentSuggestions.classList.add('hidden');
-            return;
-        }
-
-        studentSearchTimeout = setTimeout(() => {
-            fetch(`/api/search/students/?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    displayStudentSuggestions(data.results);
-                })
-                .catch(error => {
-                    console.error('Error searching students:', error);
-                });
-        }, 300);
-    });
-
-    // Parent search functionality
-    let parentSearchTimeout;
-    parentSearch.addEventListener('input', function() {
-        clearTimeout(parentSearchTimeout);
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-            parentSuggestions.classList.add('hidden');
-            return;
-        }
-
-        parentSearchTimeout = setTimeout(() => {
-            fetch(`/api/search/parents/?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    displayParentSuggestions(data.results);
-                })
-                .catch(error => {
-                    console.error('Error searching parents:', error);
-                });
-        }, 300);
-    });
-
-    function displayStudentSuggestions(students) {
-        if (students.length === 0) {
-            studentSuggestions.classList.add('hidden');
-            return;
-        }
-
-        const html = students.map(student => `
-            <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100" 
-                 onclick="selectStudent(${student.id}, '${student.full_name}', '${student.school || ''}')">
-                <div class="font-medium text-neutral-800">${student.full_name}</div>
-                ${student.school ? `<div class="text-sm text-neutral-500">${student.school}</div>` : ''}
-            </div>
-        `).join('');
-
-        studentSuggestions.innerHTML = html;
-        studentSuggestions.classList.remove('hidden');
-    }
-
-    function displayParentSuggestions(parents) {
-        if (parents.length === 0) {
-            parentSuggestions.classList.add('hidden');
-            return;
-        }
-
-        const html = parents.map(parent => `
-            <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100" 
-                 onclick="selectParent(${parent.id}, '${parent.full_name}', '${parent.email}')">
-                <div class="font-medium text-neutral-800">${parent.full_name}</div>
-                <div class="text-sm text-neutral-500">${parent.email}</div>
-            </div>
-        `).join('');
-
-        parentSuggestions.innerHTML = html;
-        parentSuggestions.classList.remove('hidden');
-    }
-
-    function selectStudent(id, name, school) {
-        selectedStudent = { id, name, school };
-        studentSearch.value = name;
-        document.getElementById('student_id').value = id;
-        studentSuggestions.classList.add('hidden');
-        validateStudentParentRelation();
-    }
-
-    function selectParent(id, name, email) {
-        selectedParent = { id, name, email };
-        parentSearch.value = name;
-        document.getElementById('parent_id').value = id;
-        parentSuggestions.classList.add('hidden');
-        validateStudentParentRelation();
-    }
-
-    // Validate student-parent relationship
-    function validateStudentParentRelation() {
-        if (!selectedStudent || !selectedParent) {
-            validationMessage.classList.add('hidden');
-            return;
-        }
-
-        fetch('/api/validate/student-parent/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({
-                student_id: selectedStudent.id,
-                parent_id: selectedParent.id
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.valid) {
-                validationMessage.classList.add('hidden');
-                validationMessage.classList.remove('text-red-600');
-                validationMessage.classList.add('text-green-600');
-                validationMessage.textContent = '✓ Relación válida entre estudiante y padre/tutor';
-                validationMessage.classList.remove('hidden');
-                
-                // Auto-fill enrollment information if available
-                if (data.enrollment) {
-                    fillEnrollmentInfo(data.enrollment);
-                }
-            } else {
-                validationMessage.classList.remove('text-green-600');
-                validationMessage.classList.add('text-red-600');
-                validationMessage.textContent = '⚠ El padre/tutor seleccionado no está asociado con este estudiante';
-                validationMessage.classList.remove('hidden');
+// ==================== UTILITY FUNCTIONS ====================
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
-        })
-        .catch(error => {
-            console.error('Error validating relationship:', error);
-        });
-    }
-
-    function fillEnrollmentInfo(enrollment) {
-        // Auto-fill some payment information based on enrollment
-        if (enrollment.remaining_amount > 0) {
-            document.getElementById('amount').value = enrollment.remaining_amount;
-            document.getElementById('concept').value = `Pago de matrícula - ${enrollment.enrollment_type}`;
-            document.getElementById('payment_type').value = 'enrollment';
         }
     }
+    return cookieValue;
+}
 
-    // Edit payment function
-    function editPayment(paymentId) {
-        fetch(`/payments/${paymentId}/`)
+// ==================== MODAL FUNCTIONALITY ====================
+const modal = document.getElementById('paymentModal');
+const createBtn = document.getElementById('createPaymentBtn');
+const closeBtn = document.getElementById('closeModal');
+const cancelBtn = document.getElementById('cancelBtn');
+const form = document.getElementById('paymentForm');
+const modalTitle = document.getElementById('modalTitle');
+const submitBtnText = document.getElementById('submitBtnText');
+const paymentIdInput = document.getElementById('paymentId');
+
+// Student/Parent search elements
+const studentSearch = document.getElementById('student_search');
+const parentSearch = document.getElementById('parent_search');
+const studentSuggestions = document.getElementById('student_suggestions');
+const parentSuggestions = document.getElementById('parent_suggestions');
+const validationMessage = document.getElementById('validation_message');
+
+let selectedStudent = null;
+let selectedParent = null;
+
+// Open modal for creating new payment
+createBtn.addEventListener('click', () => {
+    console.log("Botón crear pago clickeado");
+    resetForm();
+    modalTitle.textContent = 'Nuevo Pago';
+    submitBtnText.textContent = 'Crear Pago';
+    paymentIdInput.value = '';
+    modal.classList.remove('hidden');
+});
+
+// Close modal
+function closeModal() {
+    modal.classList.add('hidden');
+    resetForm();
+}
+
+closeBtn.addEventListener('click', closeModal);
+cancelBtn.addEventListener('click', closeModal);
+
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        closeModal();
+    }
+});
+
+// Reset form
+function resetForm() {
+    form.reset();
+    selectedStudent = null;
+    selectedParent = null;
+    document.getElementById('student_id').value = '';
+    document.getElementById('parent_id').value = '';
+    studentSuggestions.classList.add('hidden');
+    parentSuggestions.classList.add('hidden');
+    validationMessage.classList.add('hidden');
+    document.getElementById('currency').value = 'EUR';
+    document.getElementById('payment_status').value = 'pending';
+    document.getElementById('due_date').value = new Date().toISOString().split('T')[0];
+}
+
+// ==================== SEARCH FUNCTIONALITY ====================
+let studentSearchTimeout;
+studentSearch.addEventListener('input', function() {
+    clearTimeout(studentSearchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        studentSuggestions.classList.add('hidden');
+        return;
+    }
+
+    studentSearchTimeout = setTimeout(() => {
+        fetch(`/api/search/students/?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
-                // Populate form with payment data
-                selectedStudent = { id: data.student.id, name: data.student.full_name };
-                selectedParent = { id: data.parent.id, name: data.parent.full_name };
+                displayStudentSuggestions(data.results);
+            })
+            .catch(error => {
+                console.error('Error searching students:', error);
+            });
+    }, 300);
+});
+
+let parentSearchTimeout;
+parentSearch.addEventListener('input', function() {
+    clearTimeout(parentSearchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        parentSuggestions.classList.add('hidden');
+        return;
+    }
+
+    parentSearchTimeout = setTimeout(() => {
+        fetch(`/api/search/parents/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                displayParentSuggestions(data.results);
+            })
+            .catch(error => {
+                console.error('Error searching parents:', error);
+            });
+    }, 300);
+});
+
+function displayStudentSuggestions(students) {
+    if (students.length === 0) {
+        studentSuggestions.classList.add('hidden');
+        return;
+    }
+
+    const html = students.map(student => `
+        <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100" 
+             onclick="selectStudent(${student.id}, '${student.full_name.replace(/'/g, "\\'")}', '${(student.school || '').replace(/'/g, "\\'")}')">
+            <div class="font-medium text-neutral-800">${student.full_name}</div>
+            ${student.school ? `<div class="text-sm text-neutral-500">${student.school}</div>` : ''}
+        </div>
+    `).join('');
+
+    studentSuggestions.innerHTML = html;
+    studentSuggestions.classList.remove('hidden');
+}
+
+function displayParentSuggestions(parents) {
+    if (parents.length === 0) {
+        parentSuggestions.classList.add('hidden');
+        return;
+    }
+
+    const html = parents.map(parent => `
+        <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100" 
+             onclick="selectParent(${parent.id}, '${parent.full_name.replace(/'/g, "\\'")}', '${parent.email.replace(/'/g, "\\'")}')">
+            <div class="font-medium text-neutral-800">${parent.full_name}</div>
+            <div class="text-sm text-neutral-500">${parent.email}</div>
+        </div>
+    `).join('');
+
+    parentSuggestions.innerHTML = html;
+    parentSuggestions.classList.remove('hidden');
+}
+
+function selectStudent(id, name, school) {
+    selectedStudent = { id, name, school };
+    studentSearch.value = name;
+    document.getElementById('student_id').value = id;
+    studentSuggestions.classList.add('hidden');
+    validateStudentParentRelation();
+}
+
+function selectParent(id, name, email) {
+    selectedParent = { id, name, email };
+    parentSearch.value = name;
+    document.getElementById('parent_id').value = id;
+    parentSuggestions.classList.add('hidden');
+    validateStudentParentRelation();
+}
+
+// Validate student-parent relationship
+function validateStudentParentRelation() {
+    if (!selectedStudent || !selectedParent) {
+        validationMessage.classList.add('hidden');
+        return;
+    }
+
+    fetch('/api/validate/student-parent/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            student_id: selectedStudent.id,
+            parent_id: selectedParent.id
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            validationMessage.className = 'mt-2 text-sm text-green-600';
+            validationMessage.textContent = '✓ Relación válida entre estudiante y padre/tutor';
+            validationMessage.classList.remove('hidden');
+            
+            if (data.enrollment && data.enrollment.remaining_amount > 0) {
+                document.getElementById('amount').value = data.enrollment.remaining_amount;
+                document.getElementById('concept').value = `Pago de matrícula - ${data.enrollment.enrollment_type}`;
+                document.getElementById('payment_type').value = 'enrollment';
+            }
+        } else {
+            validationMessage.className = 'mt-2 text-sm text-red-600';
+            validationMessage.textContent = '⚠ El padre/tutor seleccionado no está asociado con este estudiante';
+            validationMessage.classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Error validating relationship:', error);
+    });
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(e) {
+    if (!studentSearch.contains(e.target) && !studentSuggestions.contains(e.target)) {
+        studentSuggestions.classList.add('hidden');
+    }
+    if (!parentSearch.contains(e.target) && !parentSuggestions.contains(e.target)) {
+        parentSuggestions.classList.add('hidden');
+    }
+});
+
+// ==================== FORM SUBMISSION ====================
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    console.log("=== FORMULARIO ENVIADO ===");
+    
+    // Validate student and parent are selected
+    if (!selectedStudent || !selectedParent) {
+        alert('Debe seleccionar un estudiante y un padre/tutor válidos.');
+        return;
+    }
+    
+    // Auto-set payment date if status is completed
+    const paymentStatus = document.getElementById('payment_status').value;
+    const paymentDate = document.getElementById('payment_date').value;
+    
+    if (paymentStatus === 'completed' && !paymentDate) {
+        document.getElementById('payment_date').value = new Date().toISOString().split('T')[0];
+    }
+    
+    const formData = new FormData(form);
+    
+    // Log form data
+    console.log("Datos del formulario:");
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+    
+    // Determine if creating or updating
+    const paymentId = paymentIdInput.value;
+    const url = paymentId ? `/payments/${paymentId}/update/` : '/payments/create/';
+    
+    console.log("Enviando petición a:", url);
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log("Respuesta recibida:", response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log("Data recibida:", data);
+        if (data.success) {
+            alert(data.message);
+            closeModal();
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        alert('Error al procesar el pago: ' + error);
+    });
+});
+
+// ==================== AUTO-FILL HELPERS ====================
+// Auto-fill payment date when status changes to completed
+document.getElementById('payment_status').addEventListener('change', function() {
+    const paymentDate = document.getElementById('payment_date');
+    if (this.value === 'completed' && !paymentDate.value) {
+        paymentDate.value = new Date().toISOString().split('T')[0];
+    }
+});
+
+// Auto-generate concept based on payment type
+document.getElementById('payment_type').addEventListener('change', function() {
+    const concept = document.getElementById('concept');
+    if (!concept.value || concept.value.includes('Pago de')) {
+        switch(this.value) {
+            case 'enrollment':
+                concept.value = 'Pago de matrícula';
+                break;
+            case 'monthly':
+                concept.value = 'Pago mensualidad';
+                break;
+            case 'materials':
+                concept.value = 'Pago de materiales';
+                break;
+            case 'registration':
+                concept.value = 'Pago de inscripción';
+                break;
+            case 'exam':
+                concept.value = 'Pago de examen';
+                break;
+            case 'other':
+                concept.value = 'Otro pago';
+                break;
+        }
+    }
+});
+
+// ==================== EDIT/VIEW/DELETE FUNCTIONS ====================
+function editPayment(paymentId) {
+    console.log("Editando pago:", paymentId);
+    fetch(`/payments/${paymentId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const payment = data.payment;
                 
-                studentSearch.value = data.student.full_name;
-                parentSearch.value = data.parent.full_name;
-                document.getElementById('student_id').value = data.student.id;
-                document.getElementById('parent_id').value = data.parent.id;
+                // Set selected student and parent
+                selectedStudent = { id: payment.student_id, name: payment.student_name };
+                selectedParent = { id: payment.parent_id, name: payment.parent_name };
                 
-                document.getElementById('payment_type').value = data.payment_type;
-                document.getElementById('payment_method').value = data.payment_method;
-                document.getElementById('amount').value = data.amount;
-                document.getElementById('currency').value = data.currency;
-                document.getElementById('payment_status').value = data.payment_status;
-                document.getElementById('due_date').value = data.due_date;
-                document.getElementById('payment_date').value = data.payment_date || '';
-                document.getElementById('concept').value = data.concept;
-                document.getElementById('reference_number').value = data.reference_number || '';
-                document.getElementById('observations').value = data.observations || '';
+                // Fill form fields
+                studentSearch.value = payment.student_name;
+                parentSearch.value = payment.parent_name;
+                document.getElementById('student_id').value = payment.student_id;
+                document.getElementById('parent_id').value = payment.parent_id;
+                document.getElementById('payment_type').value = payment.payment_type;
+                document.getElementById('payment_method').value = payment.payment_method;
+                document.getElementById('amount').value = payment.amount;
+                document.getElementById('currency').value = payment.currency;
+                document.getElementById('payment_status').value = payment.payment_status;
+                document.getElementById('due_date').value = payment.due_date;
+                document.getElementById('payment_date').value = payment.payment_date || '';
+                document.getElementById('concept').value = payment.concept;
+                document.getElementById('reference_number').value = payment.reference_number || '';
+                document.getElementById('observations').value = payment.observations || '';
 
                 // Update modal
                 modalTitle.textContent = 'Editar Pago';
                 submitBtnText.textContent = 'Actualizar Pago';
                 paymentIdInput.value = paymentId;
-                form.action = `/payments/${paymentId}/update/`;
                 modal.classList.remove('hidden');
-            })
-            .catch(error => {
-                console.error('Error loading payment data:', error);
-                alert('Error al cargar los datos del pago');
-            });
-    }
-
-    // View payment function
-    function viewPayment(paymentId) {
-        // This would typically open a read-only modal or navigate to a detail page
-        window.open(`/payments/${paymentId}/detail/`, '_blank');
-    }
-
-    // Deactivate payment function
-    function deactivatePayment(paymentId) {
-        if (confirm('¿Estás seguro de que deseas desactivar este pago? No se eliminará, pero no aparecerá en la lista principal.')) {
-            fetch(`/payments/${paymentId}/deactivate/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error al desactivar el pago');
-                }
-            })
-            .catch(error => {
-                console.error('Error deactivating payment:', error);
-                alert('Error al desactivar el pago');
-            });
-        }
-    }
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!studentSearch.contains(e.target) && !studentSuggestions.contains(e.target)) {
-            studentSuggestions.classList.add('hidden');
-        }
-        if (!parentSearch.contains(e.target) && !parentSuggestions.contains(e.target)) {
-            parentSuggestions.classList.add('hidden');
-        }
-    });
-
-    // Form validation
-    form.addEventListener('submit', (e) => {
-        // Check if student and parent are selected
-        if (!selectedStudent || !selectedParent) {
-            e.preventDefault();
-            alert('Debe seleccionar un estudiante y un padre/tutor válidos.');
-            return;
-        }
-
-        // Check if payment status is completed and payment_date is empty
-        const paymentStatus = document.getElementById('payment_status').value;
-        const paymentDate = document.getElementById('payment_date').value;
-        
-        if (paymentStatus === 'completed' && !paymentDate) {
-            // Auto-set payment date to today
-            document.getElementById('payment_date').value = new Date().toISOString().split('T')[0];
-        }
-    });
-
-    // Auto-fill payment date when status changes to completed
-    document.getElementById('payment_status').addEventListener('change', function() {
-        const paymentDate = document.getElementById('payment_date');
-        if (this.value === 'completed' && !paymentDate.value) {
-            paymentDate.value = new Date().toISOString().split('T')[0];
-        }
-    });
-
-    // Auto-generate concept based on payment type
-    document.getElementById('payment_type').addEventListener('change', function() {
-        const concept = document.getElementById('concept');
-        if (!concept.value || concept.value.includes('Pago de')) {
-            switch(this.value) {
-                case 'enrollment':
-                    concept.value = 'Pago de matrícula';
-                    break;
-                case 'monthly':
-                    concept.value = 'Pago mensualidad';
-                    break;
-                case 'materials':
-                    concept.value = 'Pago de materiales';
-                    break;
-                case 'registration':
-                    concept.value = 'Pago de inscripción';
-                    break;
-                case 'exam':
-                    concept.value = 'Pago de examen';
-                    break;
-                case 'other':
-                    concept.value = 'Otro pago';
-                    break;
+            } else {
+                alert('Error: ' + data.error);
             }
-        }
-    });
+        })
+        .catch(error => {
+            console.error('Error loading payment data:', error);
+            alert('Error al cargar los datos del pago');
+        });
+}
 
-    // Set today as default due date
-    document.getElementById('due_date').value = new Date().toISOString().split('T')[0];
+function viewPayment(paymentId) {
+    window.open(`/payments/${paymentId}/detail/`, '_blank');
+}
+
+function deletePayment(paymentId) {
+    if (confirm('¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.')) {
+        fetch(`/payments/${paymentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting payment:', error);
+            alert('Error al eliminar el pago');
+        });
+    }
+}
+
+// Initialize
+console.log("=== PAYMENTS.JS INICIALIZADO ===");
+document.getElementById('due_date').value = new Date().toISOString().split('T')[0];
 </script>
 {% endblock %}

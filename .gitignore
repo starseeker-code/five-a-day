@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[codz]
+
+# Added by AI
 *$py.class
 
 # C extensions
@@ -208,3 +209,36 @@ __marimo__/
 
 # Personal files and dirs
 /mocks
+
+# ============================================================================
+# DOCKER & ENVIRONMENT
+# ============================================================================
+# Variables de entorno (¡NUNCA subir .env con contraseñas reales!)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Mantener el ejemplo
+!.env.example
+
+# Volúmenes de Docker
+postgres_data/
+redis_data/
+pgadmin_data/
+
+# Archivos estáticos y media
+staticfiles/
+mediafiles/
+
+# Backups de base de datos
+backups/
+*.sql
+*.dump
+
+# Logs
+logs/
+*.log
+
+# Docs with secrets
+/docs

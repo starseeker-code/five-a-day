@@ -6,8 +6,8 @@
 {% block page_subtitle %}Información completa del pago{% endblock %}
 
 {% block header_actions %}
-<div class="flex gap-2">
-    <a href="{% url 'payments' %}" class="bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200">
+<div class="flex gap-3">
+    <a href="{% url 'payments_list' %}" class="bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200">
         <span class="material-symbols-outlined">arrow_back</span> Volver a Pagos
     </a>
     <button onclick="editPayment({{ payment.id }})" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200">
@@ -254,7 +254,7 @@
 <script>
     function editPayment(paymentId) {
         // Redirect to main payments page with edit mode
-        window.location.href = `{% url 'payments' %}?edit=${paymentId}`;
+        window.location.href = `{% url 'payments_list' %}?edit=${paymentId}`;
     }
 </script>
 {% endblock %}
