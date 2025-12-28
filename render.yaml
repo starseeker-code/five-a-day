@@ -13,7 +13,7 @@ services:
     region: frankfurt
     branch: production-render
     dockerfilePath: ./Dockerfile
-    dockerCommand: gunicorn --chdir project --bind 0.0.0.0:$PORT --workers 2 --timeout 120 project.wsgi:application
+    dockerCommand: /app/entrypoint.sh
     
     envVars:
       - key: PYTHON_VERSION
