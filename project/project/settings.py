@@ -210,24 +210,19 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR.parent, 'logs', 'django.log'),
-            'formatter': 'verbose',
-        },
     },
     'root': {
-        'handlers': ['console'] if DEBUG else ['console', 'file'],
+        'handlers': ['console'],
         'level': LOG_LEVEL,
     },
     'loggers': {
         'django': {
-            'handlers': ['console'] if DEBUG else ['console', 'file'],
+            'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', LOG_LEVEL),
             'propagate': False,
         },
         'core': {
-            'handlers': ['console'] if DEBUG else ['console', 'file'],
+            'handlers': ['console'],
             'level': LOG_LEVEL,
             'propagate': False,
         },
