@@ -7,66 +7,45 @@ services:
     region: frankfurt
     branch: production-render
     
-    # Dockerfile
     dockerfilePath: ./Dockerfile
-    
-    # Comando de inicio
     dockerCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 project.wsgi:application
     
-    # Variables de entorno
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
-      
       - key: DJANGO_ENV
         value: production
-      
       - key: DJANGO_DEBUG
         value: "False"
-      
       - key: DJANGO_SECRET_KEY
         generateValue: true
-      
       - key: DJANGO_ALLOWED_HOSTS
         value: .onrender.com,localhost,127.0.0.1
-      
-      # Database
       - key: DATABASE_URL
         fromDatabase:
           name: fiveaday-db
           property: connectionString
-      
-      # Superuser
       - key: DJANGO_SUPERUSER_USERNAME
         value: Mirmo_1997
-      
       - key: DJANGO_SUPERUSER_EMAIL
         value: hellofiveaday@fiveaday.com
-      
       - key: DJANGO_SUPERUSER_PASSWORD
         generateValue: true
-      
-      # Security settings
       - key: SECURE_SSL_REDIRECT
         value: "True"
-      
       - key: SESSION_COOKIE_SECURE
         value: "True"
-      
       - key: CSRF_COOKIE_SECURE
         value: "True"
-      
       - key: CSRF_TRUSTED_ORIGINS
         value: https://fiveaday-web.onrender.com
     
-    # Health check
     healthCheckPath: /health/
-    
-    # Auto-deploy
     autoDeploy: true
 
-  # Database service
+  # PostgreSQL Database
   - type: pserv
     name: fiveaday-db
     plan: free
     region: frankfurt
+    env: docker
