@@ -51,4 +51,5 @@ services:
     name: fiveaday-db
     plan: free
     region: frankfurt
-    env: docker
+    databaseName: fiveaday_db
+    databaseUser: fiveaday_user
