@@ -3,7 +3,7 @@
 # ============================================================================
 # Simplifica comandos comunes de Docker y Django
 
-.PHONY: help build up down restart logs shell migrate makemigrations test clean backup restore
+.PHONY: help build up down restart logs shell migrate makemigrations test clean backup restore reset-db
 
 # ============================================================================
 # HELP
@@ -45,6 +45,7 @@ help:
 	@echo "  make dbshell        - Abrir PostgreSQL shell"
 	@echo "  make backup         - Hacer backup de la BD"
 	@echo "  make restore FILE=  - Restaurar backup (uso: make restore FILE=backup.sql)"
+	@echo "  make reset-db       - Recrear base de datos (⚠️  elimina todos los datos)"
 	@echo ""
 	@echo "🧪 Testing:"
 	@echo "  make test           - Ejecutar tests"
@@ -226,6 +227,26 @@ clean-all:
 		docker compose down -v; \
 		docker system prune -af --volumes; \
 		echo "✅ Todo limpio (datos borrados)"; \
+	else \
+		echo "❌ Operación cancelada"; \
+	fi
+
+# ============================================================================
+# DATABASE RESET
+# ============================================================================
+reset-db:
+	@echo "⚠️  ¡ADVERTENCIA! Esto eliminará TODA la base de datos."
+	@echo "Se creará una base de datos limpia con el superusuario configurado en .env"
+	@read -p "¿Estás seguro? (escribe 'yes'): " confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		echo "🗑️  Deteniendo servicios y eliminando volúmenes..."; \
+		docker compose down -v; \
+		echo "🚀 Iniciando servicios con base de datos limpia..."; \
+		docker compose up -d; \
+		echo "⏳ Esperando a que los servicios estén listos..."; \
+		sleep 15; \
+		echo "✅ Base de datos recreada! Superusuario creado con credenciales de .env"; \
+		docker compose ps; \
 	else \
 		echo "❌ Operación cancelada"; \
 	fi

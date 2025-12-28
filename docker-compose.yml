@@ -5,7 +5,6 @@
 # Servicios actuales: PostgreSQL + Django
 # Servicios futuros (comentados): Redis, Celery, Frontend, Nginx
 
-version: '3.9'
 
 # ============================================================================
 # SERVICIOS
