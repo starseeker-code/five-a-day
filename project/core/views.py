@@ -68,7 +68,61 @@ def logout_view(request):
     return redirect('login')
 
 def home(request):
-    return render(request, "home.html")
+    from datetime import date
+    from django.db.models import Q
+    from .models import Payment, Student
+    
+    today = date.today()
+    current_month = today.month
+    current_year = today.year
+    
+    # Pagos pendientes de este mes (due_date en este mes y status pending)
+    pending_payments = Payment.objects.filter(
+        payment_status='pending',
+        due_date__month=current_month,
+        due_date__year=current_year
+    ).select_related('student')
+    
+    pending_count = pending_payments.count()
+    
+    # Obtener nombres únicos de estudiantes con pagos pendientes (máximo 5)
+    pending_students = []
+    seen_students = set()
+    for payment in pending_payments:
+        if payment.student_id not in seen_students:
+            seen_students.add(payment.student_id)
+            pending_students.append(payment.student.first_name)
+    
+    pending_students_display = pending_students[:5]
+    has_more_pending = len(pending_students) > 5
+    
+    # Cumpleaños este mes (estudiantes activos)
+    birthday_students = Student.objects.filter(
+        active=True,
+        birth_date__month=current_month
+    ).order_by('birth_date__day')
+    
+    birthday_count = birthday_students.count()
+    
+    # Lista de cumpleaños con nombre y día (máximo 5)
+    birthdays_display = [
+        {'name': s.first_name, 'day': s.birth_date.day}
+        for s in birthday_students[:5]
+    ]
+    has_more_birthdays = birthday_count > 5
+    
+    context = {
+        'pending_payments_count': pending_count,
+        'pending_students': pending_students_display,
+        'has_more_pending': has_more_pending,
+        'total_pending_students': len(pending_students),
+        'birthday_count': birthday_count,
+        'birthdays': birthdays_display,
+        'has_more_birthdays': has_more_birthdays,
+        'current_month_name': today.strftime('%B'),
+    }
+    
+    return render(request, "home.html", context)
 
 def all_info(request):
     return render(request, "all_info.html", {"students": all_students, "payments": all_payments})
