@@ -1,37 +1,22 @@
-# ============================================================================
-# RENDER.COM DEPLOYMENT CONFIGURATION
-# ============================================================================
-# Este archivo define todos los servicios necesarios para desplegar Five a Day
-# en Render.com de forma automática usando Blueprint Specification v2
-
 services:
-  # ==========================================================================
-  # PostgreSQL Database
-  # ==========================================================================
-  - type: pserv
-    name: fiveaday-db
-    runtime: docker
-    plan: starter
-    region: frankfurt
-    
-  # ==========================================================================
-  # Django Web Application
-  # ==========================================================================
   - type: web
     name: fiveaday-web
-    runtime: python
-    plan: starter
+    runtime: docker
+    plan: free  # ⬅️ PLAN GRATUITO (750 horas/mes)
     region: frankfurt
-    branch: production-render
+    branch: produccion-render  # ⬅️ Tu rama de producción
     
-    # Comando de construcción
-    buildCommand: pip install poetry && poetry config virtualenvs.create false && poetry install --no-dev && python project/manage.py collectstatic --noinput
+    # Dockerfile
+    dockerfilePath: ./Dockerfile
     
-    # Comando de inicio
-    startCommand: chmod +x entrypoint.sh && ./entrypoint.sh
+    # Comando de inicio (Render usa la variable $PORT automáticamente)
+    dockerCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 project.wsgi:application
     
     # Variables de entorno
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      
       - key: DJANGO_ENV
         value: production
       
@@ -39,37 +24,28 @@ services:
         value: "False"
       
       - key: DJANGO_SECRET_KEY
-        generateValue: true
+        generateValue: true  # Render genera un secreto aleatorio seguro
       
       - key: DJANGO_ALLOWED_HOSTS
-        value: .onrender.com
+        value: .onrender.com,localhost,127.0.0.1
       
+      # Database - Se conecta automáticamente al servicio PostgreSQL
       - key: DATABASE_URL
         fromDatabase:
           name: fiveaday-db
           property: connectionString
       
+      # Superuser (configura estos manualmente después del deploy)
       - key: DJANGO_SUPERUSER_USERNAME
-        sync: false
+        value: admin
       
       - key: DJANGO_SUPERUSER_EMAIL
-        sync: false
+        value: admin@fiveaday.com
       
       - key: DJANGO_SUPERUSER_PASSWORD
-        sync: false
+        generateValue: true  # Render genera password seguro (anótalo)
       
-      - key: EMAIL_HOST_USER
-        sync: false
-      
-      - key: EMAIL_SECRET
-        sync: false
-      
-      - key: LOGIN_USERNAME
-        sync: false
-      
-      - key: LOGIN_PASSWORD
-        sync: false
-      
+      # Security settings para producción
       - key: SECURE_SSL_REDIRECT
         value: "True"
       
@@ -81,18 +57,9 @@ services:
       
       - key: CSRF_TRUSTED_ORIGINS
         value: https://fiveaday-web.onrender.com
-      
-      - key: PYTHON_VERSION
-        value: 3.12.0
     
     # Health check
-    healthCheckPath: /health/
+    healthCheckPath: /admin/login/
     
-    # Auto-deploy desde la rama especificada
+    # Auto-deploy cuando haces push
     autoDeploy: true
-    
-    # Disco persistente para archivos estáticos y media
-    disk:
-      name: fiveaday-storage
-      mountPath: /opt/render/project/staticfiles
-      sizeGB: 1
