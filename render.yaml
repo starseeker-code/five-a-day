@@ -4,7 +4,7 @@ services:
     runtime: docker
     plan: free  # PLAN GRATUITO (750 horas/mes)
     region: frankfurt
-    branch: produccion-render
+    branch: production-render
     
     # Dockerfile
     dockerfilePath: ./Dockerfile
