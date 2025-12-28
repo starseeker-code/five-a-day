@@ -1,7 +1,11 @@
+databases:
+  - name: fiveaday-db
+    databaseName: fiveaday_db
+    user: fiveaday_user
+    plan: free
+    region: frankfurt
+
 services:
-  # ==========================================================================
-  # Web service
-  # ==========================================================================
   - type: web
     name: fiveaday-web
     runtime: docker
@@ -43,13 +47,3 @@ services:
     
     healthCheckPath: /health/
     autoDeploy: true
-
-  # ==========================================================================
-  # PostgreSQL Database
-  # ==========================================================================
-  - type: pserv
-    name: fiveaday-db
-    plan: free
-    region: frankfurt
-    databaseName: fiveaday_db
-    databaseUser: fiveaday_user
