@@ -81,10 +81,16 @@
                     </a>
                 </nav>
                 <div class="mt-auto pt-10">
-                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
+                    <a href="{% url 'logout' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto group-hover:mx-0">logout</span>
                         <span class="hidden group-hover:block">Cerrar Sesión</span>
                     </a>
+                    {% if request.session.username %}
+                    <div class="mt-3 px-5 hidden group-hover:block">
+                        <p class="text-xs text-primary-500">Sesión activa:</p>
+                        <p class="text-sm font-semibold text-primary-700">{{ request.session.username }}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </aside>
 

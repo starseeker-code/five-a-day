@@ -17,8 +17,14 @@ help:
 	@echo "  make setup          - Configuración inicial (copia .env)"
 	@echo "  make build          - Construir las imágenes Docker"
 	@echo "  make up             - Iniciar todos los servicios"
-	@echo "  make down           - Detener todos los servicios"
+	@echo "  make down           - Detener y eliminar contenedores"
 	@echo "  make restart        - Reiniciar todos los servicios"
+	@echo "  make restart-web    - Reiniciar solo el servicio web"
+	@echo "  make restart-db     - Reiniciar solo la base de datos"
+	@echo "  make stop           - Detener sin eliminar contenedores"
+	@echo "  make start          - Iniciar contenedores detenidos"
+	@echo "  make rebuild        - Reconstruir todas las imágenes"
+	@echo "  make rebuild-web    - Reconstruir solo imagen web"
 	@echo ""
 	@echo "📊 Monitoreo:"
 	@echo "  make logs           - Ver logs de todos los servicios"
@@ -47,6 +53,14 @@ help:
 	@echo "🧹 Limpieza:"
 	@echo "  make clean          - Limpiar contenedores y volúmenes"
 	@echo "  make clean-all      - Limpiar todo (¡cuidado! pierdes datos)"
+	@echo ""
+	@echo "🔐 Seguridad:"
+	@echo "  make generate-password - Generar contraseña segura"
+	@echo "  make check-deploy   - Verificar configuración para producción"
+	@echo ""
+	@echo "🏥 Salud:"
+	@echo "  make health         - Verificar estado de todos los servicios"
+	@echo "  make url            - Mostrar URLs de acceso"
 	@echo ""
 
 # ============================================================================
@@ -83,6 +97,40 @@ restart:
 	@echo "🔄 Reiniciando servicios..."
 	docker compose restart
 	@echo "✅ Servicios reiniciados!"
+
+restart-web:
+	@echo "🔄 Reiniciando servicio web..."
+	docker compose restart web
+	@echo "✅ Servicio web reiniciado!"
+
+restart-db:
+	@echo "🔄 Reiniciando base de datos..."
+	docker compose restart db
+	@echo "✅ Base de datos reiniciada!"
+
+stop:
+	@echo "⏸️  Deteniendo servicios (sin eliminar)..."
+	docker compose stop
+	@echo "✅ Servicios detenidos!"
+
+start:
+	@echo "▶️  Iniciando servicios detenidos..."
+	docker compose start
+	@echo "✅ Servicios iniciados!"
+
+rebuild:
+	@echo "🔨 Reconstruyendo imágenes..."
+	docker compose down
+	docker compose build --no-cache
+	docker compose up -d
+	@echo "✅ Imágenes reconstruidas y servicios iniciados!"
+
+rebuild-web:
+	@echo "🔨 Reconstruyendo imagen web..."
+	docker compose stop web
+	docker compose build --no-cache web
+	docker compose up -d web
+	@echo "✅ Imagen web reconstruida!"
 
 # ============================================================================
 # LOGS & MONITORING
@@ -214,3 +262,43 @@ install-deps:
 update-deps:
 	@echo "🔄 Actualizando dependencias..."
 	docker compose exec web poetry update
+
+check:
+	@echo "🔍 Verificando configuración Django..."
+	docker compose exec web python project/manage.py check
+
+send-test-email:
+	@echo "📧 Enviando email de prueba..."
+	docker compose exec web python project/manage.py send_email --template happy_birthday --test
+
+# ============================================================================
+# QUICK ACCESS
+# ============================================================================
+url:
+	@echo "📱 Aplicación: http://localhost:8000"
+	@echo "🔧 Admin: http://localhost:8000/admin"
+	@echo "🔐 Login: http://localhost:8000/login"
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+health:
+	@echo "🏥 Verificando salud de servicios..."
+	@docker compose ps
+	@echo ""
+	@echo "📊 Verificando Django..."
+	@docker compose exec web python project/manage.py check --deploy || true
+	@echo ""
+	@echo "🗄️  Verificando PostgreSQL..."
+	@docker compose exec db pg_isready -U fiveaday_user || true
+
+# ============================================================================
+# SECURITY
+# ============================================================================
+generate-password:
+	@echo "🔐 Contraseña segura generada:"
+	@python3 scripts/generate_secure_password.py
+
+check-deploy:
+	@echo "🔍 Verificando configuración para despliegue..."
+	docker compose exec web python project/manage.py check --deploy

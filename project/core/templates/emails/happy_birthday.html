@@ -1,7 +1,40 @@
-{% extends 'base_email.html' %}
+{% extends 'emails/base_email.html' %}
+
+{% block title %}¡Feliz Cumpleaños!{% endblock %}
 
 {% block content %}
-
-
-
-{%  endblock %}
+<div style="text-align: center; padding: 40px 20px;">
+    <h1 style="color: #4F46E5; font-size: 36px; margin-bottom: 20px;">
+        🎉 ¡Feliz Cumpleaños{{ name|default:"" }}! 🎂
+    </h1>
+    
+    <p style="font-size: 18px; color: #374151; line-height: 1.6; margin-bottom: 20px;">
+        Desde <strong>Five a Day</strong> queremos desearte un día lleno de alegría, 
+        risas y momentos inolvidables.
+    </p>
+    
+    <p style="font-size: 16px; color: #6B7280; margin-bottom: 30px;">
+        ¡Esperamos que este nuevo año esté lleno de éxitos y aprendizajes increíbles! 🌟
+    </p>
+    
+    <div style="background-color: #EEF2FF; border-radius: 12px; padding: 25px; margin: 30px 0;">
+        <p style="font-size: 20px; color: #4F46E5; font-weight: bold; margin: 0;">
+            "El mejor regalo es aprender algo nuevo cada día" 📚
+        </p>
+    </div>
+    
+    <p style="font-size: 14px; color: #9CA3AF; margin-top: 30px;">
+        Con cariño,<br>
+        <strong>El equipo de Five a Day</strong>
+    </p>
+    
+    {% if error %}
+    <div style="background-color: #FEE2E2; border-left: 4px solid #EF4444; padding: 15px; margin-top: 20px; text-align: left;">
+        <p style="color: #991B1B; margin: 0; font-size: 14px;">
+            <strong>⚠️ Error al enviar email:</strong><br>
+            {{ error }}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

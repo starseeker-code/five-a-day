@@ -3,10 +3,17 @@ from core.views import *
 
 urlpatterns = [
     # ============================================================================
+    # AUTHENTICATION - Autenticación
+    # ============================================================================
+    path("login/", login_view, name="login"),
+    path("logout/", logout_view, name="logout"),
+    
+    # ============================================================================
     # HOME AND DASHBOARD
     # ============================================================================
     path("", home, name="home"),
     path("database/", all_info, name="all_info"),
+    path("email/", email_test, name="email_test"),  # Prueba de emails
     
     # ============================================================================
     # PARENT MANAGEMENT - Gestión de Padres

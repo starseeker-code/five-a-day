@@ -17,12 +17,82 @@ import json
 from datetime import date
 from core.transactions import all_students, all_payments
 from core.forms import StudentForm, ParentForm, EnrollmentForm, ParentFormSet
+from core.email import email_service
+from django.conf import settings
+import os
+
+def login_view(request):
+    """Vista de login con credenciales desde .env"""
+    # Si ya está autenticado, redirigir al home
+    if request.session.get('is_authenticated'):
+        return redirect('home')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Validar contra credenciales en .env
+        valid_username = os.getenv('LOGIN_USERNAME', 'fiveaday')
+        valid_password = os.getenv('LOGIN_PASSWORD', 'Fiveaday123!')
+        
+        if username == valid_username and password == valid_password:
+            # Autenticación exitosa
+            request.session['is_authenticated'] = True
+            request.session['username'] = username
+            messages.success(request, f'¡Bienvenido {username}!')
+            return redirect('home')
+        else:
+            # Credenciales incorrectas
+            messages.error(request, '❌ Usuario o contraseña incorrectos')
+    
+    return render(request, 'login.html')
+
+def logout_view(request):
+    """Vista de logout"""
+    request.session.flush()  # Eliminar toda la sesión
+    messages.success(request, '✅ Has cerrado sesión correctamente')
+    return redirect('login')
 
 def home(request):
     return render(request, "home.html")
 
 def all_info(request):
     return render(request, "all_info.html", {"students": all_students, "payments": all_payments})
+
+def email_test(request):
+    """Vista para probar el envío de emails usando el servicio genérico"""
+    if request.method == 'GET':
+        try:
+            # Usar el servicio genérico de emails
+            success = email_service.send_email(
+                template_name='happy_birthday',
+                recipients=settings.EMAIL_HOST_USER,
+                subject='🎉 ¡Feliz Cumpleaños! - Five a Day (Prueba)',
+                context={'name': 'Estudiante de Prueba'}
+            )
+            
+            if success:
+                messages.success(request, f'✅ Email enviado correctamente a {settings.EMAIL_HOST_USER}')
+            else:
+                messages.error(request, '❌ Error al enviar email. Verifica la configuración SMTP.')
+            
+            return render(request, 'emails/happy_birthday.html', {
+                'name': 'Estudiante de Prueba',
+                'year': 2025
+            })
+            
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+            return render(request, 'emails/happy_birthday.html', {
+                'name': 'Estudiante de Prueba',
+                'year': 2025,
+                'error': str(e)
+            })
+    
+    return render(request, 'emails/happy_birthday.html', {
+        'name': 'Estudiante de Prueba',
+        'year': 2025
+    })
 
 # ---> Estudiantes | Pagos || DASHBOARDS (Home + Info) | Aplicaciones | Facturacion | UI! || Gastos | Renta | UI!! || Configuracion | Contacto y ayuda
 # TESTING CODE ("testing/")
