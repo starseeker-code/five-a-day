@@ -13,7 +13,7 @@ services:
     region: frankfurt
     branch: production-render
     dockerfilePath: ./Dockerfile
-    dockerCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 project.wsgi:application
+    dockerCommand: cd project && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 project.wsgi:application
     
     envVars:
       - key: PYTHON_VERSION
