@@ -76,10 +76,18 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       
-      # Superuser (solo desarrollo)
+      # Superuser (desarrollo y producción)
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@fiveaday.com}
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+      
+      # Email Configuration
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_SECRET: ${EMAIL_SECRET:-}
+      
+      # Authentication (temporal)
+      LOGIN_USERNAME: ${LOGIN_USERNAME:-admin}
+      LOGIN_PASSWORD: ${LOGIN_PASSWORD:-admin123}
     
     # Volúmenes para desarrollo (hot reload)
     volumes:

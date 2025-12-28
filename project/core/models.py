@@ -5,25 +5,12 @@ from datetime import date
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
+from . import constants
 
 class EnrollmentType(models.Model):
-    # !ELIMINATE
-    """
-    Defines different enrollment types with their base pricing
-    This makes pricing more maintainable and auditable
-    """
-    ENROLLMENT_TYPES = [
-        ('adults', 'Adults'),
-        ('special', 'Special'),
-        ('languages_ticket', 'Languages Ticket'),
-        ('monthly', 'Monthly'),
-        ('half_month', 'Half-month'),
-        ('quarterly', 'Quarterly'),
-    ]
-    
     name = models.CharField(
         max_length=20, 
-        choices=ENROLLMENT_TYPES,
+        choices=constants.ENROLLMENT_TYPE_CHOICES,
         unique=True
     )
     display_name = models.CharField(max_length=50)
@@ -49,36 +36,14 @@ class EnrollmentType(models.Model):
         return self.display_name
 
 class Enrollment(models.Model):
-    """
-    Improved enrollment model with better structure and logic
-    """
-    ENROLLMENT_COST = [
-        ('children_enrollment', 40),  # enrollment (1 year)
-        ('adult_enrollment', 20),  # enrollment (1 year)
-    ]
-    
-    SCHEDULE_TYPES = [
-        ('full_time', 'Full-time (2 classes/week)'),  # 54€ / month
-        ('part_time', 'Part-time (1 class/week)'),  # 36€ / month
-        ('adult_group', 'Part-time (1 class/week)')  # 60€ / month
-    ]
-
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('active', 'Active'),
-        ('finished', 'Finished'),
-        ('cancelled', 'Cancelled'),
-        ('suspended', 'Suspended'),
-    ]
-
     student = models.ForeignKey(
         'Student',
-        on_delete=models.PROTECT,  # Keep - enrollments are too important to cascade delete
+        on_delete=models.PROTECT,
         related_name='enrollments'
     )
     enrollment_type = models.ForeignKey(
         EnrollmentType,
-        on_delete=models.PROTECT,  # Don't allow deletion of enrollment types with active enrollments
+        on_delete=models.PROTECT,
         related_name='enrollments'
     )
     
@@ -86,14 +51,14 @@ class Enrollment(models.Model):
     enrollment_period_end = models.DateField()
     schedule_type = models.CharField(
         max_length=20,
-        choices=SCHEDULE_TYPES,
+        choices=constants.SCHEDULE_TYPE_CHOICES,
         default='full_time'
     )
     
     enrollment_amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
     )
     discount_percentage = models.DecimalField(
         max_digits=5,
@@ -104,12 +69,12 @@ class Enrollment(models.Model):
     final_amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
     )
     
     status = models.CharField(
         max_length=10,
-        choices=STATUS_CHOICES,
+        choices=constants.ENROLLMENT_STATUS_CHOICES,
         default='pending'
     )
     enrollment_date = models.DateField()
@@ -182,85 +147,45 @@ class Enrollment(models.Model):
         return max(self.final_amount - total_payments, Decimal('0.00'))
 
 class Payment(models.Model):
-    """
-    Improved payment model with better structure and validation
-    """
-    # !IMPORTANT payments could be partial (divorced parents)
-    PAYMENT_METHODS = [
-        ('cash', 'In Cash'),
-        ('transfer', 'Transference'),
-        ('credit_card', 'Credit Card'),
-    ]
-
-    DISCOUNTS = [
-        {"language_cheque": (20, "flat")},
-        {"quartely_enrollment": (0.05, "percentage")},  # x3 months
-        {"old_student_enrollment": (10, "flat")},
-        {"full_year_bonus": (20, "flat")},  # NO adultos, en abril trimestrales tambien se aplica
-        {"sibling_discount": (0.05, "percentage")},  # each month
-        # ---- let's see first
-        {"half-month_discount": (0.5, "percentage")},  # sept
-        {"only_one_week_discount": (0.75, "percentage")},  # we should automate this with a calendar system (first month)
-        {"only_three_week_discount": (0.25, "percentage")},
-    ]
-
-    PAYMENT_STATUS = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-        ('cancelled', 'Cancelled'),
-        ('refunded', 'Refunded'),
-    ]
-
-    PAYMENT_TYPES = [
-        ('enrollment', 'Enrollment Fee'),
-        ('monthly', 'Monthly Fee'),
-        ('materials', 'Materials'),
-        ('registration', 'Registration'),
-        ('exam', 'Exam Fee'),
-        ('other', 'Other'),
-    ]
-
-    # Core relationships
     student = models.ForeignKey(
         'Student',
-        on_delete=models.PROTECT,  # Payments are critical financial records
+        on_delete=models.PROTECT,
         related_name='payments'
     )
     enrollment = models.ForeignKey(
         Enrollment,
-        on_delete=models.PROTECT,  # Keep payment history even if enrollment changes
+        on_delete=models.PROTECT,
         related_name='payments',
         null=True,
-        blank=True  # Some payments might not be tied to specific enrollment
+        blank=True
     )
     parent = models.ForeignKey(
         'Parent',
-        on_delete=models.PROTECT,  # Keep payment history
+        on_delete=models.PROTECT,
         related_name='payments'
     )
 
     payment_type = models.CharField(
         max_length=20,
-        choices=PAYMENT_TYPES,
+        choices=constants.PAYMENT_TYPE_CHOICES,
         default='monthly'
     )
     payment_method = models.CharField(
         max_length=15,
-        choices=PAYMENT_METHODS,
+        choices=constants.PAYMENT_METHOD_CHOICES,
         default='transfer'
     )
     
     amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(constants.MIN_PAYMENT_AMOUNT)]
     )
-    currency = models.CharField(max_length=3, default='EUR')
+    currency = models.CharField(max_length=3, default=constants.DEFAULT_CURRENCY)
     
     payment_status = models.CharField(
         max_length=10,
-        choices=PAYMENT_STATUS,
+        choices=constants.PAYMENT_STATUS_CHOICES,
         default='pending'
     )
     due_date = models.DateField()  # When payment is expected
@@ -320,9 +245,6 @@ class Payment(models.Model):
         if self.is_overdue:
             return (date.today() - self.due_date).days
         return 0
-        
-    # Manager
-    #active_objects = ActivePaymentManager()
 
 class Teacher(models.Model):
     last_name = models.CharField(max_length=100)
@@ -352,7 +274,7 @@ class Group(models.Model):
     group_name = models.CharField(max_length=100, unique=True)
     teacher = models.ForeignKey(
         Teacher, 
-        on_delete=models.PROTECT,  # Prevent deletion if group exists
+        on_delete=models.PROTECT,
         related_name='groups'
     )
     active = models.BooleanField(default=True)
@@ -372,7 +294,7 @@ class Group(models.Model):
 class Parent(models.Model):
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
-    dni = models.CharField(max_length=20, unique=True)  # Spanish ID number
+    dni = models.CharField(max_length=20, unique=True)
     phone = models.CharField(max_length=20)
     email = models.EmailField()
     iban = models.CharField(max_length=34, blank=True)  # International Bank Account Number
@@ -394,11 +316,9 @@ class Parent(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 class Student(models.Model):
-    # !IMPORTANT ADULTS DO NOT NEED FK WITH PARENTS (new table for adult_students?)
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
     birth_date = models.DateField()
-    email = models.EmailField(blank=True)  # TODO remove
     school = models.CharField(max_length=200, blank=True)
     allergies = models.TextField(blank=True)
     gdpr_signed = models.BooleanField(default=False)
