@@ -1,12 +1,13 @@
 services:
+  # ==========================================================================
   # Web service
+  # ==========================================================================
   - type: web
     name: fiveaday-web
     runtime: docker
     plan: free
     region: frankfurt
     branch: production-render
-    
     dockerfilePath: ./Dockerfile
     dockerCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 project.wsgi:application
     
@@ -43,7 +44,9 @@ services:
     healthCheckPath: /health/
     autoDeploy: true
 
+  # ==========================================================================
   # PostgreSQL Database
+  # ==========================================================================
   - type: pserv
     name: fiveaday-db
     plan: free
