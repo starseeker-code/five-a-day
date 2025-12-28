@@ -13,7 +13,6 @@ services:
     runtime: docker
     plan: starter
     region: frankfurt
-    ipAllowList: []
     
   # ==========================================================================
   # Django Web Application
