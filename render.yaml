@@ -37,7 +37,7 @@ services:
       - key: DJANGO_SUPERUSER_PASSWORD
         generateValue: true
       - key: SECURE_SSL_REDIRECT
-        value: "True"
+        value: "False"
       - key: SESSION_COOKIE_SECURE
         value: "True"
       - key: CSRF_COOKIE_SECURE
