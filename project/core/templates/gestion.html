@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Gestión{% endblock %}
+
+{% block page_title %}Gestión del Sistema{% endblock %}
+{% block page_subtitle %}Configura precios, profesores y grupos{% endblock %}
+
+{% block header_actions %}
+<button id="btn-edit-values" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+    <span class="material-symbols-outlined">edit</span> Cambiar Valores
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Sección de Precios -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <button type="button" class="w-full px-6 py-4 flex justify-between items-center bg-primary-50 hover:bg-primary-100 transition-colors duration-200 focus:outline-none" onclick="toggleSection('precios-section')">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary-600">payments</span>
+                <h3 class="text-lg font-semibold text-primary-700">Precios y Tarifas</h3>
+            </div>
+            <span id="precios-icon" class="material-symbols-outlined text-primary-600 transition-transform duration-200">expand_more</span>
+        </button>
+        <div id="precios-section" class="hidden">
+            <div class="p-6 border-t border-primary-100">
+                <form id="config-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Matrículas -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-semibold text-neutral-700 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">school</span>
+                            Matrículas
+                        </h4>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Matrícula Niños (€)</label>
+                            <input type="number" step="0.01" name="children_enrollment_fee" 
+                                   value="{{ config.children_enrollment_fee }}" 
+                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
+                                   disabled>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Matrícula Adultos (€)</label>
+                            <input type="number" step="0.01" name="adult_enrollment_fee" 
+                                   value="{{ config.adult_enrollment_fee }}" 
+                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
+                                   disabled>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensualidades -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-semibold text-neutral-700 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">calendar_month</span>
+                            Mensualidades
+                        </h4>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Jornada Completa (€)</label>
+                            <input type="number" step="0.01" name="full_time_monthly_fee" 
+                                   value="{{ config.full_time_monthly_fee }}" 
+                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
+                                   disabled>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Media Jornada (€)</label>
+                            <input type="number" step="0.01" name="part_time_monthly_fee" 
+                                   value="{{ config.part_time_monthly_fee }}" 
+                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
+                                   disabled>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Grupo Adultos (€)</label>
+                            <input type="number" step="0.01" name="adult_group_monthly_fee" 
+                                   value="{{ config.adult_group_monthly_fee }}" 
+                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
+                                   disabled>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Botón guardar (oculto por defecto) -->
+                <div id="save-config-container" class="hidden mt-6 flex justify-end gap-3">
+                    <button type="button" id="btn-cancel-edit" class="px-6 py-2 bg-neutral-200 text-neutral-700 rounded-md hover:bg-neutral-300 transition-colors duration-200">
+                        Cancelar
+                    </button>
+                    <button type="button" id="btn-save-config" class="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">save</span>
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Grupos y Profesores -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <button type="button" class="w-full px-6 py-4 flex justify-between items-center bg-primary-50 hover:bg-primary-100 transition-colors duration-200 focus:outline-none" onclick="toggleSection('grupos-section')">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary-600">groups</span>
+                <h3 class="text-lg font-semibold text-primary-700">Grupos y Profesores</h3>
+            </div>
+            <span id="grupos-icon" class="material-symbols-outlined text-primary-600 transition-transform duration-200">expand_more</span>
+        </button>
+        <div id="grupos-section" class="hidden">
+            <div class="p-6 border-t border-primary-100">
+                <!-- Tabla de Grupos -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-neutral-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-neutral-600">Grupo</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-neutral-600">Profesora</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-neutral-600">Estudiantes</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-100">
+                            {% for group in groups %}
+                            <tr class="hover:bg-neutral-50 transition-colors duration-200">
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
+                                        {{ group.group_name }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-neutral-700">
+                                    {{ group.teacher.full_name }}
+                                </td>
+                                <td class="px-4 py-3 text-neutral-600">
+                                    {{ group.students.count }} estudiantes
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-neutral-500">
+                                    No hay grupos registrados
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button type="button" id="btn-new-teacher" class="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2">
+                        <span class="material-symbols-outlined">person_add</span>
+                        Nuevo Profesor
+                    </button>
+                    <button type="button" id="btn-new-group" class="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 flex items-center gap-2">
+                        <span class="material-symbols-outlined">group_add</span>
+                        Nuevo Grupo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nuevo Profesor -->
+<div id="modal-teacher" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="px-6 py-4 bg-blue-500 text-white flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Nuevo Profesor</h3>
+            <button type="button" onclick="closeModal('modal-teacher')" class="hover:bg-blue-600 p-1 rounded transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="form-teacher" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1">Nombre *</label>
+                <input type="text" name="first_name" required 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1">Apellidos *</label>
+                <input type="text" name="last_name" required 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1">Email *</label>
+                <input type="email" name="email" required 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1">Teléfono</label>
+                <input type="tel" name="phone" 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="admin" id="teacher-admin" class="rounded border-neutral-300 text-blue-500 focus:ring-blue-500">
+                <label for="teacher-admin" class="text-sm text-neutral-700">Administrador</label>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal('modal-teacher')" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-md hover:bg-neutral-300 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">save</span>
+                    Crear Profesor
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Nuevo Grupo -->
+<div id="modal-group" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="px-6 py-4 bg-green-500 text-white flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Nuevo Grupo</h3>
+            <button type="button" onclick="closeModal('modal-group')" class="hover:bg-green-600 p-1 rounded transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="form-group" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1">Nombre del Grupo *</label>
+                <input type="text" name="group_name" required 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                       placeholder="Ej: Group 1, Adults, etc.">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1">Profesora *</label>
+                <select name="teacher_id" id="select-teacher" required 
+                        class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <option value="">Seleccionar profesor...</option>
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal('modal-group')" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-md hover:bg-neutral-300 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">save</span>
+                    Crear Grupo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Toast de notificación -->
+<div id="toast" class="fixed bottom-4 right-4 transform translate-y-full opacity-0 transition-all duration-300 z-50">
+    <div class="px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+        <span id="toast-icon" class="material-symbols-outlined"></span>
+        <span id="toast-message"></span>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = '{{ csrf_token }}';
+    let editMode = false;
+    
+    // Toggle sección desplegable
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        const iconId = sectionId.replace('-section', '-icon');
+        const icon = document.getElementById(iconId);
+        
+        section.classList.toggle('hidden');
+        icon.style.transform = section.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+    
+    // Mostrar/ocultar modal
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    
+    // Toast de notificación
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const toastIcon = document.getElementById('toast-icon');
+        
+        toastMessage.textContent = message;
+        
+        if (type === 'success') {
+            toast.querySelector('div').className = 'bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3';
+            toastIcon.textContent = 'check_circle';
+        } else {
+            toast.querySelector('div').className = 'bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3';
+            toastIcon.textContent = 'error';
+        }
+        
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
+    }
+    
+    // Modo edición de configuración
+    document.getElementById('btn-edit-values').addEventListener('click', function() {
+        editMode = !editMode;
+        const inputs = document.querySelectorAll('.config-input');
+        const saveContainer = document.getElementById('save-config-container');
+        const editBtn = document.getElementById('btn-edit-values');
+        
+        if (editMode) {
+            inputs.forEach(input => {
+                input.disabled = false;
+                input.classList.remove('bg-neutral-100', 'cursor-not-allowed');
+                input.classList.add('bg-white', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500');
+            });
+            saveContainer.classList.remove('hidden');
+            editBtn.innerHTML = '<span class="material-symbols-outlined">close</span> Cancelar Edición';
+            editBtn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
+            editBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+            
+            // Abrir sección de precios si está cerrada
+            const preciosSection = document.getElementById('precios-section');
+            if (preciosSection.classList.contains('hidden')) {
+                toggleSection('precios-section');
+            }
+        } else {
+            cancelEdit();
+        }
+    });
+    
+    function cancelEdit() {
+        editMode = false;
+        const inputs = document.querySelectorAll('.config-input');
+        const saveContainer = document.getElementById('save-config-container');
+        const editBtn = document.getElementById('btn-edit-values');
+        
+        inputs.forEach(input => {
+            input.disabled = true;
+            input.classList.add('bg-neutral-100', 'cursor-not-allowed');
+            input.classList.remove('bg-white', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500');
+        });
+        saveContainer.classList.add('hidden');
+        editBtn.innerHTML = '<span class="material-symbols-outlined">edit</span> Cambiar Valores';
+        editBtn.classList.add('bg-primary-500', 'hover:bg-primary-600');
+        editBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+    }
+    
+    document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
+    
+    // Guardar configuración
+    document.getElementById('btn-save-config').addEventListener('click', async function() {
+        const form = document.getElementById('config-form');
+        const formData = new FormData(form);
+        const data = {};
+        
+        for (let [key, value] of formData.entries()) {
+            data[key] = parseFloat(value);
+        }
+        
+        try {
+            const response = await fetch('{% url "update_site_config" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                cancelEdit();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Error al guardar la configuración', 'error');
+        }
+    });
+    
+    // Nuevo Profesor
+    document.getElementById('btn-new-teacher').addEventListener('click', function() {
+        openModal('modal-teacher');
+    });
+    
+    document.getElementById('form-teacher').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = {
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            email: formData.get('email'),
+            phone: formData.get('phone') || '',
+            admin: formData.get('admin') === 'on'
+        };
+        
+        try {
+            const response = await fetch('{% url "create_teacher" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                closeModal('modal-teacher');
+                // Recargar página para ver el nuevo profesor
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Error al crear el profesor', 'error');
+        }
+    });
+    
+    // Nuevo Grupo
+    document.getElementById('btn-new-group').addEventListener('click', async function() {
+        // Refrescar lista de profesores antes de abrir
+        try {
+            const response = await fetch('{% url "api_get_teachers" %}');
+            const data = await response.json();
+            
+            const select = document.getElementById('select-teacher');
+            select.innerHTML = '<option value="">Seleccionar profesor...</option>';
+            
+            data.teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = teacher.full_name;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error al cargar profesores:', error);
+        }
+        
+        openModal('modal-group');
+    });
+    
+    document.getElementById('form-group').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = {
+            group_name: formData.get('group_name'),
+            teacher_id: parseInt(formData.get('teacher_id'))
+        };
+        
+        try {
+            const response = await fetch('{% url "create_group" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                closeModal('modal-group');
+                // Recargar página para ver el nuevo grupo
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Error al crear el grupo', 'error');
+        }
+    });
+    
+    // Cerrar modales al hacer click fuera
+    document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal(this.id);
+            }
+        });
+    });
+    
+    // Cerrar modales con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[id^="modal-"]:not(.hidden)').forEach(modal => {
+                closeModal(modal.id);
+            });
+        }
+    });
+</script>
+{% endblock %}

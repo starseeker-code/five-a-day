@@ -260,3 +260,38 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SECRET", "")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# ============================================================================
+# CELERY CONFIGURATION
+# ============================================================================
+# Sin Redis (plan free de Render), usar eager mode (sincrónico)
+# Las tareas se ejecutan inmediatamente en el mismo proceso
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", None)
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", None)
+
+# Serialización
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Timezone
+CELERY_TIMEZONE = 'Europe/Madrid'
+CELERY_ENABLE_UTC = True
+
+# Configuración de tareas
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos máximo por tarea
+
+# Reintentos automáticos para tareas de email
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
+# Configuración de colas
+CELERY_TASK_ROUTES = {
+    'core.tasks.send_*': {'queue': 'emails'},
+}
+
+# Modo eager cuando no hay broker (plan free)
+if not CELERY_BROKER_URL:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True

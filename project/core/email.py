@@ -5,10 +5,25 @@ Soporta múltiples templates y puede ser usado desde comandos Django o Celery ta
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from email.mime.image import MIMEImage
 from typing import List, Dict, Optional, Union
 import logging
+import os
 
 logger = logging.getLogger(__name__)
+
+
+def get_email_config():
+    """
+    Obtiene la configuración de email desde settings/variables de entorno.
+    Esta función asegura que siempre usamos los valores correctos del .env.
+    """
+    return {
+        'host_user': settings.EMAIL_HOST_USER,
+        'host_password': settings.EMAIL_HOST_PASSWORD,
+        'from_email': settings.DEFAULT_FROM_EMAIL,
+        'backend': settings.EMAIL_BACKEND,
+    }
 
 
 class EmailService:
@@ -38,7 +53,8 @@ class EmailService:
         cc: Optional[List[str]] = None,
         bcc: Optional[List[str]] = None,
         fail_silently: bool = False,
-        attachments: Optional[List] = None
+        attachments: Optional[List] = None,
+        inline_images: Optional[Dict[str, str]] = None
     ) -> bool:
         """
         Envía un email usando un template HTML
@@ -52,6 +68,8 @@ class EmailService:
             bcc: Lista de emails en copia oculta
             fail_silently: Si True, no lanza excepciones en caso de error
             attachments: Lista de tuplas (filename, content, mimetype)
+            inline_images: Dict de {content_id: file_path} para imágenes inline
+                           En el template usar: <img src="cid:content_id">
         
         Returns:
             True si se envió correctamente, False en caso contrario
@@ -86,6 +104,17 @@ class EmailService:
                 bcc=bcc
             )
             email.attach_alternative(html_content, "text/html")
+            
+            # Añadir imágenes inline si existen
+            if inline_images:
+                email.mixed_subtype = 'related'
+                for content_id, image_path in inline_images.items():
+                    if os.path.exists(image_path):
+                        with open(image_path, 'rb') as img_file:
+                            img = MIMEImage(img_file.read())
+                            img.add_header('Content-ID', f'<{content_id}>')
+                            img.add_header('Content-Disposition', 'inline', filename=os.path.basename(image_path))
+                            email.attach(img)
             
             # Añadir adjuntos si existen
             if attachments:
@@ -177,4 +206,44 @@ def send_monthly_report(recipient: str, report_data: Dict) -> bool:
         recipients=recipient,
         subject='📊 Reporte Mensual - Five a Day',
         context=report_data
+    )
+
+
+def send_welcome_email(
+    parent_email: str,
+    parent_name: str,
+    student_name: str,
+    group_name: str = None,
+    enrollment_type: str = None,
+    schedule_type: str = None,
+    start_date: str = None
+) -> bool:
+    """
+    Envía email de bienvenida cuando se matricula un nuevo estudiante.
+    
+    Args:
+        parent_email: Email del padre/tutor
+        parent_name: Nombre del padre/tutor
+        student_name: Nombre del estudiante
+        group_name: Nombre del grupo asignado
+        enrollment_type: Tipo de matrícula
+        schedule_type: Tipo de horario
+        start_date: Fecha de inicio del período
+    
+    Returns:
+        True si se envió correctamente
+    """
+    return email_service.send_email(
+        template_name='welcome_student',
+        recipients=parent_email,
+        subject=f'🎓 ¡Bienvenido/a {student_name} a Five a Day!',
+        context={
+            'parent_name': parent_name,
+            'student_name': student_name,
+            'group_name': group_name,
+            'enrollment_type': enrollment_type,
+            'schedule_type': schedule_type,
+            'start_date': start_date,
+        },
+        fail_silently=True  # No queremos que falle la creación si el email falla
     )

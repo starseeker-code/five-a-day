@@ -1,0 +1,92 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}¡Bienvenido a Five a Day!{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 20px;">
+    <h1 style="color: #4F46E5; font-size: 32px; margin-bottom: 20px;">
+        🎓 ¡Bienvenido/a a Five a Day!
+    </h1>
+    
+    <p style="font-size: 18px; color: #374151; line-height: 1.6; margin-bottom: 10px;">
+        Estimado/a <strong>{{ parent_name }}</strong>,
+    </p>
+    
+    <p style="font-size: 16px; color: #6B7280; line-height: 1.6; margin-bottom: 20px;">
+        Nos alegra comunicarte que <strong>{{ student_name }}</strong> 
+        ha sido matriculado/a exitosamente en nuestra academia.
+    </p>
+    
+    <div style="background-color: #EEF2FF; border-radius: 12px; padding: 25px; margin: 30px 0; text-align: left;">
+        <h2 style="color: #4F46E5; font-size: 18px; margin: 0 0 15px 0;">
+            📋 Detalles de la matrícula:
+        </h2>
+        <table style="width: 100%; font-size: 14px; color: #374151;">
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE;">
+                    <strong>Estudiante:</strong>
+                </td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE; text-align: right;">
+                    {{ student_name }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE;">
+                    <strong>Grupo:</strong>
+                </td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE; text-align: right;">
+                    {{ group_name|default:"Por asignar" }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE;">
+                    <strong>Tipo de matrícula:</strong>
+                </td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE; text-align: right;">
+                    {{ enrollment_type|default:"Estándar" }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE;">
+                    <strong>Horario:</strong>
+                </td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #C7D2FE; text-align: right;">
+                    {{ schedule_type|default:"Por confirmar" }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0;">
+                    <strong>Fecha de inicio:</strong>
+                </td>
+                <td style="padding: 8px 0; text-align: right;">
+                    {{ start_date|default:"Por confirmar" }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <p style="font-size: 16px; color: #6B7280; margin-bottom: 20px;">
+        Estamos emocionados de tener a {{ student_name }} en nuestra familia Five a Day. 
+        Nos esforzamos por crear un ambiente de aprendizaje divertido y enriquecedor.
+    </p>
+    
+    <div style="background-color: #F0FDF4; border-left: 4px solid #22C55E; padding: 15px; margin: 20px 0; text-align: left;">
+        <p style="color: #166534; margin: 0; font-size: 14px;">
+            <strong>📞 ¿Tienes alguna pregunta?</strong><br>
+            No dudes en contactarnos. Estamos aquí para ayudarte.
+        </p>
+    </div>
+    
+    <p style="font-size: 14px; color: #9CA3AF; margin-top: 30px;">
+        Con cariño,<br>
+        <strong>El equipo de Five a Day</strong>
+    </p>
+    
+    <!-- Espacio reservado para firma personalizada -->
+    {% if signature %}
+    <div style="margin-top: 20px;">
+        {{ signature|safe }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
