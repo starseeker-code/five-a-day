@@ -128,39 +128,75 @@ def all_info(request):
     return render(request, "all_info.html", {"students": all_students, "payments": all_payments})
 
 def email_test(request):
-    """Vista para probar el envío de emails usando el servicio genérico"""
-    if request.method == 'GET':
-        try:
-            # Usar el servicio genérico de emails
-            success = email_service.send_email(
-                template_name='happy_birthday',
-                recipients=settings.EMAIL_HOST_USER,
-                subject='🎉 ¡Feliz Cumpleaños! - Five a Day (Prueba)',
-                context={'name': 'Estudiante de Prueba'}
-            )
-            
-            if success:
-                messages.success(request, f'✅ Email enviado correctamente a {settings.EMAIL_HOST_USER}')
-            else:
-                messages.error(request, '❌ Error al enviar email. Verifica la configuración SMTP.')
-            
-            return render(request, 'emails/happy_birthday.html', {
-                'name': 'Estudiante de Prueba',
-                'year': 2025
-            })
-            
-        except Exception as e:
-            messages.error(request, f'❌ Error: {str(e)}')
-            return render(request, 'emails/happy_birthday.html', {
-                'name': 'Estudiante de Prueba',
-                'year': 2025,
-                'error': str(e)
-            })
+    """
+    Vista para probar el envío de emails.
+    Uso: /email/?email=destinatario@example.com
+    Envía un email de cumpleaños inmediatamente y uno de bienvenida a los 5 segundos.
+    """
+    recipient = request.GET.get('email')
     
-    return render(request, 'emails/happy_birthday.html', {
-        'name': 'Estudiante de Prueba',
-        'year': 2025
-    })
+    if not recipient:
+        return JsonResponse({
+            'error': 'Parámetro "email" requerido',
+            'uso': '/email/?email=tu@email.com',
+            'ejemplo': '/email/?email=test@gmail.com'
+        }, status=400)
+    
+    try:
+        from datetime import datetime
+        import threading
+        import time
+        
+        # Enviar email de cumpleaños inmediatamente
+        success_birthday = email_service.send_email(
+            template_name='happy_birthday',
+            recipients=recipient,
+            subject='🎉 ¡Feliz Cumpleaños! - Five a Day (Prueba)',
+            context={
+                'name': 'Estudiante de Prueba',
+                'year': datetime.now().year
+            }
+        )
+        
+        # Función para enviar email de bienvenida después de 5 segundos
+        def send_welcome_delayed():
+            time.sleep(5)
+            email_service.send_email(
+                template_name='welcome_student',
+                recipients=recipient,
+                subject='🎓 ¡Bienvenido a Five a Day! (Prueba)',
+                context={
+                    'student_name': 'Estudiante de Prueba',
+                    'parent_name': 'Padre/Madre de Prueba',
+                    'group_name': 'Grupo de Ejemplo',
+                    'teacher_name': 'Profesor de Prueba',
+                    'schedule_type': 'Completo',
+                    'enrollment_fee': '50.00',
+                    'monthly_fee': '100.00',
+                    'year': datetime.now().year
+                }
+            )
+        
+        # Lanzar el email de bienvenida en un hilo separado
+        threading.Thread(target=send_welcome_delayed, daemon=True).start()
+        
+        if success_birthday:
+            return JsonResponse({
+                'success': True,
+                'message': f'Email de cumpleaños enviado a {recipient}. Email de bienvenida se enviará en 5 segundos.',
+                'templates': ['happy_birthday', 'welcome_student (en 5s)']
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al enviar email. Verifica la configuración SMTP.'
+            }, status=500)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 # ---> Estudiantes | Pagos || DASHBOARDS (Home + Info) | Aplicaciones | Facturacion | UI! || Gastos | Renta | UI!! || Configuracion | Contacto y ayuda
 # TESTING CODE ("testing/")
@@ -283,6 +319,7 @@ class StudentCreateView(CreateView):
     template_name = 'student_create.html'
     
     def get_context_data(self, **kwargs):
+        from .models import SiteConfiguration
         context = super().get_context_data(**kwargs)
         
         # Obtener el parent_id de los parámetros GET si existe
@@ -303,9 +340,19 @@ class StudentCreateView(CreateView):
         # Agregar grupos disponibles
         context['groups'] = Group.objects.filter(active=True)
         
+        # Agregar precios de configuración para JavaScript
+        config = SiteConfiguration.get_config()
+        context['price_config'] = {
+            'full_time': str(config.full_time_monthly_fee),
+            'part_time': str(config.part_time_monthly_fee),
+            'adult_group': str(config.adult_group_monthly_fee),
+        }
+        
         return context
     
     def form_valid(self, form):
+        from core.tasks import send_welcome_email_task
+        
         enrollment_form = EnrollmentForm(self.request.POST)
         
         if not enrollment_form.is_valid():
@@ -337,6 +384,19 @@ class StudentCreateView(CreateView):
                 enrollment = enrollment_form.save(commit=False)
                 enrollment.student = student
                 enrollment.save()
+                
+                # Encolar email de bienvenida de forma asíncrona (Celery)
+                try:
+                    send_welcome_email_task.delay(
+                        parent_id=parent.id,
+                        student_id=student.id,
+                        enrollment_id=enrollment.id
+                    )
+                except Exception as celery_error:
+                    # Si Celery no está disponible, no fallar
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"No se pudo encolar email de bienvenida: {celery_error}")
                 
                 messages.success(
                     self.request,
@@ -1305,4 +1365,194 @@ def export_payments(request):
         ])
     
     return response
+
+
+# ============================================================================
+# GESTIÓN - Site Configuration, Teachers & Groups Management
+# ============================================================================
+
+def gestion_view(request):
+    """
+    Vista principal de gestión con configuración de precios, profesores y grupos.
+    """
+    from .models import SiteConfiguration, Teacher, Group
+    
+    config = SiteConfiguration.get_config()
+    teachers = Teacher.objects.filter(active=True).order_by('first_name', 'last_name')
+    groups = Group.objects.filter(active=True).select_related('teacher').order_by('group_name')
+    
+    context = {
+        'config': config,
+        'teachers': teachers,
+        'groups': groups,
+    }
+    return render(request, 'gestion.html', context)
+
+
+@require_http_methods(["POST"])
+def update_site_config(request):
+    """
+    API para actualizar la configuración de precios del sitio.
+    """
+    from .models import SiteConfiguration
+    
+    try:
+        data = json.loads(request.body)
+        config = SiteConfiguration.get_config()
+        
+        # Actualizar precios de matrícula
+        if 'children_enrollment_fee' in data:
+            config.children_enrollment_fee = Decimal(str(data['children_enrollment_fee']))
+        if 'adult_enrollment_fee' in data:
+            config.adult_enrollment_fee = Decimal(str(data['adult_enrollment_fee']))
+        
+        # Actualizar mensualidades
+        if 'full_time_monthly_fee' in data:
+            config.full_time_monthly_fee = Decimal(str(data['full_time_monthly_fee']))
+        if 'part_time_monthly_fee' in data:
+            config.part_time_monthly_fee = Decimal(str(data['part_time_monthly_fee']))
+        if 'adult_group_monthly_fee' in data:
+            config.adult_group_monthly_fee = Decimal(str(data['adult_group_monthly_fee']))
+        
+        config.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Configuración actualizada correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@require_http_methods(["POST"])
+def create_teacher(request):
+    """
+    API para crear un nuevo profesor.
+    """
+    from .models import Teacher
+    
+    try:
+        data = json.loads(request.body)
+        
+        # Validar campos requeridos
+        required_fields = ['first_name', 'last_name', 'email']
+        for field in required_fields:
+            if not data.get(field):
+                return JsonResponse({
+                    'success': False,
+                    'message': f'El campo {field} es requerido'
+                }, status=400)
+        
+        # Verificar email único
+        if Teacher.objects.filter(email=data['email']).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'Ya existe un profesor con ese email'
+            }, status=400)
+        
+        teacher = Teacher.objects.create(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            phone=data.get('phone', ''),
+            active=True,
+            admin=data.get('admin', False)
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Profesor creado correctamente',
+            'teacher': {
+                'id': teacher.id,
+                'full_name': teacher.full_name,
+                'email': teacher.email
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@require_http_methods(["POST"])
+def create_group(request):
+    """
+    API para crear un nuevo grupo.
+    """
+    from .models import Group, Teacher
+    
+    try:
+        data = json.loads(request.body)
+        
+        # Validar campos requeridos
+        if not data.get('group_name'):
+            return JsonResponse({
+                'success': False,
+                'message': 'El nombre del grupo es requerido'
+            }, status=400)
+        
+        if not data.get('teacher_id'):
+            return JsonResponse({
+                'success': False,
+                'message': 'El profesor es requerido'
+            }, status=400)
+        
+        # Verificar nombre único
+        if Group.objects.filter(group_name=data['group_name']).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'Ya existe un grupo con ese nombre'
+            }, status=400)
+        
+        # Verificar que el profesor existe
+        try:
+            teacher = Teacher.objects.get(id=data['teacher_id'], active=True)
+        except Teacher.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'El profesor seleccionado no existe'
+            }, status=400)
+        
+        group = Group.objects.create(
+            group_name=data['group_name'],
+            teacher=teacher,
+            active=True
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Grupo creado correctamente',
+            'group': {
+                'id': group.id,
+                'group_name': group.group_name,
+                'teacher_name': teacher.full_name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+def api_get_teachers(request):
+    """
+    API para obtener lista de profesores activos (para select de grupos).
+    """
+    from .models import Teacher
+    
+    teachers = Teacher.objects.filter(active=True).order_by('first_name', 'last_name')
+    data = [
+        {
+            'id': t.id,
+            'full_name': t.full_name,
+            'email': t.email
+        }
+        for t in teachers
+    ]
+    return JsonResponse({'teachers': data})
 

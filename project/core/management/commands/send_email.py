@@ -149,11 +149,12 @@ class Command(BaseCommand):
         
         today = date.today()
         
-        # Buscar estudiantes que cumplen hoy
+        # Buscar estudiantes activos que cumplen hoy
         birthday_students = Student.objects.filter(
             birth_date__month=today.month,
-            birth_date__day=today.day
-        ).select_related('parent')
+            birth_date__day=today.day,
+            active=True
+        ).prefetch_related('parents')
         
         if not birthday_students.exists():
             self.stdout.write(self.style.WARNING('ℹ️  No hay cumpleaños hoy'))
@@ -165,24 +166,27 @@ class Command(BaseCommand):
         failed = 0
         
         for student in birthday_students:
-            if not student.parent or not student.parent.email:
-                self.stdout.write(self.style.WARNING(f'⚠️  {student.name}: Sin email del padre'))
+            # Obtener el primer padre con email
+            parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+            
+            if not parent:
+                self.stdout.write(self.style.WARNING(f'⚠️  {student.full_name}: Sin email del padre'))
                 failed += 1
                 continue
             
             success = email_service.send_email(
                 template_name='happy_birthday',
-                recipients=student.parent.email,
-                subject=f'🎉 ¡Feliz Cumpleaños {student.name}!',
-                context={'name': student.name}
+                recipients=parent.email,
+                subject=f'🎉 ¡Feliz Cumpleaños {student.first_name}!',
+                context={'name': student.first_name}
             )
             
             if success:
                 sent += 1
-                self.stdout.write(f'  ✅ {student.name} → {student.parent.email}')
+                self.stdout.write(f'  ✅ {student.full_name} → {parent.email}')
             else:
                 failed += 1
-                self.stdout.write(self.style.ERROR(f'  ❌ {student.name} → {student.parent.email}'))
+                self.stdout.write(self.style.ERROR(f'  ❌ {student.full_name} → {parent.email}'))
         
         self.stdout.write(self.style.SUCCESS(f'\n📊 Resultado: {sent} enviados, {failed} fallidos'))
 
@@ -200,15 +204,15 @@ class Command(BaseCommand):
         failed = 0
         
         for parent in parents:
-            # Obtener datos del reporte (puedes personalizar esto)
-            students = parent.student_set.all()
+            # Obtener estudiantes asociados a este padre
+            students = parent.children.filter(active=True)
             
             context = {
-                'parent_name': parent.name,
+                'parent_name': parent.full_name,
                 'students': [
                     {
-                        'name': s.name,
-                        'group': s.group.name if s.group else 'Sin grupo'
+                        'name': s.full_name,
+                        'group': s.group.group_name if s.group else 'Sin grupo'
                     }
                     for s in students
                 ],
@@ -224,9 +228,9 @@ class Command(BaseCommand):
             
             if success:
                 sent += 1
-                self.stdout.write(f'  ✅ {parent.name} → {parent.email}')
+                self.stdout.write(f'  ✅ {parent.full_name} → {parent.email}')
             else:
                 failed += 1
-                self.stdout.write(self.style.ERROR(f'  ❌ {parent.name} → {parent.email}'))
+                self.stdout.write(self.style.ERROR(f'  ❌ {parent.full_name} → {parent.email}'))
         
         self.stdout.write(self.style.SUCCESS(f'\n📊 Resultado: {sent} enviados, {failed} fallidos'))

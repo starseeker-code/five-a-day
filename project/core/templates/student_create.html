@@ -129,6 +129,29 @@
                         {% endif %}
                     </div>
                     
+                    <!-- Campo de precio manual (solo visible para tipo "special") -->
+                    <div id="manual-amount-container" class="hidden">
+                        <label for="id_manual_amount" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.manual_amount.label }} *
+                        </label>
+                        {{ enrollment_form.manual_amount }}
+                        <p class="mt-1 text-xs text-neutral-500">{{ enrollment_form.manual_amount.help_text }}</p>
+                        {% if enrollment_form.manual_amount.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.manual_amount.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Precio calculado (informativo) -->
+                    <div id="calculated-price-container">
+                        <label class="block text-sm font-medium text-neutral-700 mb-2">
+                            Precio mensual calculado
+                        </label>
+                        <div class="w-full px-3 py-2 border border-neutral-200 rounded-md bg-neutral-50 text-neutral-700">
+                            <span id="calculated-price">--</span> €/mes
+                        </div>
+                        <p class="mt-1 text-xs text-neutral-500">Se calcula automáticamente según el tipo de horario</p>
+                    </div>
+                    
                     <div>
                         <label for="{{ enrollment_form.enrollment_period_start.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ enrollment_form.enrollment_period_start.label }} *
@@ -221,4 +244,78 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Configuración de precios desde el servidor
+    const priceConfig = {
+        'full_time': {{ price_config.full_time }},
+        'part_time': {{ price_config.part_time }},
+        'adult_group': {{ price_config.adult_group }}
+    };
+    
+    const enrollmentTypeSelect = document.getElementById('id_enrollment_type');
+    const scheduleTypeSelect = document.getElementById('id_schedule_type');
+    const manualAmountContainer = document.getElementById('manual-amount-container');
+    const calculatedPriceContainer = document.getElementById('calculated-price-container');
+    const calculatedPrice = document.getElementById('calculated-price');
+    const discountInput = document.querySelector('[name="discount_percentage"]');
+    
+    // Función para actualizar la UI según el tipo de matrícula
+    function updateEnrollmentUI() {
+        const selectedOption = enrollmentTypeSelect.options[enrollmentTypeSelect.selectedIndex];
+        const enrollmentTypeName = selectedOption ? selectedOption.text.toLowerCase() : '';
+        
+        // Detectar si es tipo "special" (puede variar según cómo se muestre)
+        const isSpecial = enrollmentTypeName.includes('special') || enrollmentTypeName.includes('especial');
+        
+        if (isSpecial) {
+            // Mostrar campo de precio manual, ocultar precio calculado
+            manualAmountContainer.classList.remove('hidden');
+            calculatedPriceContainer.classList.add('hidden');
+        } else {
+            // Ocultar campo de precio manual, mostrar precio calculado
+            manualAmountContainer.classList.add('hidden');
+            calculatedPriceContainer.classList.remove('hidden');
+            updateCalculatedPrice();
+        }
+    }
+    
+    // Función para calcular y mostrar el precio
+    function updateCalculatedPrice() {
+        const scheduleType = scheduleTypeSelect.value;
+        const discount = parseFloat(discountInput.value) || 0;
+        
+        let basePrice = 0;
+        if (scheduleType === 'full_time') {
+            basePrice = priceConfig.full_time;
+        } else if (scheduleType === 'part_time') {
+            basePrice = priceConfig.part_time;
+        } else if (scheduleType === 'adult_group') {
+            basePrice = priceConfig.adult_group;
+        }
+        
+        // Aplicar descuento
+        const discountAmount = basePrice * (discount / 100);
+        const finalPrice = basePrice - discountAmount;
+        
+        // Mostrar precio
+        if (discount > 0) {
+            calculatedPrice.innerHTML = `<span class="line-through text-neutral-400">${basePrice.toFixed(2)}</span> <span class="text-green-600 font-medium">${finalPrice.toFixed(2)}</span>`;
+        } else {
+            calculatedPrice.textContent = basePrice.toFixed(2);
+        }
+    }
+    
+    // Event listeners
+    enrollmentTypeSelect.addEventListener('change', updateEnrollmentUI);
+    scheduleTypeSelect.addEventListener('change', updateCalculatedPrice);
+    discountInput.addEventListener('input', updateCalculatedPrice);
+    
+    // Inicializar al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        updateEnrollmentUI();
+    });
+</script>
 {% endblock %}

@@ -1,5 +1,4 @@
 from decimal import Decimal
-from django.conf import settings
 
 
 # ============================================================================
@@ -90,23 +89,6 @@ PAYMENT_TYPE_CHOICES = [
     ('quarterly', 'Quarterly Fee'),
     ('other', 'Other'),
 ]
-
-
-# ============================================================================
-# CONFIGURACIÓN DE EMAIL
-# ============================================================================
-
-def get_email_config():
-    """
-    Obtiene la configuración de email desde settings/variables de entorno
-    Esta función asegura que siempre usamos los valores correctos del .env
-    """
-    return {
-        'host_user': settings.EMAIL_HOST_USER,
-        'host_password': settings.EMAIL_HOST_PASSWORD,
-        'from_email': settings.DEFAULT_FROM_EMAIL,
-        'backend': settings.EMAIL_BACKEND,
-    }
 
 
 # ============================================================================

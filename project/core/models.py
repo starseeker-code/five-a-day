@@ -7,6 +7,94 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from . import constants
 
+
+# ============================================================================
+# SITE CONFIGURATION - Singleton para configuración del sitio
+# ============================================================================
+
+class SiteConfiguration(models.Model):
+    """
+    Modelo singleton para almacenar configuración editable del sitio.
+    Solo debe existir una instancia de este modelo.
+    """
+    
+    # Matrícula (Enrollment Fees)
+    children_enrollment_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('40.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Matrícula niños'
+    )
+    adult_enrollment_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Matrícula adultos'
+    )
+    
+    # Mensualidades (Monthly Fees)
+    full_time_monthly_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('54.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Mensualidad jornada completa'
+    )
+    part_time_monthly_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('36.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Mensualidad media jornada'
+    )
+    adult_group_monthly_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('60.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Mensualidad grupo adultos'
+    )
+    
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'site_configuration'
+        verbose_name = 'Configuración del sitio'
+        verbose_name_plural = 'Configuración del sitio'
+
+    def __str__(self):
+        return 'Configuración del sitio'
+
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)"""
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of the singleton"""
+        pass
+
+    @classmethod
+    def get_config(cls):
+        """
+        Obtiene la configuración del sitio (crea una si no existe).
+        Usa valores por defecto de constants.py si no hay configuración.
+        """
+        config, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'children_enrollment_fee': constants.CHILDREN_ENROLLMENT_FEE,
+                'adult_enrollment_fee': constants.ADULT_ENROLLMENT_FEE,
+                'full_time_monthly_fee': constants.FULL_TIME_MONTHLY_FEE,
+                'part_time_monthly_fee': constants.PART_TIME_MONTHLY_FEE,
+                'adult_group_monthly_fee': constants.ADULT_GROUP_MONTHLY_FEE,
+            }
+        )
+        return config
+
+
 class EnrollmentType(models.Model):
     name = models.CharField(
         max_length=20, 

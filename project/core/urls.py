@@ -48,4 +48,13 @@ urlpatterns = [
     path('api/payments/<int:payment_id>/details/', get_payment_details, name='get_payment_details'),
     path('api/payments/statistics/', payment_statistics, name='payment_statistics'),
     path('payments/export/', export_payments, name='export_payments'),
+    
+    # ============================================================================
+    # GESTIÓN - Configuración del Sitio, Profesores y Grupos
+    # ============================================================================
+    path('gestion/', gestion_view, name='gestion'),
+    path('api/config/update/', update_site_config, name='update_site_config'),
+    path('api/teachers/', api_get_teachers, name='api_get_teachers'),
+    path('api/teachers/create/', create_teacher, name='create_teacher'),
+    path('api/groups/create/', create_group, name='create_group'),
 ]
