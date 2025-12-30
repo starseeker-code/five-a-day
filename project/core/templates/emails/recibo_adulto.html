@@ -1,13 +1,14 @@
 {% extends 'emails/base_email.html' %}
+{% load static %}
 
 {% block content %}
 
 <p>Buenos días,</p>
 <br>
-<p>Adjuntamos el recibo correspondiente a la mensualidad de {{ Month }}. Compruebe que esté correcto, por favor.</p>
+<p>Adjuntamos el recibo correspondiente a la mensualidad de {{ month }}. Compruebe que esté correcto, por favor.</p>
 <br>
 <p>Kind regards,</p>
 <br>
-<p>{{ Sender }}</p>
+<img src="cid:logo" alt="Five a Day" width="150" style="max-width: 150px;">
 
-{%  endblock %}
+{% endblock %}

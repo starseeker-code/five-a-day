@@ -1,4 +1,5 @@
 {% extends 'emails/base_email.html' %}
+{% load static %}
 
 {% block content %}
 
@@ -14,6 +15,6 @@
 <br>
 <p>Kind regards,</p>
 <br>
-<p>{{ sender }}</p>
+<img src="cid:logo" alt="Five a Day" width="150" style="max-width: 150px;">
 
-{%  endblock %}
+{% endblock %}

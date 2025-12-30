@@ -252,3 +252,84 @@ def send_generic_email_task(
         return {'status': 'success', 'recipient': recipient_email}
     else:
         raise Exception(f"Fallo al enviar email a {recipient_email}")
+
+
+# ============================================================================
+# TAREA: Confirmación de Matrícula (matricula_niño.html)
+# ============================================================================
+
+@shared_task(
+    name='core.tasks.send_enrollment_confirmation_task',
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+)
+def send_enrollment_confirmation_task(
+    self,
+    enrollment_id: int,
+    attachments_paths: list = None
+):
+    """
+    Envía email de confirmación de matrícula con documentos adjuntos.
+    
+    Args:
+        enrollment_id: ID de la matrícula
+        attachments_paths: Lista de rutas a PDFs adjuntos (opcional)
+    """
+    from core.models import Enrollment
+    from core.email import send_enrollment_confirmation_email
+    from datetime import date
+    import os
+    
+    MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    
+    try:
+        enrollment = Enrollment.objects.select_related(
+            'student', 'student__group'
+        ).prefetch_related('student__parents').get(id=enrollment_id)
+        
+        student = enrollment.student
+        parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+        
+        if not parent:
+            logger.error(f"❌ No hay padre con email para {student.full_name}")
+            return {'status': 'error', 'message': 'No parent email'}
+        
+        # Determinar año académico
+        today = date.today()
+        if today.month >= 9:
+            academic_year = f"{today.year}-{today.year + 1}"
+        else:
+            academic_year = f"{today.year - 1}-{today.year}"
+        
+        # Preparar adjuntos
+        attachments = []
+        if attachments_paths:
+            for path in attachments_paths:
+                if os.path.exists(path):
+                    with open(path, 'rb') as f:
+                        attachments.append((
+                            os.path.basename(path),
+                            f.read(),
+                            'application/pdf'
+                        ))
+        
+        success = send_enrollment_confirmation_email(
+            parent_email=parent.email,
+            student_name=student.full_name,
+            gender='m',  # TODO: Añadir campo gender al modelo Student
+            academic_year=academic_year,
+            month=MONTHS_ES[enrollment.enrollment_period_start.month - 1],
+            attachments=attachments if attachments else None
+        )
+        
+        if success:
+            logger.info(f"✅ Confirmación de matrícula enviada para {student.full_name}")
+            return {'status': 'success', 'recipient': parent.email}
+        else:
+            raise Exception("Fallo en envío de confirmación de matrícula")
+            
+    except Enrollment.DoesNotExist:
+        logger.error(f"❌ Matrícula no encontrada: {enrollment_id}")
+        return {'status': 'error', 'message': 'Enrollment not found'}

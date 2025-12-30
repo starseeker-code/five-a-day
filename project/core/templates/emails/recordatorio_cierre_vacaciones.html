@@ -1,4 +1,5 @@
 {% extends 'emails/base_email.html' %}
+{% load static %}
 
 {% block content %}
 
@@ -6,12 +7,12 @@
 <br>
 <p>Les recordamos que la academia permanecerá cerrada desde el {{ start_closure_day_name }} {{ start_closure_day_number }} hasta el {{ end_closure_day_name }} {{ end_closure_day_number }} de {{ month_closure }} por motivo de {{ closure_reason }}.</p>
 <br>
-<p>Por tanto, retomaremos las clases el {{ reopenning_day_name }} {{ reopenning_day_name }} de {{ month_reopenning }}.</p>
+<p>Por tanto, retomaremos las clases el {{ reopening_day_name }} {{ reopening_day_number }} de {{ month_reopening }}.</p>
 <br>
 <p>No dudéis en contactar con nosotras ante cualquier duda.</p>
 <br>
 <p>Kind regards,</p>
 <br>
-<p>{{ sender }}</p>
+<img src="cid:logo" alt="Five a Day" width="150" style="max-width: 150px;">
 
-{%  endblock %}
+{% endblock %}

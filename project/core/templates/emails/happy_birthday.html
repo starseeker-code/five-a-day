@@ -1,10 +1,12 @@
 {% extends 'emails/base_email.html' %}
+{% load static %}
 
 {% block content %}
 
-<img src="{% static 'images/Email_HappyBirthday.png' %}"
+<img src="cid:birthday_image" 
      alt="Happy Birthday"
-     width="452">
+     width="452"
+     style="max-width: 100%; height: auto;">
 <figcaption>
     May this special day bring you endless happiness and unforgettable memories.
 </figcaption>
@@ -13,6 +15,6 @@
 <br>
 <p>Kind regards,</p>
 <br>
-<p>{{ sender }}</p>
+<img src="cid:logo" alt="Five a Day" width="150" style="max-width: 150px;">
 
-{%  endblock %}
+{% endblock %}
