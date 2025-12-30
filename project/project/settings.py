@@ -8,6 +8,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ============================================================================
+# APP VERSION
+# ============================================================================
+# NOTA: Al cambiar la versión, actualizar también en:
+#   - readme.md (badge y texto)
+#   - pyproject.toml (campo version)
+APP_VERSION = os.getenv("APP_VERSION", "0.16.0")
+
+# ============================================================================
 # SECURITY SETTINGS
 # ============================================================================
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-in-production")
@@ -64,6 +72,11 @@ ENVIRONMENT = os.getenv("DJANGO_ENV", "development")
 SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", "86400"))  # 24 horas por defecto
 SESSION_COOKIE_HTTPONLY = os.getenv("SESSION_COOKIE_HTTPONLY", "True").lower() == 'true'
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")  # 'Strict' en producción
+
+# ============================================================================
+# SUPPORT / TICKETING
+# ============================================================================
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", None)
 
 # ============================================================================
 # CSRF CONFIGURATION

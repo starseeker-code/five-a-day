@@ -62,4 +62,9 @@ urlpatterns = [
     # APLICACIONES - Herramientas de comunicación
     # ============================================================================
     path('apps/fun-friday/', fun_friday_form, name='fun_friday_form'),
+    
+    # ============================================================================
+    # SOPORTE - Sistema de tickets
+    # ============================================================================
+    path('api/support/submit/', submit_support_ticket, name='submit_support_ticket'),
 ]
