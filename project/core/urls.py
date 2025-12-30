@@ -57,4 +57,9 @@ urlpatterns = [
     path('api/teachers/', api_get_teachers, name='api_get_teachers'),
     path('api/teachers/create/', create_teacher, name='create_teacher'),
     path('api/groups/create/', create_group, name='create_group'),
+    
+    # ============================================================================
+    # APLICACIONES - Herramientas de comunicación
+    # ============================================================================
+    path('apps/fun-friday/', fun_friday_form, name='fun_friday_form'),
 ]

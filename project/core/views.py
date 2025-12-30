@@ -1556,3 +1556,158 @@ def api_get_teachers(request):
     ]
     return JsonResponse({'teachers': data})
 
+
+# ============================================================================
+# FUN FRIDAY - Formulario de envío masivo
+# ============================================================================
+
+def fun_friday_form(request):
+    """
+    Vista para el formulario de Fun Friday.
+    GET: Muestra el formulario con valores por defecto
+    POST: Valida HTML y envía emails a todos los padres con estudiantes activos
+    """
+    from datetime import date, timedelta
+    from .models import Parent, Student
+    from .email import send_fun_friday_email
+    import html.parser
+    
+    # Calcular próximo viernes
+    today = date.today()
+    days_until_friday = (4 - today.weekday()) % 7
+    if days_until_friday == 0:
+        days_until_friday = 7  # Si hoy es viernes, el próximo viernes
+    next_friday = today + timedelta(days=days_until_friday)
+    
+    # Contar padres con estudiantes activos
+    parent_count = Parent.objects.filter(
+        students__active=True
+    ).distinct().count()
+    
+    # HTML por defecto de ejemplo
+    default_html = """<strong>🎉 ¡SESIÓN DE MANUALIDADES!</strong>
+<br><br>
+Esta semana haremos manualidades creativas con materiales reciclados.
+<br><br>
+<em>Los niños deben traer:</em>
+<ul>
+    <li>Una camiseta vieja</li>
+    <li>Tijeras de punta redonda</li>
+</ul>
+<br>
+¡Os esperamos! 🎨"""
+    
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        event_date_str = request.POST.get('event_date')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        meeting_point = request.POST.get('meeting_point', '')
+        min_age = request.POST.get('min_age')
+        max_age = request.POST.get('max_age')
+        activity_description = request.POST.get('activity_description', '')
+        
+        # Validar campos requeridos
+        if not all([event_date_str, start_time, end_time, min_age, max_age, activity_description]):
+            messages.error(request, '❌ Todos los campos obligatorios son requeridos')
+            return render(request, 'apps/fun_friday_form.html', {
+                'next_friday': next_friday.isoformat(),
+                'parent_count': parent_count,
+                'default_html': activity_description or default_html,
+            })
+        
+        # Validar HTML
+        try:
+            parser = html.parser.HTMLParser()
+            parser.feed(activity_description)
+        except Exception as e:
+            messages.error(request, f'❌ HTML inválido: {str(e)}')
+            return render(request, 'apps/fun_friday_form.html', {
+                'next_friday': next_friday.isoformat(),
+                'parent_count': parent_count,
+                'default_html': activity_description,
+            })
+        
+        # Parsear fecha
+        try:
+            event_date = date.fromisoformat(event_date_str)
+        except ValueError:
+            messages.error(request, '❌ Fecha inválida')
+            return render(request, 'apps/fun_friday_form.html', {
+                'next_friday': next_friday.isoformat(),
+                'parent_count': parent_count,
+                'default_html': activity_description,
+            })
+        
+        # Validar edades
+        try:
+            min_age_int = int(min_age)
+            max_age_int = int(max_age)
+            if min_age_int > max_age_int:
+                raise ValueError("Edad mínima mayor que máxima")
+        except ValueError as e:
+            messages.error(request, f'❌ Error en rango de edades: {str(e)}')
+            return render(request, 'apps/fun_friday_form.html', {
+                'next_friday': next_friday.isoformat(),
+                'parent_count': parent_count,
+                'default_html': activity_description,
+            })
+        
+        # Nombres de días y meses en español
+        DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+        MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+        
+        day_name = DIAS[event_date.weekday()]
+        month_name = MESES[event_date.month - 1]
+        
+        # Obtener emails de padres con estudiantes activos
+        parents = Parent.objects.filter(
+            students__active=True
+        ).distinct()
+        
+        parent_emails = [p.email for p in parents if p.email]
+        
+        if not parent_emails:
+            messages.warning(request, '⚠️ No hay padres con email para enviar')
+            return redirect('home')
+        
+        # Enviar emails
+        success_count = 0
+        error_count = 0
+        
+        for email in parent_emails:
+            try:
+                result = send_fun_friday_email(
+                    recipients=email,
+                    day_name=day_name,
+                    day_number=event_date.day,
+                    month=month_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                    activity_description=activity_description,
+                    minimum_age=min_age_int,
+                    maximum_age=max_age_int,
+                    meeting_point=meeting_point if meeting_point else None
+                )
+                if result:
+                    success_count += 1
+                else:
+                    error_count += 1
+            except Exception as e:
+                error_count += 1
+        
+        if success_count > 0:
+            messages.success(request, f'✅ Fun Friday enviado a {success_count} padre(s)')
+        if error_count > 0:
+            messages.warning(request, f'⚠️ {error_count} email(s) no pudieron enviarse')
+        
+        return redirect('home')
+    
+    # GET - Mostrar formulario
+    return render(request, 'apps/fun_friday_form.html', {
+        'next_friday': next_friday.isoformat(),
+        'parent_count': parent_count,
+        'default_html': default_html,
+    })
+

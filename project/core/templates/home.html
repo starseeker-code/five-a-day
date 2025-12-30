@@ -60,7 +60,7 @@
             <span class="material-symbols-outlined text-primary-600 text-3xl">payments</span>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            <span class="text-red-500 font-medium">↓ 3%</span> desde el mes pasado
+            <span class="text-red-500 font-medium">AQUI PUEDE HABER INFORMACION DE INTERES</span>
         </div>
     </div>
 
@@ -76,7 +76,7 @@
             <span class="material-symbols-outlined text-primary-300 text-3xl">sentiment_satisfied</span>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            <span class="text-green-500 font-medium">↑ 2%</span> desde el mes pasado
+            <span class="text-green-500 font-medium">AQUI PUEDE HABER INFORMACION DE INTERES</span>
         </div>
     </div>
 
@@ -98,11 +98,73 @@
             </div>
         </div>
         <p class="text-neutral-600 mb-4">
-            TRABAJO EN PROGRESO TODO ESTO VA A SER DISTINTO!</p>
+            QUE INFORMACION UTIL SE OS OCURRE AQUI? (tal vez una lista de tareas por hacer?)</p>
         </p>
         <div class="h-64 bg-neutral-100 rounded-lg flex items-center justify-center">
             <p class="text-neutral-500">Aquí irá el gráfico principal</p>
         </div>
+    </div>
+</div>
+
+<!-- ============================================================================
+     SECCIÓN APLICACIONES
+     ============================================================================ -->
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-neutral-800 mb-6 flex items-center">
+        <span class="material-symbols-outlined text-primary-500 mr-2">apps</span>
+        Aplicaciones
+    </h2>
+    
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <!-- Fun Friday -->
+        <a href="{% url 'fun_friday_form' %}" 
+           class="bg-white rounded-xl p-6 border border-neutral-200 hover:border-primary-400 hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col items-center text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span class="material-symbols-outlined text-white text-3xl">celebration</span>
+            </div>
+            <h3 class="font-semibold text-neutral-700 group-hover:text-primary-600 transition-colors">Fun Friday</h3>
+            <p class="text-xs text-neutral-400 mt-1">Enviar invitación</p>
+        </a>
+        
+        <!-- Recordatorio de Pago -->
+        <a href="#" 
+           class="bg-white rounded-xl p-6 border border-neutral-200 hover:border-primary-400 hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col items-center text-center opacity-50">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span class="material-symbols-outlined text-white text-3xl">payments</span>
+            </div>
+            <h3 class="font-semibold text-neutral-700 group-hover:text-primary-600 transition-colors">Pago Mensual</h3>
+            <p class="text-xs text-neutral-400 mt-1">Próximamente</p>
+        </a>
+        
+        <!-- Cierre Vacaciones -->
+        <a href="#" 
+           class="bg-white rounded-xl p-6 border border-neutral-200 hover:border-primary-400 hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col items-center text-center opacity-50">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span class="material-symbols-outlined text-white text-3xl">beach_access</span>
+            </div>
+            <h3 class="font-semibold text-neutral-700 group-hover:text-primary-600 transition-colors">Vacaciones</h3>
+            <p class="text-xs text-neutral-400 mt-1">Próximamente</p>
+        </a>
+        
+        <!-- Certificado Renta -->
+        <a href="#" 
+           class="bg-white rounded-xl p-6 border border-neutral-200 hover:border-primary-400 hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col items-center text-center opacity-50">
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span class="material-symbols-outlined text-white text-3xl">description</span>
+            </div>
+            <h3 class="font-semibold text-neutral-700 group-hover:text-primary-600 transition-colors">Certificado Renta</h3>
+            <p class="text-xs text-neutral-400 mt-1">Próximamente</p>
+        </a>
+        
+        <!-- Gestión -->
+        <a href="{% url 'gestion' %}" 
+           class="bg-white rounded-xl p-6 border border-neutral-200 hover:border-primary-400 hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col items-center text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-slate-400 to-slate-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span class="material-symbols-outlined text-white text-3xl">settings</span>
+            </div>
+            <h3 class="font-semibold text-neutral-700 group-hover:text-primary-600 transition-colors">Gestión</h3>
+            <p class="text-xs text-neutral-400 mt-1">Configuración</p>
+        </a>
     </div>
 </div>
 {% endblock %}
