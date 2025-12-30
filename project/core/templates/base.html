@@ -15,31 +15,32 @@
     <div id="webcrumbs">
         <div class="flex min-h-screen bg-neutral-50">
             <!-- Sidebar -->
-            <aside class="w-16 hover:w-64 bg-primary-100 p-6 border-r border-primary-200 transition-all duration-300 ease-in-out group">
-                <div class="mb-10 flex flex-col items-center group-hover:items-start">
+            <!-- sidebar_expandable: si es true, la barra se expande con hover -->
+            <aside id="main-sidebar" class="{% block sidebar_class %}w-16{% endblock %} bg-primary-100 p-6 border-r border-primary-200 transition-all duration-300 ease-in-out group {% block sidebar_hover %}{% endblock %}">
+                <div class="mb-10 flex flex-col items-center sidebar-expanded:items-start">
                     <div class="flex items-center gap-3">
                         <div class="flex items-center justify-center rounded-full bg-primary-500 w-12 h-12 text-white overflow-hidden">
                             <span class="material-symbols-outlined text-2xl">auto_awesome</span>
                         </div>
-                        <h1 class="text-3xl font-bold text-primary-700 hidden group-hover:block transition-opacity duration-300">
+                        <h1 class="text-3xl font-bold text-primary-700 hidden sidebar-expanded:block transition-opacity duration-300 sidebar-title">
                             Five a Day
                         </h1>
                     </div>
-                    <p class="text-sm text-primary-500 mt-2 uppercase tracking-wider hidden group-hover:block transition-opacity duration-300">
+                    <p class="text-sm text-primary-500 mt-2 uppercase tracking-wider hidden sidebar-expanded:block transition-opacity duration-300 sidebar-subtitle">
                         eVolution
                     </p>
                 </div>
-                <div class="flex justify-end mb-4 text-primary-400 group-hover:hidden">
+                <div class="flex justify-end mb-4 text-primary-400 sidebar-expanded:hidden sidebar-chevron">
                     <span class="material-symbols-outlined">chevron_right</span>
                 </div>
                 <nav class="space-y-2">
-                    <a href="{% url 'home' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">dashboard</span>
-                        <span class="hidden group-hover:block">Panel Principal</span>
+                    <a href="{% url 'home' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">dashboard</span>
+                        <span class="hidden sidebar-text">Panel Principal</span>
                     </a>
                     
                     <!-- Sección de Acciones Rápidas -->
-                    <div class="my-4 pt-4 border-t border-primary-200 hidden group-hover:block">
+                    <div class="my-4 pt-4 border-t border-primary-200 hidden sidebar-quick-actions">
                         <p class="text-xs uppercase tracking-wider text-primary-400 px-5 mb-2">Acciones Rápidas</p>
                         <a href="{% url 'parent_create' %}" class="flex items-center gap-3 px-5 py-3 rounded-md bg-primary-500 text-white font-medium hover:bg-primary-600 transition-all duration-200 shadow-sm">
                             <span class="material-symbols-outlined">person_add</span>
@@ -47,42 +48,40 @@
                         </a>
                     </div>
                     
-                    <a href="{% url 'students_list' %}" class="flex items-center justify-between px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'students_list' %}" class="sidebar-link flex items-center justify-between px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <div class="flex items-center gap-3 w-full">
-                            <span class="material-symbols-outlined mx-auto group-hover:mx-0">people</span>
-                            <span class="hidden group-hover:block">Estudiantes</span>
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">people</span>
+                            <span class="hidden sidebar-text">Estudiantes</span>
                         </div>
-                        <!--span class="hidden group-hover:flex bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-md">25</span-->
                     </a>
-                    <a href="{% url 'payments_list' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">payment_arrow_down</span>
-                        <span class="hidden group-hover:block">Pagos</span>
+                    <a href="{% url 'payments_list' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">payment_arrow_down</span>
+                        <span class="hidden sidebar-text">Pagos</span>
                     </a>
-                    <a href="" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">calendar_month</span>
-                        <span class="hidden group-hover:block">Horario</span>
+                    <a href="" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
+                        <span class="hidden sidebar-text">Horario</span>
                     </a>
-                    <a href="#" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">manufacturing</span>
-                        <span class="hidden group-hover:block">Aplicaciones</span>
+                    <a href="#" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">manufacturing</span>
+                        <span class="hidden sidebar-text">Aplicaciones</span>
                     </a>
-                    <a href="{% url 'gestion' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">settings</span>
-                        <span class="hidden group-hover:block">Gestión</span>
+                    <a href="{% url 'gestion' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
+                        <span class="hidden sidebar-text">Gestión</span>
                     </a>
-                    <!--url database en class-->
-                    <a href="{% url 'all_info' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md {% if request.resolver_match.url_name == 'database' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">analytics</span>
-                        <span class="hidden group-hover:block">Base de Datos</span>
+                    <a href="{% url 'all_info' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'database' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">analytics</span>
+                        <span class="hidden sidebar-text">Base de Datos</span>
                     </a>
                 </nav>
                 <div class="mt-auto pt-10">
-                    <a href="{% url 'logout' %}" class="flex items-center gap-3 px-0 group-hover:px-5 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto group-hover:mx-0">logout</span>
-                        <span class="hidden group-hover:block">Cerrar Sesión</span>
+                    <a href="{% url 'logout' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
+                        <span class="hidden sidebar-text">Cerrar Sesión</span>
                     </a>
                     {% if request.session.username %}
-                    <div class="mt-3 px-5 hidden group-hover:block">
+                    <div class="mt-3 px-5 hidden sidebar-session">
                         <p class="text-xs text-primary-500">Sesión activa:</p>
                         <p class="text-sm font-semibold text-primary-700">{{ request.session.username }}</p>
                     </div>
@@ -134,5 +133,48 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+    
+    <style>
+        /* Sidebar expandible con transición suave */
+        #main-sidebar {
+            overflow: hidden;
+        }
+        
+        /* Estado expandido del sidebar */
+        #main-sidebar.sidebar-expanded,
+        #main-sidebar.expandable-sidebar:hover {
+            width: 16rem; /* w-64 */
+        }
+        
+        #main-sidebar.sidebar-expanded .sidebar-title,
+        #main-sidebar.sidebar-expanded .sidebar-subtitle,
+        #main-sidebar.sidebar-expanded .sidebar-text,
+        #main-sidebar.sidebar-expanded .sidebar-quick-actions,
+        #main-sidebar.sidebar-expanded .sidebar-session,
+        #main-sidebar.expandable-sidebar:hover .sidebar-title,
+        #main-sidebar.expandable-sidebar:hover .sidebar-subtitle,
+        #main-sidebar.expandable-sidebar:hover .sidebar-text,
+        #main-sidebar.expandable-sidebar:hover .sidebar-quick-actions,
+        #main-sidebar.expandable-sidebar:hover .sidebar-session {
+            display: block !important;
+        }
+        
+        #main-sidebar.sidebar-expanded .sidebar-chevron,
+        #main-sidebar.expandable-sidebar:hover .sidebar-chevron {
+            display: none !important;
+        }
+        
+        #main-sidebar.sidebar-expanded .sidebar-link,
+        #main-sidebar.expandable-sidebar:hover .sidebar-link {
+            padding-left: 1.25rem; /* px-5 */
+            padding-right: 1.25rem;
+        }
+        
+        #main-sidebar.sidebar-expanded .sidebar-icon,
+        #main-sidebar.expandable-sidebar:hover .sidebar-icon {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+    </style>
 </body>
 </html>
