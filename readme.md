@@ -1,7 +1,7 @@
 
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
-[![Versión](https://img.shields.io/badge/versión-v0.16.0-brightgreen?style=for-the-badge)](#)
+[![Versión](https://img.shields.io/badge/versión-v0.16.1-brightgreen?style=for-the-badge)](#)
 [![Última actualización](https://img.shields.io/badge/última%20actualización-2025--01--09-blue?style=for-the-badge)](#)
 [![Estado](https://img.shields.io/badge/estado-pre--producción-yellow?style=for-the-badge)](#)
 
