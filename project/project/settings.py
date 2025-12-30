@@ -66,6 +66,11 @@ SESSION_COOKIE_HTTPONLY = os.getenv("SESSION_COOKIE_HTTPONLY", "True").lower() =
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")  # 'Strict' en producción
 
 # ============================================================================
+# SUPPORT / TICKETING
+# ============================================================================
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", None)
+
+# ============================================================================
 # CSRF CONFIGURATION
 # ============================================================================
 CSRF_COOKIE_HTTPONLY = os.getenv("CSRF_COOKIE_HTTPONLY", "False").lower() == 'true'

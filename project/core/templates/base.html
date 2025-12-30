@@ -80,6 +80,11 @@
                         <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
                         <span class="hidden sidebar-text">Cerrar Sesión</span>
                     </a>
+                    <!-- Botón de Ayuda/Soporte -->
+                    <a href="#" id="support-open-btn" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200 mt-2">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
+                        <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
+                    </a>
                     {% if request.session.username %}
                     <div class="mt-3 px-5 hidden sidebar-session">
                         <p class="text-xs text-primary-500">Sesión activa:</p>
@@ -133,6 +138,102 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+    
+    <!-- Modal de Soporte -->
+    <div id="support-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white flex justify-between items-center">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined">help</span>
+                    ¿Necesitas ayuda?
+                </h3>
+                <button type="button" id="support-close-btn" class="hover:bg-white/20 p-1 rounded transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <!-- Step 1: Categoría -->
+            <div id="support-step-category" class="p-6">
+                <p class="text-neutral-600 text-sm mb-4 text-center">Selecciona el tipo de incidencia:</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Interfaz -->
+                    <button type="button" class="support-category-btn group p-4 rounded-xl bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="interfaz">
+                        <div class="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-blue-600 text-2xl">desktop_windows</span>
+                        </div>
+                        <span class="font-medium text-blue-700">Interfaz</span>
+                        <span class="text-xs text-blue-500">Problemas visuales</span>
+                    </button>
+                    
+                    <!-- Sistema -->
+                    <button type="button" class="support-category-btn group p-4 rounded-xl bg-purple-50 hover:bg-purple-100 border-2 border-transparent hover:border-purple-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="sistema">
+                        <div class="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-full flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-purple-600 text-2xl">settings</span>
+                        </div>
+                        <span class="font-medium text-purple-700">Sistema</span>
+                        <span class="text-xs text-purple-500">Errores internos</span>
+                    </button>
+                    
+                    <!-- Datos -->
+                    <button type="button" class="support-category-btn group p-4 rounded-xl bg-green-50 hover:bg-green-100 border-2 border-transparent hover:border-green-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="datos">
+                        <div class="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-green-600 text-2xl">database</span>
+                        </div>
+                        <span class="font-medium text-green-700">Datos</span>
+                        <span class="text-xs text-green-500">Info incorrecta</span>
+                    </button>
+                    
+                    <!-- Otro -->
+                    <button type="button" class="support-category-btn group p-4 rounded-xl bg-amber-50 hover:bg-amber-100 border-2 border-transparent hover:border-amber-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="otro">
+                        <div class="w-12 h-12 bg-amber-100 group-hover:bg-amber-200 rounded-full flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-amber-600 text-2xl">help</span>
+                        </div>
+                        <span class="font-medium text-amber-700">Otro</span>
+                        <span class="text-xs text-amber-500">Sugerencias</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Mensaje -->
+            <div id="support-step-message" class="hidden">
+                <div class="px-6 py-3 bg-neutral-50 border-b flex items-center justify-between">
+                    <button type="button" id="support-back-btn" class="flex items-center gap-1 text-neutral-600 hover:text-neutral-800 transition-colors">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        <span id="support-category-label" class="font-medium">Categoría</span>
+                    </button>
+                    <button type="button" id="support-send-btn" class="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full transition-colors shadow-md hover:shadow-lg">
+                        <span class="material-symbols-outlined text-sm">send</span>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <label class="block text-sm font-medium text-neutral-700 mb-2">
+                        Ponme una sugerencia/problema rápidamente:
+                    </label>
+                    <textarea id="support-message" 
+                              rows="5" 
+                              placeholder="Describe tu problema o sugerencia..."
+                              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"></textarea>
+                    
+                    <!-- Mensajes de error/éxito -->
+                    <p id="support-error" class="hidden mt-2 text-sm text-red-600 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">error</span>
+                        <span>Error</span>
+                    </p>
+                    <p id="support-success" class="hidden mt-2 text-sm text-green-600 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        ¡Ticket enviado correctamente!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CSRF Token para AJAX -->
+    {% csrf_token %}
+    
+    <!-- Script de Soporte -->
+    <script src="{% static 'js/support.js' %}"></script>
     
     <style>
         /* Sidebar expandible con transición suave */
