@@ -1,0 +1,17 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+
+<p>Nos complace comunicarte que has sido {% if genero == "f" %}aceptada{% else %}aceptado{% endif %} en nuestra academia para el curso {{ academic_year }} y tu matriculación ha sido tramitada 🎉.</p>
+<br>
+<p>Adjuntamos los recibos correspondientes a la matrícula y mes de {{ month }} . Por favor, compruebe que esté correcto. Igualmente, encuentra adjunto la normativa de la academia.</p>
+<br>
+<p>Nos llena de ilusión que forméis parte de nuestra comunidad y estamos encantadas de poder contribuir satisfactoriamente al proceso de aprendizaje del inglés.</p>
+<br>
+<p>Estamos en contacto. Vuestro feedback es fundamental para seguir creciendo como academia.</p>
+<br>
+<p>Kind regards,</p>
+<br>
+<p>{{ sender }}</p>
+
+{%  endblock %}

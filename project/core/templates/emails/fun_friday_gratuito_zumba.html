@@ -1,0 +1,24 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+
+<p>Dear families,</p>
+<br>
+<p>El día {{ day_name }} {{ day_number }} de {{ month }} de <span style="color: red;">{{ start_time }} a {{ end_time }}</span> en el centro Five a Day tenemos nuestra actividad Fun Fridays. <mark>Haremos una sesión de zumba en el parque de al lado (San Juan de Dios). Que vengan con ropa de deporte y una botella de agua.</mark></p>
+<br>
+<p><mark><span style="color: red;">Quedaremos directamente a las {{ start_time }} en el parque.</span></mark></p>
+<br>
+<p>Pueden venir todos aquellos niños y niñas que lo deseen que pertenezcan al centro en edades comprendidas entre los {{ minimum_age }} y los {{ maximum_age }} años.</p>
+<br>
+<p>Es necesario apuntarse en el centro o a través de este mail dando el nombre. (Plazas limitadas).</p>
+<p><span style="color: red;">Debido a la alta demanda para participar en los Fun Fridays, los estudiantes que no hayan asistido al Fun Friday anterior tendrán prioridad y así sucesivamente. Gracias por vuestra comprensión y colaboración.</span></p>
+<br>
+<img src="{% static 'images/FunFridayZumba.png' %}"
+     alt="Fun Friday Zumba"
+     width="320">
+<br>
+<p>Kind regards,</p>
+<br>
+<p>{{ Sender }}</p>
+
+{%  endblock %}

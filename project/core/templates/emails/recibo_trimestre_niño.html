@@ -1,0 +1,15 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+
+<p>Buenos días,</p>
+<br>
+<p>Adjuntamos el recibo correspondiente al trimestre de {{ month_1 }}, {{ month_2 }} y {{ month_3 }} de {{ student_name }}. Compruebe que esté correcto, por favor.</p>
+<br>
+<p>Muchas gracias. Un saludo.</p>
+<br>
+<p>Kind regards,</p>
+<br>
+<p>{{ Sender }}</p>
+
+{%  endblock %}

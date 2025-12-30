@@ -1,0 +1,28 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+
+<p>Buenos días familias,</p>
+<br>
+<p>Nos ponemos en contacto con vosotros para recordaros que se debe realizar el pago de este mes entre el <mark>{{ payment_start_date_name }} {{ payment_start_date_number }} y {{ payment_end_date_name }} {{ payment_end_date_end }} de {{ month }}</mark>.</p>
+<br>
+<p>Adjuntamos el documento de las distintas tarifas para cualquier consulta y las instrucciones para pago por transferencia en el caso de que prefiráis esta forma de pago. ¡¡IMPORTANTE!! El IBAN lo hemos cambiado. Las transferencias serán a esta cuenta: <mark>{{ IBAN_number }}</mark></p>
+<br>
+<p><span style="color: red;">Si os beneficiáis del Cheque Idioma, la cuota sería de {{reduced_price_cheque_idioma}} euros y tenéis que venir a la academia a <mark>firmar</mark> el recibo.</span></p>
+<br>
+<p>También podéis hacernos <mark>bizum</mark> al móvil de la academia: {{ telephone_number_bizum }}</p>
+<br>
+<p>El horario de atención al público es:</p>
+<br>
+<ul>
+  <li>De lunes a jueves de 11:00 a 13:30 y de 16:00 a 20:30</li>
+  <li>Viernes de 11:30 a 14:00 y de 16:00 a 18:30</li>
+</ul>
+<br>
+<p>Muchas gracias y buen día.</p>
+<br>
+<p>Kind regards,</p>
+<br>
+<p>{{ Sender }}</p>
+
+{%  endblock %}
