@@ -3,6 +3,8 @@
  * Maneja el modal de tickets de soporte y envío al backend
  */
 
+console.log('✅ support.js cargado correctamente');
+
 const SupportSystem = {
     // Mapeo de categorías a tipos de backend
     categoryMap: {
