@@ -31,7 +31,7 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'service': 'fiveaday',
-        'version': '0.9.0',
+        'version': settings.APP_VERSION,
         'environment': settings.ENVIRONMENT
     }, status=200)
 
@@ -1744,7 +1744,7 @@ def submit_support_ticket(request):
         username = request.session.get('username', 'Anónimo')
         
         # Versión del software
-        version = '0.9.0'
+        version = settings.APP_VERSION
         
         # Fecha y hora actual
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

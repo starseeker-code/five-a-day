@@ -8,6 +8,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ============================================================================
+# APP VERSION
+# ============================================================================
+# NOTA: Al cambiar la versión, actualizar también en:
+#   - readme.md (badge y texto)
+#   - pyproject.toml (campo version)
+APP_VERSION = os.getenv("APP_VERSION", "0.16.0")
+
+# ============================================================================
 # SECURITY SETTINGS
 # ============================================================================
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-in-production")
