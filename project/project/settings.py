@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # NOTA: Al cambiar la versión, actualizar también en:
 #   - readme.md (badge y texto)
 #   - pyproject.toml (campo version)
-APP_VERSION = os.getenv("APP_VERSION", "0.17.2")
+APP_VERSION = os.getenv("APP_VERSION", "0.17.3")
 
 # ============================================================================
 # SECURITY SETTINGS
