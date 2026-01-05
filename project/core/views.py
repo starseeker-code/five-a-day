@@ -133,6 +133,7 @@ def home(request):
 
 def all_info(request):
     from core.transactions import all_payments_unrestricted
+
     return render(
         request,
         "all_info.html",

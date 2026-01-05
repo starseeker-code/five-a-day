@@ -1,11 +1,28 @@
 from datetime import date
 from django.db.models import Q, Prefetch
-from core.models import Payment, Student, Parent, Enrollment, EnrollmentType, Group, Teacher
+from core.models import (
+    Payment,
+    Student,
+    Parent,
+    Enrollment,
+    EnrollmentType,
+    Group,
+    Teacher,
+)
 
 # Read logic
 
-all_students = Student.objects.filter(active=True).select_related("group", "group__teacher").prefetch_related("parents",
-                                            Prefetch("enrollments",queryset=Enrollment.objects.select_related("enrollment_type")))
+all_students = (
+    Student.objects.filter(active=True)
+    .select_related("group", "group__teacher")
+    .prefetch_related(
+        "parents",
+        Prefetch(
+            "enrollments", queryset=Enrollment.objects.select_related("enrollment_type")
+        ),
+    )
+)
+
 
 def payments_for_last_two_school_years():
     today = date.today()
@@ -19,14 +36,13 @@ def payments_for_last_two_school_years():
     end_date = date(end_year, 8, 31)
 
     date_filter = (
-        Q(payment_date__range=(start_date, end_date)) |
-        Q(due_date__range=(start_date, end_date)) |
-        Q(created_at__date__range=(start_date, end_date))
+        Q(payment_date__range=(start_date, end_date))
+        | Q(due_date__range=(start_date, end_date))
+        | Q(created_at__date__range=(start_date, end_date))
     )
 
     payments_qs = (
-        Payment.objects
-        .filter(date_filter)
+        Payment.objects.filter(date_filter)
         .select_related(
             "student",
             "parent",
@@ -43,12 +59,12 @@ def payments_for_last_two_school_years():
 
     return payments_qs
 
+
 all_payments = payments_for_last_two_school_years()
 
 # For the database view, show all payments without date restrictions
 all_payments_unrestricted = (
-    Payment.objects
-    .select_related(
+    Payment.objects.select_related(
         "student",
         "parent",
         "enrollment",
@@ -64,5 +80,3 @@ all_payments_unrestricted = (
 
 
 # Write logic
-
-
