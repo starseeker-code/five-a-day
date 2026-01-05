@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Aplicaciones{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex items-center mb-2">
+            <span class="material-symbols-outlined text-primary-500 text-4xl mr-3">apps</span>
+            <h1 class="text-3xl font-bold text-neutral-800">Aplicaciones</h1>
+        </div>
+        <p class="text-neutral-600 ml-14">
+            Herramientas y utilidades para la gestión de Five a Day
+        </p>
+    </div>
+
+    <!-- Applications Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+        
+        <!-- Fun Friday - Active -->
+        <a href="{% url 'fun_friday_form' %}" 
+           class="bg-white rounded-xl p-6 border-2 border-neutral-200 hover:border-primary-400 hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">celebration</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-800 group-hover:text-primary-600 transition-colors mb-1">Fun Friday</h3>
+            <p class="text-xs text-neutral-500 mb-2">Enviar invitación para actividades especiales</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Activo
+            </span>
+        </a>
+        
+        <!-- Recordatorio de Pago Mensual -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">payments</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Pago Mensual</h3>
+            <p class="text-xs text-neutral-500 mb-2">Recordatorio automático de pagos mensuales</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+        
+        <!-- Recordatorio de Pago Trimestral -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">calendar_today</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Pago Trimestral</h3>
+            <p class="text-xs text-neutral-500 mb-2">Recordatorio de pagos trimestrales</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+        
+        <!-- Cierre por Vacaciones -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">beach_access</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Vacaciones</h3>
+            <p class="text-xs text-neutral-500 mb-2">Notificación de cierre por vacaciones</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+        
+        <!-- Certificado de Renta -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">description</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Certificado Renta</h3>
+            <p class="text-xs text-neutral-500 mb-2">Generar certificados para declaración de renta</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+
+        <!-- Informe Mensual -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">bar_chart</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Informe Mensual</h3>
+            <p class="text-xs text-neutral-500 mb-2">Resumen mensual de actividad y pagos</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+
+        <!-- Email de Bienvenida -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">mail</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Bienvenida</h3>
+            <p class="text-xs text-neutral-500 mb-2">Email automático de bienvenida a nuevos estudiantes</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+
+        <!-- Cumpleaños -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">cake</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Cumpleaños</h3>
+            <p class="text-xs text-neutral-500 mb-2">Felicitación automática de cumpleaños</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+
+        <!-- Recibos -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">receipt</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Recibos</h3>
+            <p class="text-xs text-neutral-500 mb-2">Generar y enviar recibos de pago</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+
+        <!-- Matrículas -->
+        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <span class="material-symbols-outlined text-white text-4xl">school</span>
+            </div>
+            <h3 class="font-bold text-lg text-neutral-700 mb-1">Matrículas</h3>
+            <p class="text-xs text-neutral-500 mb-2">Gestión de documentos de matrícula</p>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                Próximamente
+            </span>
+        </div>
+
+    </div>
+
+    <!-- Information Panel -->
+    <div class="mt-12 bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-8 border border-primary-200">
+        <div class="flex items-start">
+            <span class="material-symbols-outlined text-primary-500 text-4xl mr-4">info</span>
+            <div>
+                <h3 class="text-xl font-bold text-neutral-800 mb-2">¿Necesitas una nueva aplicación?</h3>
+                <p class="text-neutral-700 mb-4">
+                    Si necesitas una herramienta específica que no está disponible, 
+                    contacta con el equipo de soporte y la añadiremos en futuras versiones.
+                </p>
+                <a href="#" id="support-open-btn-apps" class="inline-flex items-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200">
+                    <span class="material-symbols-outlined mr-2">support_agent</span>
+                    Contactar Soporte
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para abrir el soporte desde esta página -->
+<script>
+document.getElementById('support-open-btn-apps')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('support-open-btn')?.click();
+});
+</script>
+{% endblock %}
