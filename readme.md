@@ -1,7 +1,7 @@
-
+```rust
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
-[![Versión](https://img.shields.io/badge/versión-v0.16.2-brightgreen?style=for-the-badge)](#)
+[![Versión](https://img.shields.io/badge/versión-v0.17.2-brightgreen?style=for-the-badge)](#)
 [![Última actualización](https://img.shields.io/badge/última%20actualización-2025--01--09-blue?style=for-the-badge)](#)
 [![Estado](https://img.shields.io/badge/estado-pre--producción-yellow?style=for-the-badge)](#)
 
@@ -37,7 +37,7 @@ Documentacion: [Github - readme.md](https://github.com/starseeker-code/five-a-da
 
 Estado: 🟢
 
-Version actual: **v0.2**
+Version actual: **v0.17**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
 |:-----------------:|:-------------------:|:---------------------------:|
@@ -53,7 +53,7 @@ Version actual: **v0.2**
 - [X] Configuración inicial del proyecto (Poetry + Django + Git)
 - [X] Modelos principales en Django
 - [x] Django Admin personalizado
-- [ ] Lógica contable básica (tracking de pagos, informes)
+- [x] Lógica contable básica (tracking de pagos, informes)
 - [x] Vistas básicas y templates mínimos
 - [ ] Scripts de migración de datos a csv/excel
 - [x] Testing manual y ajustes
@@ -63,19 +63,19 @@ Version actual: **v0.2**
 <details>
 <summary>🔷 Versión Beta (5-6 semanas | 100-120h)</summary>
 
-- [ ] Dockerización + PostgreSQL
-- [ ] Mejora del frontend (templates y UX)
+- [x] Dockerización + PostgreSQL
+- [x] Mejora del frontend (templates y UX)
 - [ ] Integración con Google Sheets
 - [ ] Integración básica con Gmail
-- [ ] Primera automatización (recordatorio de pago)
-- [ ] Despliegue inicial en servidor
+- [x] Primera automatización (recordatorio de pago)
+- [x] Despliegue inicial en servidor
 
 </details>
 
 <details>
 <summary>🟢 Versión 1.0 (6-7 semanas | 120-140h)</summary>
 
-- [ ] Frontend definitivo (dashboard mejorado, formularios AJAX)
+- [ ] Frontend definitivo (dashboard mejorado con feedback)
 - [ ] Exportación automática a Google Sheets
 - [ ] Gestión de documentos PDF (facturas, certificados)
 - [ ] Sistema de notificaciones mejorado
@@ -188,6 +188,7 @@ Version actual: **v0.2**
 <details>
 <summary>Esquema ER</summary>
 
+```
 ```mermaid
 erDiagram
     %% CORE ENTITIES
@@ -520,7 +521,7 @@ EMAIL_USE_TLS=True
 EMAIL_HOST_USER=tu-email@gmail.com
 EMAIL_HOST_PASSWORD=tu_app_password
 ```
-
+```rust
 </details>
 
 
@@ -555,47 +556,6 @@ Google Sheets API: Exportación y sincronización de datos.
 Gmail API: Envío de correos electrónicos personalizados.
 Twilio: Envío de notificaciones SMS.
 Stripe: Pagos online y conciliación automática.
-
-## 🚀 Despliegue en Producción
-
-### 📘 Documentación Completa
-
-**Ver guía detallada**: [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md)
-
-### Resumen Rápido
-
-**Five a Day v0.16** está listo para desplegarse en **Render.com** con PostgreSQL.
-
-**Requisitos previos**:
-- Cuenta en [Render.com](https://render.com)
-- Repositorio Git conectado
-- App Password de Gmail para emails
-
-**Pasos básicos**:
-1. **Push código** a GitHub/GitLab
-2. **Crear Blueprint** en Render (detecta `render.yaml` automáticamente)
-3. **Configurar variables de entorno** en Render Dashboard:
-   - `SECRET_KEY`, `DJANGO_SUPERUSER_*`, `LOGIN_*`, `EMAIL_*`
-4. **Desplegar** y esperar 5-10 minutos
-5. **Verificar** health check: `https://tu-app.onrender.com/health/`
-
-**Archivos clave**:
-- `render.yaml` - Configuración de servicios (PostgreSQL + Web)
-- `entrypoint.sh` - Script de inicialización unificado (Docker + Render)
-- `.env.render` - Plantilla de variables de entorno
-
-**Costos estimados**: 
-- PostgreSQL Starter: €7/mes
-- Web Service Starter: €7/mes
-- **Total**: ~€14/mes
-
-**Tecnología**:
-- Servidor: Gunicorn (4 workers, 120s timeout)
-- Archivos estáticos: WhiteNoise
-- Base de datos: PostgreSQL 16 con `dj-database-url`
-- Health check: `/health/` endpoint
-
-📖 **Consulta la documentación completa para troubleshooting, seguridad y configuración avanzada.**
 
 ## Futuras mejoras
 
@@ -635,3 +595,5 @@ WIP
 <!-- /AUTO-SECTION:DEPENDENCIAS -->
 
 
+
+```
