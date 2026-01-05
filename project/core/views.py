@@ -132,10 +132,11 @@ def home(request):
 
 
 def all_info(request):
+    from core.transactions import all_payments_unrestricted
     return render(
         request,
         "all_info.html",
-        {"students": list(all_students), "payments": all_payments},
+        {"students": list(all_students), "payments": list(all_payments_unrestricted)},
     )
 
 

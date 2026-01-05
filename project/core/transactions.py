@@ -38,12 +38,29 @@ def payments_for_last_two_school_years():
             "student__enrollments",
             Prefetch("student__group__teacher"),
         )
-        .order_by("payment_date", "due_date", "created_at")
+        .order_by("-created_at")
     )
 
     return payments_qs
 
 all_payments = payments_for_last_two_school_years()
+
+# For the database view, show all payments without date restrictions
+all_payments_unrestricted = (
+    Payment.objects
+    .select_related(
+        "student",
+        "parent",
+        "enrollment",
+        "enrollment__enrollment_type",
+    )
+    .prefetch_related(
+        "student__parents",
+        "student__enrollments",
+        Prefetch("student__group__teacher"),
+    )
+    .order_by("-created_at")
+)
 
 
 # Write logic
