@@ -82,16 +82,17 @@ class SiteConfiguration(models.Model):
         Obtiene la configuración del sitio (crea una si no existe).
         Usa valores por defecto de constants.py si no hay configuración.
         """
-        config, created = cls.objects.get_or_create(
-            pk=1,
-            defaults={
-                'children_enrollment_fee': constants.CHILDREN_ENROLLMENT_FEE,
-                'adult_enrollment_fee': constants.ADULT_ENROLLMENT_FEE,
-                'full_time_monthly_fee': constants.FULL_TIME_MONTHLY_FEE,
-                'part_time_monthly_fee': constants.PART_TIME_MONTHLY_FEE,
-                'adult_group_monthly_fee': constants.ADULT_GROUP_MONTHLY_FEE,
-            }
-        )
+        try:
+            config = cls.objects.get(pk=1)
+        except cls.DoesNotExist:
+            config = cls.objects.create(
+                pk=1,
+                children_enrollment_fee=constants.CHILDREN_ENROLLMENT_FEE,
+                adult_enrollment_fee=constants.ADULT_ENROLLMENT_FEE,
+                full_time_monthly_fee=constants.FULL_TIME_MONTHLY_FEE,
+                part_time_monthly_fee=constants.PART_TIME_MONTHLY_FEE,
+                adult_group_monthly_fee=constants.ADULT_GROUP_MONTHLY_FEE,
+            )
         return config
 
 

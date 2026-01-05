@@ -1,7 +1,7 @@
 
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
-[![Versión](https://img.shields.io/badge/versión-v0.16.1-brightgreen?style=for-the-badge)](#)
+[![Versión](https://img.shields.io/badge/versión-v0.16.2-brightgreen?style=for-the-badge)](#)
 [![Última actualización](https://img.shields.io/badge/última%20actualización-2025--01--09-blue?style=for-the-badge)](#)
 [![Estado](https://img.shields.io/badge/estado-pre--producción-yellow?style=for-the-badge)](#)
 
@@ -564,7 +564,7 @@ Stripe: Pagos online y conciliación automática.
 
 ### Resumen Rápido
 
-**Five a Day v0.16.0** está listo para desplegarse en **Render.com** con PostgreSQL.
+**Five a Day v0.16** está listo para desplegarse en **Render.com** con PostgreSQL.
 
 **Requisitos previos**:
 - Cuenta en [Render.com](https://render.com)

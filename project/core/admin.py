@@ -38,12 +38,12 @@ class ParentStudentInline(admin.TabularInline):
 class StudentAdmin(admin.ModelAdmin):
     list_display = ['first_name', 'last_name', 'group', 'active', 'birth_date']
     list_filter = ['group', 'active', 'gdpr_signed']
-    search_fields = ['first_name', 'last_name', 'email']
+    search_fields = ['first_name', 'last_name']
     inlines = [StudentParentInline]
     
     fieldsets = (
         ('Personal Information', {
-            'fields': ('first_name', 'last_name', 'birth_date', 'email')
+            'fields': ('first_name', 'last_name', 'birth_date')
         }),
         ('School Information', {
             'fields': ('school', 'group')
