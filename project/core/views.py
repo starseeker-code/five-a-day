@@ -139,6 +139,11 @@ def all_info(request):
     )
 
 
+def apps_view(request):
+    """Vista para la página de aplicaciones/herramientas"""
+    return render(request, "apps.html")
+
+
 def email_test(request):
     """
     Vista para probar el envío de emails.
