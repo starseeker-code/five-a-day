@@ -5,8 +5,14 @@
 {% block page_title %}Base de Datos{% endblock %}
 {% block page_subtitle %}Vista consolidada de estudiantes y pagos{% endblock %}
 
+{% block header_actions %}
+<a href="/admin/" target="_blank" rel="noopener noreferrer" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+  <span class="material-symbols-outlined text-[20px]">database</span> Admin Django
+</a>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8">
+<div class="space-y-8 max-w-[1600px] mx-auto">
   <div>
     <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
       <div>
@@ -26,7 +32,7 @@
 
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
       <div class="overflow-x-scroll pb-4 mb-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <table class="w-full min-w-[2400px] whitespace-nowrap" style="min-width: 2400px; white-space: nowrap;">
+        <table class="w-full min-w-[2400px] whitespace-nowrap mx-auto" style="min-width: 2400px; white-space: nowrap;">
           <thead class="bg-primary-50 border-b border-primary-200">
             <tr>
               <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">ID</th>
@@ -143,7 +149,7 @@
 
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
       <div class="overflow-x-scroll pb-4 mb-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <table class="w-full min-w-[2400px] whitespace-nowrap" style="min-width: 2400px; white-space: nowrap;">
+        <table class="w-full min-w-[2400px] whitespace-nowrap mx-auto" style="min-width: 2400px; white-space: nowrap;">
           <thead class="bg-primary-50 border-b border-primary-200">
             <tr>
               <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">ID</th>

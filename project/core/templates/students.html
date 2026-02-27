@@ -6,8 +6,8 @@
 {% block page_subtitle %}Administra todos los estudiantes de la academia{% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'parent_create' %}" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-    <span class="material-symbols-outlined">person_add</span> Nuevo Estudiante
+<a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
 </a>
 {% endblock %}
 
@@ -42,7 +42,7 @@
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
-                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Acciones</th>
+                    <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-100">
@@ -107,15 +107,10 @@
                             </span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="editStudent({{ student.id }})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">edit</span>
-                            </button>
-                            <button onclick="viewStudent({{ student.id }})" class="p-2 text-neutral-600 hover:bg-neutral-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
-                            </button>
-                        </div>
+                    <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
+                        <a href="{% url 'student_detail' student.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" title="Ver estudiante">
+                            <span class="material-symbols-outlined text-base">visibility</span>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
@@ -317,13 +312,6 @@
                 console.error('Error loading student data:', error);
                 alert('Error al cargar los datos del estudiante');
             });
-    }
-
-    // View student function (placeholder)
-    function viewStudent(studentId) {
-        // This would typically open a read-only modal or navigate to a detail page
-        console.log('View student:', studentId);
-        alert('Funcionalidad de visualización en desarrollo');
     }
 
     // Form validation

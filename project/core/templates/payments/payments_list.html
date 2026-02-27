@@ -6,8 +6,8 @@
 {% block page_subtitle %}Administra todos los pagos de la academia{% endblock %}
 
 {% block header_actions %}
-<button id="createPaymentBtn" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-    <span class="material-symbols-outlined">payment</span> Nuevo Pago
+<button id="createPaymentBtn" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago
 </button>
 {% endblock %}
 
@@ -43,7 +43,7 @@
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Vencimiento</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Pago</th>
-                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Acciones</th>
+                    <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-100">
@@ -127,18 +127,10 @@
                             <span class="text-neutral-400">Sin fecha</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="editPayment({{ payment.id }})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">edit</span>
-                            </button>
-                            <button onclick="viewPayment({{ payment.id }})" class="p-2 text-neutral-600 hover:bg-neutral-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
-                            </button>
-                            <button onclick="deactivatePayment({{ payment.id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">close</span>
-                            </button>
-                        </div>
+                    <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
+                        <a href="{% url 'payment_detail_view' payment.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" title="Ver pago">
+                            <span class="material-symbols-outlined text-base">visibility</span>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
@@ -564,75 +556,6 @@
             document.getElementById('amount').value = enrollment.remaining_amount;
             document.getElementById('concept').value = `Pago de matrícula - ${enrollment.enrollment_type}`;
             document.getElementById('payment_type').value = 'enrollment';
-        }
-    }
-
-    // Edit payment function
-    function editPayment(paymentId) {
-        fetch(`/payments/${paymentId}/`)
-            .then(response => response.json())
-            .then(data => {
-                // Populate form with payment data
-                selectedStudent = { id: data.student.id, name: data.student.full_name };
-                selectedParent = { id: data.parent.id, name: data.parent.full_name };
-                
-                studentSearch.value = data.student.full_name;
-                parentSearch.value = data.parent.full_name;
-                document.getElementById('student_id').value = data.student.id;
-                document.getElementById('parent_id').value = data.parent.id;
-                
-                document.getElementById('payment_type').value = data.payment_type;
-                document.getElementById('payment_method').value = data.payment_method;
-                document.getElementById('amount').value = data.amount;
-                document.getElementById('currency').value = data.currency;
-                document.getElementById('payment_status').value = data.payment_status;
-                document.getElementById('due_date').value = formatDateForDisplay(data.due_date);
-                document.getElementById('payment_date').value = formatDateForDisplay(data.payment_date);
-                document.getElementById('concept').value = data.concept;
-                document.getElementById('reference_number').value = data.reference_number || '';
-                document.getElementById('observations').value = data.observations || '';
-
-                // Update modal
-                modalTitle.textContent = 'Editar Pago';
-                submitBtnText.textContent = 'Actualizar Pago';
-                paymentIdInput.value = paymentId;
-                form.action = `/payments/${paymentId}/update/`;
-                modal.classList.remove('hidden');
-            })
-            .catch(error => {
-                console.error('Error loading payment data:', error);
-                alert('Error al cargar los datos del pago');
-            });
-    }
-
-    // View payment function
-    function viewPayment(paymentId) {
-        // This would typically open a read-only modal or navigate to a detail page
-        window.open(`/payments/${paymentId}/detail/`, '_blank');
-    }
-
-    // Deactivate payment function
-    function deactivatePayment(paymentId) {
-        if (confirm('¿Estás seguro de que deseas desactivar este pago? No se eliminará, pero no aparecerá en la lista principal.')) {
-            fetch(`/payments/${paymentId}/deactivate/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error al desactivar el pago');
-                }
-            })
-            .catch(error => {
-                console.error('Error deactivating payment:', error);
-                alert('Error al desactivar el pago');
-            });
         }
     }
 

@@ -6,14 +6,9 @@
 {% block page_subtitle %}Información completa del pago{% endblock %}
 
 {% block header_actions %}
-<div class="flex gap-3">
-    <a href="{% url 'payments_list' %}" class="bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200">
-        <span class="material-symbols-outlined">arrow_back</span> Volver a Pagos
-    </a>
-    <button onclick="editPayment({{ payment.id }})" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200">
-        <span class="material-symbols-outlined">edit</span> Editar Pago
-    </button>
-</div>
+<a href="{% url 'payments_list' %}" class="header-action-btn bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 text-base font-semibold leading-none">
+    <span class="material-symbols-outlined text-[20px]">arrow_back</span> Volver a Pagos
+</a>
 {% endblock %}
 
 {% block content %}
@@ -156,6 +151,18 @@
                 <label class="block text-sm font-medium text-neutral-600 mb-1">Estado</label>
                 <p class="text-neutral-800">{{ payment.get_payment_status_display }}</p>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-600 mb-1">ID Pago</label>
+                <p class="text-neutral-800">{{ payment.id }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-600 mb-1">ID Estudiante</label>
+                <p class="text-neutral-800">{{ payment.student.id }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-600 mb-1">ID Padre/Tutor</label>
+                <p class="text-neutral-800">{{ payment.parent.id }}</p>
+            </div>
         </div>
     </div>
 
@@ -188,6 +195,10 @@
             <div>
                 <label class="block text-sm font-medium text-neutral-600 mb-1">Fecha de Creación</label>
                 <p class="text-neutral-800">{{ payment.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-600 mb-1">Última actualización</label>
+                <p class="text-neutral-800">{{ payment.updated_at|date:"d/m/Y H:i" }}</p>
             </div>
         </div>
     </div>
@@ -249,13 +260,4 @@
     {% endif %}
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    function editPayment(paymentId) {
-        // Redirect to main payments page with edit mode
-        window.location.href = `{% url 'payments_list' %}?edit=${paymentId}`;
-    }
-</script>
 {% endblock %}

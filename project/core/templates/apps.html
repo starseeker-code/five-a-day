@@ -2,6 +2,12 @@
 
 {% block title %}Five a Day - Aplicaciones{% endblock %}
 
+{% block header_actions %}
+<a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">mail</span> Abrir Gmail
+</a>
+{% endblock %}
+
 {% block extra_css %}
 <style>
     .apps-grid {
@@ -15,7 +21,6 @@
 
     .apps-grid .material-symbols-outlined {
         font-family: 'Material Symbols Outlined' !important;
-        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 48;
     }
 </style>
 {% endblock %}

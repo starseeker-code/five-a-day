@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body id="top">
     <div id="webcrumbs">
         <div class="flex min-h-screen bg-neutral-50">
             <!-- Sidebar -->
@@ -116,8 +116,8 @@
                             <span class="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full"></span>
                         </button>
                         {% block header_actions %}
-                        <a href="{% url 'parent_create' %}" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-                            <span class="material-symbols-outlined">add</span> Nuevo Estudiante
+                        <a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
+                            <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
                         </a>
                         {% endblock %}
                     </div>
@@ -130,8 +130,8 @@
                 </div>
 
                 <!-- Floating Action Button -->
-                <a href="#" class="absolute bottom-8 right-8 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-md shadow-lg transition-all duration-300 hover:transform hover:scale-110">
-                    <span class="material-symbols-outlined">arrow_upward</span>
+                <a id="scroll-top-btn" href="#" class="group fixed bottom-8 right-8 z-40 inline-flex items-center justify-center w-12 h-12 bg-primary-100/60 hover:bg-primary-600 rounded-full border-2 border-primary-200 shadow-lg transition-all duration-300 hover:transform hover:scale-110 no-underline" style="width: 3rem; height: 3rem; display: inline-flex; position: fixed; right: 2rem; bottom: 2rem; text-decoration: none; border-width: 2px;">
+                    <span class="material-symbols-outlined text-[30px] text-primary-700 transition-colors duration-200" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 30;">arrow_upward</span>
                 </a>
             </main>
         </div>
@@ -278,6 +278,26 @@
         #main-sidebar.expandable-sidebar:hover .sidebar-icon {
             margin-left: 0 !important;
             margin-right: 0 !important;
+        }
+
+        .header-action-btn {
+            font-size: 1rem;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+            letter-spacing: 0;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
+        }
+
+        #scroll-top-btn:hover .material-symbols-outlined {
+            color: white !important;
+        }
+
+        .header-action-btn .material-symbols-outlined {
+            font-size: 20px;
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
         }
     </style>
 </body>
