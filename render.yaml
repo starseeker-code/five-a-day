@@ -30,6 +30,28 @@ services:
         fromDatabase:
           name: fiveaday-db
           property: connectionString
+      - key: DATABASE
+        value: postgres
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: fiveaday-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: fiveaday-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: fiveaday-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: fiveaday-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: fiveaday-db
+          property: password
       - key: DJANGO_SUPERUSER_USERNAME
         value: Mirmo_1997
       - key: DJANGO_SUPERUSER_EMAIL
@@ -77,6 +99,28 @@ services:
         fromDatabase:
           name: fiveaday-db
           property: connectionString
+      - key: DATABASE
+        value: postgres
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: fiveaday-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: fiveaday-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: fiveaday-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: fiveaday-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: fiveaday-db
+          property: password
       - key: EMAIL_HOST_USER
         sync: false
       - key: EMAIL_SECRET
