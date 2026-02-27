@@ -18,51 +18,51 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.first_name.label }} *
+                            {{ form.first_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.first_name }}
                         {% if form.first_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.first_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.last_name.label }} *
+                            {{ form.last_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.last_name }}
                         {% if form.last_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.last_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.dni.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.dni.label }} *
+                            {{ form.dni.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.dni }}
                         {% if form.dni.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.dni.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.dni.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.phone.label }} *
+                            {{ form.phone.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.phone }}
                         {% if form.phone.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.phone.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.email.label }} *
+                            {{ form.email.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.email }}
                         {% if form.email.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.email.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -72,7 +72,7 @@
                         </label>
                         {{ form.iban }}
                         {% if form.iban.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.iban.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.iban.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>

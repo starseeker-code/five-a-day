@@ -11,17 +11,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body id="top">
     <div id="webcrumbs">
         <div class="flex min-h-screen bg-neutral-50">
             <!-- Sidebar -->
             <!-- sidebar_expandable: si es true, la barra se expande con hover -->
-            <aside id="main-sidebar" class="{% block sidebar_class %}w-16{% endblock %} bg-primary-100 p-6 border-r border-primary-200 transition-all duration-300 ease-in-out group {% block sidebar_hover %}{% endblock %}">
-                <div class="mb-10 flex flex-col items-center sidebar-expanded:items-start">
+            <aside id="main-sidebar" class="{% block sidebar_class %}w-[7.5rem]{% endblock %} bg-primary-100 p-6 border-r border-primary-200 transition-all duration-300 ease-in-out group flex flex-col relative {% block sidebar_hover %}{% endblock %}">
+                <div class="mb-8 flex flex-col items-center sidebar-expanded:items-start">
                     <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center rounded-full bg-primary-500 w-12 h-12 text-white overflow-hidden">
-                            <span class="material-symbols-outlined text-2xl">auto_awesome</span>
-                        </div>
                         <h1 class="text-3xl font-bold text-primary-700 hidden sidebar-expanded:block transition-opacity duration-300 sidebar-title">
                             Five a Day
                         </h1>
@@ -30,68 +27,53 @@
                         eVolution
                     </p>
                 </div>
-                <div class="flex justify-end mb-4 text-primary-400 sidebar-expanded:hidden sidebar-chevron">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </div>
-                <nav class="space-y-2">
-                    <a href="{% url 'home' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">dashboard</span>
-                        <span class="hidden sidebar-text">Panel Principal</span>
-                    </a>
-                    
-                    <!-- Sección de Acciones Rápidas -->
-                    <div class="my-4 pt-4 border-t border-primary-200 hidden sidebar-quick-actions">
-                        <p class="text-xs uppercase tracking-wider text-primary-400 px-5 mb-2">Acciones Rápidas</p>
-                        <a href="{% url 'parent_create' %}" class="flex items-center gap-3 px-5 py-3 rounded-md bg-primary-500 text-white font-medium hover:bg-primary-600 transition-all duration-200 shadow-sm">
-                            <span class="material-symbols-outlined">person_add</span>
-                            <span>Nuevo Estudiante</span>
+                <div class="sidebar-fixed-links">
+                    <nav class="space-y-0">
+                        <a href="{% url 'home' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">dashboard</span>
+                            <span class="hidden sidebar-text">Panel Principal</span>
                         </a>
-                    </div>
-                    
-                    <a href="{% url 'students_list' %}" class="sidebar-link flex items-center justify-between px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <div class="flex items-center gap-3 w-full">
+                        
+                        <a href="{% url 'students_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'students_list' or request.resolver_match.url_name == 'student_create' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                             <span class="material-symbols-outlined mx-auto sidebar-icon">people</span>
                             <span class="hidden sidebar-text">Estudiantes</span>
-                        </div>
-                    </a>
-                    <a href="{% url 'payments_list' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">payment_arrow_down</span>
-                        <span class="hidden sidebar-text">Pagos</span>
-                    </a>
-                    <a href="" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
-                        <span class="hidden sidebar-text">Horario</span>
-                    </a>
-                    <a href="{% url 'apps' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'apps' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">apps</span>
-                        <span class="hidden sidebar-text">Aplicaciones</span>
-                    </a>
-                    <a href="{% url 'gestion' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
-                        <span class="hidden sidebar-text">Gestión</span>
-                    </a>
-                    <a href="{% url 'all_info' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'database' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">analytics</span>
-                        <span class="hidden sidebar-text">Base de Datos</span>
-                    </a>
-                </nav>
-                <div class="mt-auto pt-10">
-                    <a href="{% url 'logout' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
-                        <span class="hidden sidebar-text">Cerrar Sesión</span>
-                    </a>
-                    <!-- Botón de Ayuda/Soporte -->
-                    <a href="#" id="support-open-btn" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200 mt-2">
-                        <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
-                        <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
-                    </a>
-                    {% if request.session.username %}
-                    <div class="mt-3 px-5 hidden sidebar-session">
-                        <p class="text-xs text-primary-500">Sesión activa:</p>
-                        <p class="text-sm font-semibold text-primary-700">{{ request.session.username }}</p>
-                    </div>
-                    {% endif %}
+                        </a>
+                        <a href="{% url 'payments_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'payments_list' or request.resolver_match.url_name == 'create_payment' or request.resolver_match.url_name == 'payment_detail_view' or request.resolver_match.url_name == 'update_payment' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">payment_arrow_down</span>
+                            <span class="hidden sidebar-text">Pagos</span>
+                        </a>
+                        <a href="" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
+                            <span class="hidden sidebar-text">Horario</span>
+                        </a>
+                        <a href="{% url 'apps' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'apps' or request.resolver_match.url_name == 'fun_friday_form' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">apps</span>
+                            <span class="hidden sidebar-text">Aplicaciones</span>
+                        </a>
+                        <a href="{% url 'gestion' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
+                            <span class="hidden sidebar-text">Gestión</span>
+                        </a>
+                        <a href="{% url 'all_info' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'all_info' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">analytics</span>
+                            <span class="hidden sidebar-text">Base de Datos</span>
+                        </a>
+                        <a href="{% url 'logout' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
+                            <span class="hidden sidebar-text">Cerrar Sesión</span>
+                        </a>
+                        <a href="#" id="support-open-btn" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200">
+                            <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
+                            <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
+                        </a>
+                    </nav>
                 </div>
+                {% if request.session.username %}
+                <div class="mt-3 px-5 hidden sidebar-session">
+                    <p class="text-xs text-primary-500">Sesión activa:</p>
+                    <p class="text-sm font-semibold text-primary-700">{{ request.session.username }}</p>
+                </div>
+                {% endif %}
             </aside>
 
             <!-- Main Content -->
@@ -116,8 +98,8 @@
                             <span class="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full"></span>
                         </button>
                         {% block header_actions %}
-                        <a href="{% url 'parent_create' %}" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-                            <span class="material-symbols-outlined">add</span> Nuevo Estudiante
+                        <a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
+                            <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
                         </a>
                         {% endblock %}
                     </div>
@@ -130,8 +112,8 @@
                 </div>
 
                 <!-- Floating Action Button -->
-                <a href="#" class="absolute bottom-8 right-8 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-md shadow-lg transition-all duration-300 hover:transform hover:scale-110">
-                    <span class="material-symbols-outlined">arrow_upward</span>
+                <a id="scroll-top-btn" href="#" class="group fixed bottom-8 right-8 z-40 inline-flex items-center justify-center w-12 h-12 bg-primary-100/60 hover:bg-primary-600 rounded-full border-2 border-primary-200 transition-all duration-300 hover:transform hover:scale-110 no-underline" style="width: 3rem; height: 3rem; display: inline-flex; position: fixed; right: 2rem; bottom: 2rem; text-decoration: none; border-width: 2px;">
+                    <span class="material-symbols-outlined text-[30px] text-primary-700 transition-colors duration-200" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 30;">arrow_upward</span>
                 </a>
             </main>
         </div>
@@ -140,7 +122,7 @@
     {% block extra_js %}{% endblock %}
     
     <!-- Modal de Soporte -->
-    <div id="support-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div id="support-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <!-- Header -->
             <div class="px-6 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white flex justify-between items-center">
@@ -154,7 +136,7 @@
             </div>
             
             <!-- Step 1: Categoría -->
-            <div id="support-step-category" class="p-6">
+            <div id="support-step-category" class="p-6" style="display: block;">
                 <p class="text-neutral-600 text-sm mb-4 text-center">Selecciona el tipo de incidencia:</p>
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Interfaz -->
@@ -181,7 +163,7 @@
                             <span class="material-symbols-outlined text-green-600 text-2xl">database</span>
                         </div>
                         <span class="font-medium text-green-700">Datos</span>
-                        <span class="text-xs text-green-500">Info incorrecta</span>
+                        <span class="text-xs text-green-500">Base de datos</span>
                     </button>
                     
                     <!-- Otro -->
@@ -190,20 +172,17 @@
                             <span class="material-symbols-outlined text-amber-600 text-2xl">help</span>
                         </div>
                         <span class="font-medium text-amber-700">Otro</span>
-                        <span class="text-xs text-amber-500">Sugerencias</span>
+                        <span class="text-xs text-amber-500">Otro</span>
                     </button>
                 </div>
             </div>
             
             <!-- Step 2: Mensaje -->
-            <div id="support-step-message" class="hidden">
+            <div id="support-step-message" class="hidden" style="display: none;">
                 <div class="px-6 py-3 bg-neutral-50 border-b flex items-center justify-between">
                     <button type="button" id="support-back-btn" class="flex items-center gap-1 text-neutral-600 hover:text-neutral-800 transition-colors">
                         <span class="material-symbols-outlined text-sm">arrow_back</span>
                         <span id="support-category-label" class="font-medium">Categoría</span>
-                    </button>
-                    <button type="button" id="support-send-btn" class="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full transition-colors shadow-md hover:shadow-lg">
-                        <span class="material-symbols-outlined text-sm">send</span>
                     </button>
                 </div>
                 <div class="p-6">
@@ -224,6 +203,12 @@
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                         ¡Ticket enviado correctamente!
                     </p>
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" id="support-send-btn" class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md transition-colors shadow-sm hover:shadow-md flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">send</span>
+                            Enviar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -239,12 +224,38 @@
         /* Sidebar expandible con transición suave */
         #main-sidebar {
             overflow: hidden;
+            width: 7.5rem;
+        }
+
+        .sidebar-fixed-links {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 7.5rem;
+            padding: 0 1.5rem 1.5rem;
+            box-sizing: border-box;
+            z-index: 20;
+        }
+
+        #main-sidebar.expandable-sidebar {
+            transition-duration: 220ms;
         }
         
         /* Estado expandido del sidebar */
-        #main-sidebar.sidebar-expanded,
+        #main-sidebar.sidebar-expanded {
+            width: 27rem;
+        }
+
         #main-sidebar.expandable-sidebar:hover {
-            width: 16rem; /* w-64 */
+            width: 21.6rem;
+        }
+
+        #main-sidebar.sidebar-expanded .sidebar-fixed-links {
+            width: 27rem;
+        }
+
+        #main-sidebar.expandable-sidebar:hover .sidebar-fixed-links {
+            width: 21.6rem;
         }
         
         #main-sidebar.sidebar-expanded .sidebar-title,
@@ -255,8 +266,7 @@
         #main-sidebar.expandable-sidebar:hover .sidebar-title,
         #main-sidebar.expandable-sidebar:hover .sidebar-subtitle,
         #main-sidebar.expandable-sidebar:hover .sidebar-text,
-        #main-sidebar.expandable-sidebar:hover .sidebar-quick-actions,
-        #main-sidebar.expandable-sidebar:hover .sidebar-session {
+        #main-sidebar.expandable-sidebar:hover .sidebar-quick-actions {
             display: block !important;
         }
         
@@ -269,12 +279,52 @@
         #main-sidebar.expandable-sidebar:hover .sidebar-link {
             padding-left: 1.25rem; /* px-5 */
             padding-right: 1.25rem;
+            justify-content: flex-start;
+            align-items: center;
         }
         
         #main-sidebar.sidebar-expanded .sidebar-icon,
         #main-sidebar.expandable-sidebar:hover .sidebar-icon {
             margin-left: 0 !important;
             margin-right: 0 !important;
+        }
+
+        .sidebar-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+        }
+
+        #main-sidebar.sidebar-expanded .sidebar-text,
+        #main-sidebar.expandable-sidebar:hover .sidebar-text {
+            text-align: left;
+        }
+
+        .active-sidebar-link {
+            display: flex !important;
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        .header-action-btn {
+            font-size: 1rem;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+            letter-spacing: 0;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
+        }
+
+        #scroll-top-btn:hover .material-symbols-outlined {
+            color: white !important;
+        }
+
+        .header-action-btn .material-symbols-outlined {
+            font-size: 20px;
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
         }
     </style>
 </body>

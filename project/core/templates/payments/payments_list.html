@@ -6,8 +6,8 @@
 {% block page_subtitle %}Administra todos los pagos de la academia{% endblock %}
 
 {% block header_actions %}
-<button id="createPaymentBtn" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-    <span class="material-symbols-outlined">payment</span> Nuevo Pago
+<button id="createPaymentBtn" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago
 </button>
 {% endblock %}
 
@@ -43,7 +43,7 @@
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Vencimiento</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Pago</th>
-                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Acciones</th>
+                    <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-100">
@@ -92,7 +92,7 @@
                                     Vencido
                                 </span>
                             {% else %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-red-700" style="background-color:transparent;color:#dc2626;">
                                     <span class="material-symbols-outlined text-sm mr-1">schedule</span>
                                     Pendiente
                                 </span>
@@ -127,18 +127,10 @@
                             <span class="text-neutral-400">Sin fecha</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="editPayment({{ payment.id }})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">edit</span>
-                            </button>
-                            <button onclick="viewPayment({{ payment.id }})" class="p-2 text-neutral-600 hover:bg-neutral-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
-                            </button>
-                            <button onclick="deactivatePayment({{ payment.id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">close</span>
-                            </button>
-                        </div>
+                    <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
+                        <a href="{% url 'payment_detail_view' payment.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" title="Ver pago">
+                            <span class="material-symbols-outlined text-base">visibility</span>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
@@ -200,7 +192,7 @@
             </div>
         </div>
         
-        <form id="paymentForm" method="post" class="p-6">
+        <form id="paymentForm" method="post" action="{% url 'create_payment' %}" class="p-6" novalidate>
             {% csrf_token %}
             <input type="hidden" id="paymentId" name="payment_id" value="">
             
@@ -209,7 +201,7 @@
                 <h4 class="text-lg font-medium text-neutral-700 mb-4">Información del Pago</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="student_search" class="block text-sm font-medium text-neutral-700 mb-2">Estudiante *</label>
+                        <label for="student_search" class="block text-sm font-medium text-neutral-700 mb-2">Estudiante <span style="color:#dc2626;">*</span></label>
                         <input type="text" id="student_search" name="student_search" required 
                                placeholder="Buscar estudiante por nombre..."
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
@@ -217,7 +209,7 @@
                         <div id="student_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto"></div>
                     </div>
                     <div>
-                        <label for="parent_search" class="block text-sm font-medium text-neutral-700 mb-2">Padre/Tutor *</label>
+                        <label for="parent_search" class="block text-sm font-medium text-neutral-700 mb-2">Padre/Tutor <span style="color:#dc2626;">*</span></label>
                         <input type="text" id="parent_search" name="parent_search" required 
                                placeholder="Buscar padre/tutor por nombre..."
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
@@ -225,7 +217,7 @@
                         <div id="parent_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto"></div>
                     </div>
                 </div>
-                <div id="validation_message" class="mt-2 text-sm text-red-600 hidden"></div>
+                <div id="validation_message" class="mt-2 text-sm hidden px-3 py-2 rounded-md bg-white" style="color:#dc2626;"></div>
             </div>
 
             <!-- Payment Details -->
@@ -233,7 +225,7 @@
                 <h4 class="text-lg font-medium text-neutral-700 mb-4">Detalles del Pago</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="payment_type" class="block text-sm font-medium text-neutral-700 mb-2">Tipo de Pago *</label>
+                        <label for="payment_type" class="block text-sm font-medium text-neutral-700 mb-2">Tipo de Pago <span style="color:#dc2626;">*</span></label>
                         <select id="payment_type" name="payment_type" required 
                                 class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <option value="">Seleccionar tipo...</option>
@@ -246,7 +238,7 @@
                         </select>
                     </div>
                     <div>
-                        <label for="payment_method" class="block text-sm font-medium text-neutral-700 mb-2">Método de Pago *</label>
+                        <label for="payment_method" class="block text-sm font-medium text-neutral-700 mb-2">Método de Pago <span style="color:#dc2626;">*</span></label>
                         <select id="payment_method" name="payment_method" required 
                                 class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <option value="">Seleccionar método...</option>
@@ -256,7 +248,7 @@
                         </select>
                     </div>
                     <div>
-                        <label for="amount" class="block text-sm font-medium text-neutral-700 mb-2">Cantidad *</label>
+                        <label for="amount" class="block text-sm font-medium text-neutral-700 mb-2">Cantidad <span style="color:#dc2626;">*</span></label>
                         <input type="number" id="amount" name="amount" required min="0.01" step="0.01"
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
@@ -277,17 +269,17 @@
                 <h4 class="text-lg font-medium text-neutral-700 mb-4">Fechas y Estado</h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label for="due_date" class="block text-sm font-medium text-neutral-700 mb-2">Fecha de Vencimiento *</label>
-                        <input type="date" id="due_date" name="due_date" required 
+                        <label for="due_date" class="block text-sm font-medium text-neutral-700 mb-2">Fecha de Vencimiento <span style="color:#dc2626;">*</span></label>
+                           <input type="text" id="due_date" name="due_date" required placeholder="dd/mm/yyyy"
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
                     <div>
                         <label for="payment_date" class="block text-sm font-medium text-neutral-700 mb-2">Fecha de Pago</label>
-                        <input type="date" id="payment_date" name="payment_date" 
+                           <input type="text" id="payment_date" name="payment_date" placeholder="dd/mm/yyyy"
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
                     <div>
-                        <label for="payment_status" class="block text-sm font-medium text-neutral-700 mb-2">Estado *</label>
+                        <label for="payment_status" class="block text-sm font-medium text-neutral-700 mb-2">Estado <span style="color:#dc2626;">*</span></label>
                         <select id="payment_status" name="payment_status" required 
                                 class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <option value="pending">Pendiente</option>
@@ -305,7 +297,7 @@
                 <h4 class="text-lg font-medium text-neutral-700 mb-4">Información Adicional</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="concept" class="block text-sm font-medium text-neutral-700 mb-2">Concepto *</label>
+                        <label for="concept" class="block text-sm font-medium text-neutral-700 mb-2">Concepto <span style="color:#dc2626;">*</span></label>
                         <input type="text" id="concept" name="concept" required 
                                placeholder="Descripción del pago..."
                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
@@ -362,13 +354,28 @@
     let selectedStudent = null;
     let selectedParent = null;
 
+    function formatDateForDisplay(isoDate) {
+        if (!isoDate) return '';
+        const parts = isoDate.split('-');
+        if (parts.length !== 3) return isoDate;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function getTodayDisplayDate() {
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
     // Open modal for creating new payment
     createBtn.addEventListener('click', () => {
         resetForm();
         modalTitle.textContent = 'Nuevo Pago';
         submitBtnText.textContent = 'Crear Pago';
         paymentIdInput.value = '';
-        form.action = '{% url "payments_list" %}';
+        form.action = '{% url "create_payment" %}';
         modal.classList.remove('hidden');
     });
 
@@ -552,75 +559,6 @@
         }
     }
 
-    // Edit payment function
-    function editPayment(paymentId) {
-        fetch(`/payments/${paymentId}/`)
-            .then(response => response.json())
-            .then(data => {
-                // Populate form with payment data
-                selectedStudent = { id: data.student.id, name: data.student.full_name };
-                selectedParent = { id: data.parent.id, name: data.parent.full_name };
-                
-                studentSearch.value = data.student.full_name;
-                parentSearch.value = data.parent.full_name;
-                document.getElementById('student_id').value = data.student.id;
-                document.getElementById('parent_id').value = data.parent.id;
-                
-                document.getElementById('payment_type').value = data.payment_type;
-                document.getElementById('payment_method').value = data.payment_method;
-                document.getElementById('amount').value = data.amount;
-                document.getElementById('currency').value = data.currency;
-                document.getElementById('payment_status').value = data.payment_status;
-                document.getElementById('due_date').value = data.due_date;
-                document.getElementById('payment_date').value = data.payment_date || '';
-                document.getElementById('concept').value = data.concept;
-                document.getElementById('reference_number').value = data.reference_number || '';
-                document.getElementById('observations').value = data.observations || '';
-
-                // Update modal
-                modalTitle.textContent = 'Editar Pago';
-                submitBtnText.textContent = 'Actualizar Pago';
-                paymentIdInput.value = paymentId;
-                form.action = `/payments/${paymentId}/update/`;
-                modal.classList.remove('hidden');
-            })
-            .catch(error => {
-                console.error('Error loading payment data:', error);
-                alert('Error al cargar los datos del pago');
-            });
-    }
-
-    // View payment function
-    function viewPayment(paymentId) {
-        // This would typically open a read-only modal or navigate to a detail page
-        window.open(`/payments/${paymentId}/detail/`, '_blank');
-    }
-
-    // Deactivate payment function
-    function deactivatePayment(paymentId) {
-        if (confirm('¿Estás seguro de que deseas desactivar este pago? No se eliminará, pero no aparecerá en la lista principal.')) {
-            fetch(`/payments/${paymentId}/deactivate/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error al desactivar el pago');
-                }
-            })
-            .catch(error => {
-                console.error('Error deactivating payment:', error);
-                alert('Error al desactivar el pago');
-            });
-        }
-    }
-
     // Hide suggestions when clicking outside
     document.addEventListener('click', function(e) {
         if (!studentSearch.contains(e.target) && !studentSuggestions.contains(e.target)) {
@@ -633,10 +571,23 @@
 
     // Form validation
     form.addEventListener('submit', (e) => {
+        const requiredFields = form.querySelectorAll('[required]');
+        const hasMissingRequired = Array.from(requiredFields).some((field) => !field.value || !field.value.trim());
+
+        if (hasMissingRequired) {
+            e.preventDefault();
+            validationMessage.classList.remove('hidden', 'text-green-600');
+            validationMessage.classList.add('text-red-600');
+            validationMessage.textContent = 'Este campo es necesario';
+            return;
+        }
+
         // Check if student and parent are selected
         if (!selectedStudent || !selectedParent) {
             e.preventDefault();
-            alert('Debe seleccionar un estudiante y un padre/tutor válidos.');
+            validationMessage.classList.remove('hidden', 'text-green-600');
+            validationMessage.classList.add('text-red-600');
+            validationMessage.textContent = '⚠ Debe seleccionar un estudiante y un padre/tutor válidos.';
             return;
         }
 
@@ -646,7 +597,7 @@
         
         if (paymentStatus === 'completed' && !paymentDate) {
             // Auto-set payment date to today
-            document.getElementById('payment_date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('payment_date').value = getTodayDisplayDate();
         }
     });
 
@@ -654,7 +605,7 @@
     document.getElementById('payment_status').addEventListener('change', function() {
         const paymentDate = document.getElementById('payment_date');
         if (this.value === 'completed' && !paymentDate.value) {
-            paymentDate.value = new Date().toISOString().split('T')[0];
+            paymentDate.value = getTodayDisplayDate();
         }
     });
 
@@ -686,6 +637,6 @@
     });
 
     // Set today as default due date
-    document.getElementById('due_date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('due_date').value = getTodayDisplayDate();
 </script>
 {% endblock %}

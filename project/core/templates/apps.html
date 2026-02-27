@@ -2,169 +2,179 @@
 
 {% block title %}Five a Day - Aplicaciones{% endblock %}
 
+{% block header_actions %}
+<a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">mail</span> Abrir Gmail
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .apps-grid {
+        font-family: 'Nunito', 'Open Sans', sans-serif;
+    }
+
+    .apps-grid a,
+    .apps-grid a * {
+        text-decoration: none !important;
+    }
+
+    .apps-grid .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined' !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="px-4 py-6">
-    <!-- Header Section -->
     <div class="mb-8">
-        <div class="flex items-center mb-2">
-            <span class="material-symbols-outlined text-primary-500 text-4xl mr-3">apps</span>
-            <h1 class="text-3xl font-bold text-neutral-800">Aplicaciones</h1>
+        <div class="flex items-center gap-3 mb-2">
+            <span class="material-symbols-outlined text-primary-600 text-5xl">apps</span>
+            <h1 class="text-3xl font-bold tracking-tight text-neutral-800">Aplicaciones</h1>
         </div>
-        <p class="text-neutral-600 ml-14">
-            Herramientas y utilidades para la gestión de Five a Day
-        </p>
+        <p class="text-neutral-600">Herramientas rápidas para el día a día.</p>
     </div>
 
-    <!-- Applications Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-        
-        <!-- Fun Friday - Active -->
-        <a href="{% url 'fun_friday_form' %}" 
-           class="bg-white rounded-xl p-6 border-2 border-neutral-200 hover:border-primary-400 hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">celebration</span>
+    <div class="apps-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <a href="{% url 'fun_friday_form' %}"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-600 text-6xl">celebration</span>
             </div>
-            <h3 class="font-bold text-lg text-neutral-800 group-hover:text-primary-600 transition-colors mb-1">Fun Friday</h3>
-            <p class="text-xs text-neutral-500 mb-2">Enviar invitación para actividades especiales</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Activo
-            </span>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Fun Friday</h3>
+                <p class="text-sm text-neutral-600">Invitación semanal</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    Disponible
+                </span>
+            </div>
         </a>
-        
-        <!-- Recordatorio de Pago Mensual -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">payments</span>
-            </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Pago Mensual</h3>
-            <p class="text-xs text-neutral-500 mb-2">Recordatorio automático de pagos mensuales</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
-        
-        <!-- Recordatorio de Pago Trimestral -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">calendar_today</span>
-            </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Pago Trimestral</h3>
-            <p class="text-xs text-neutral-500 mb-2">Recordatorio de pagos trimestrales</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
-        
-        <!-- Cierre por Vacaciones -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">beach_access</span>
-            </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Vacaciones</h3>
-            <p class="text-xs text-neutral-500 mb-2">Notificación de cierre por vacaciones</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
-        
-        <!-- Certificado de Renta -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">description</span>
-            </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Certificado Renta</h3>
-            <p class="text-xs text-neutral-500 mb-2">Generar certificados para declaración de renta</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
 
-        <!-- Informe Mensual -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">bar_chart</span>
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">payments</span>
             </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Informe Mensual</h3>
-            <p class="text-xs text-neutral-500 mb-2">Resumen mensual de actividad y pagos</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
-
-        <!-- Email de Bienvenida -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">mail</span>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Pago Mensual</h3>
+                <p class="text-sm text-neutral-600">Recordatorio automático</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
             </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Bienvenida</h3>
-            <p class="text-xs text-neutral-500 mb-2">Email automático de bienvenida a nuevos estudiantes</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
+        </a>
 
-        <!-- Cumpleaños -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">cake</span>
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">calendar_today</span>
             </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Cumpleaños</h3>
-            <p class="text-xs text-neutral-500 mb-2">Felicitación automática de cumpleaños</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
-
-        <!-- Recibos -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">receipt</span>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Pago Trimestral</h3>
+                <p class="text-sm text-neutral-600">Avisos programados</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
             </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Recibos</h3>
-            <p class="text-xs text-neutral-500 mb-2">Generar y enviar recibos de pago</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
+        </a>
 
-        <!-- Matrículas -->
-        <div class="bg-white rounded-xl p-6 border-2 border-neutral-200 opacity-60 cursor-not-allowed flex flex-col items-center text-center">
-            <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-                <span class="material-symbols-outlined text-white text-4xl">school</span>
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">beach_access</span>
             </div>
-            <h3 class="font-bold text-lg text-neutral-700 mb-1">Matrículas</h3>
-            <p class="text-xs text-neutral-500 mb-2">Gestión de documentos de matrícula</p>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                Próximamente
-            </span>
-        </div>
-
-    </div>
-
-    <!-- Information Panel -->
-    <div class="mt-12 bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-8 border border-primary-200">
-        <div class="flex items-start">
-            <span class="material-symbols-outlined text-primary-500 text-4xl mr-4">info</span>
-            <div>
-                <h3 class="text-xl font-bold text-neutral-800 mb-2">¿Necesitas una nueva aplicación?</h3>
-                <p class="text-neutral-700 mb-4">
-                    Si necesitas una herramienta específica que no está disponible, 
-                    contacta con el equipo de soporte y la añadiremos en futuras versiones.
-                </p>
-                <a href="#" id="support-open-btn-apps" class="inline-flex items-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200">
-                    <span class="material-symbols-outlined mr-2">support_agent</span>
-                    Contactar Soporte
-                </a>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Vacaciones</h3>
+                <p class="text-sm text-neutral-600">Aviso de cierre</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
             </div>
-        </div>
+        </a>
+
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">description</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Certificado Renta</h3>
+                <p class="text-sm text-neutral-600">Generación anual</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
+            </div>
+        </a>
+
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">bar_chart</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Informe Mensual</h3>
+                <p class="text-sm text-neutral-600">Resumen operativo</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
+            </div>
+        </a>
+
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">mail</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Bienvenida</h3>
+                <p class="text-sm text-neutral-600">Alta de estudiantes</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
+            </div>
+        </a>
+
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">cake</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Cumpleaños</h3>
+                <p class="text-sm text-neutral-600">Saludos automáticos</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
+            </div>
+        </a>
+
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">receipt</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Recibos</h3>
+                <p class="text-sm text-neutral-600">Generación y envío</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
+            </div>
+        </a>
+
+          <a href="#"
+              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
+            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                <span class="material-symbols-outlined text-primary-500 text-6xl">school</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Matrículas</h3>
+                <p class="text-sm text-neutral-600">Documentación y alta</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                    Próximamente
+                </span>
+            </div>
+        </a>
     </div>
 </div>
-
-<!-- Script para abrir el soporte desde esta página -->
-<script>
-document.getElementById('support-open-btn-apps')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('support-open-btn')?.click();
-});
-</script>
 {% endblock %}

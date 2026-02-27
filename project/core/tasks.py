@@ -51,7 +51,7 @@ def send_welcome_email_task(self, parent_id: int, student_id: int, enrollment_id
             'group_name': student.group.group_name if student.group else None,
             'enrollment_type': enrollment.enrollment_type.display_name if enrollment.enrollment_type else None,
             'schedule_type': enrollment.get_schedule_type_display(),
-            'start_date': enrollment.enrollment_period_start.strftime('%d/%m/%Y') if enrollment.enrollment_period_start else None,
+            'start_date': enrollment.enrollment_date.strftime('%d/%m/%Y') if enrollment.enrollment_date else None,
         }
         
         success = email_service.send_email(
@@ -296,12 +296,7 @@ def send_enrollment_confirmation_task(
             logger.error(f"❌ No hay padre con email para {student.full_name}")
             return {'status': 'error', 'message': 'No parent email'}
         
-        # Determinar año académico
-        today = date.today()
-        if today.month >= 9:
-            academic_year = f"{today.year}-{today.year + 1}"
-        else:
-            academic_year = f"{today.year - 1}-{today.year}"
+        academic_year = enrollment.academic_year
         
         # Preparar adjuntos
         attachments = []
@@ -320,7 +315,7 @@ def send_enrollment_confirmation_task(
             student_name=student.full_name,
             gender='m',  # TODO: Añadir campo gender al modelo Student
             academic_year=academic_year,
-            month=MONTHS_ES[enrollment.enrollment_period_start.month - 1],
+            month=MONTHS_ES[enrollment.enrollment_date.month - 1],
             attachments=attachments if attachments else None
         )
         

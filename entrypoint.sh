@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # ============================================================================
 # ENTRYPOINT SCRIPT - Inicialización para Docker y Render.com
 # ============================================================================
@@ -7,7 +7,6 @@
 # 2. Render.com (producción): Ejecuta migraciones, collectstatic, lanza Gunicorn
 
 set -e  # Salir si algún comando falla
-set -o pipefail
 
 # ============================================================================
 # Detectar entorno

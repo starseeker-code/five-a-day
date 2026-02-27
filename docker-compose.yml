@@ -66,6 +66,7 @@ services:
       DJANGO_ENV: ${DJANGO_ENV:-development}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
       
       # Database

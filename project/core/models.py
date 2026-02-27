@@ -8,6 +8,16 @@ from django.db.models import Sum
 from . import constants
 
 
+def current_academic_year(reference_date=None):
+    """Return academic year in YYYY-YYYY format (starts in September)."""
+    reference_date = reference_date or date.today()
+    if reference_date.month >= 9:
+        start_year = reference_date.year
+    else:
+        start_year = reference_date.year - 1
+    return f"{start_year}-{start_year + 1}"
+
+
 # ============================================================================
 # SITE CONFIGURATION - Singleton para configuración del sitio
 # ============================================================================
@@ -138,6 +148,7 @@ class Enrollment(models.Model):
     
     enrollment_period_start = models.DateField()
     enrollment_period_end = models.DateField()
+    academic_year = models.CharField(max_length=9, default=current_academic_year)
     schedule_type = models.CharField(
         max_length=20,
         choices=constants.SCHEDULE_TYPE_CHOICES,
