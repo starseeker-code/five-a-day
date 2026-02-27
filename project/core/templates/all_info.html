@@ -6,91 +6,112 @@
 {% block page_subtitle %}Vista consolidada de estudiantes y pagos{% endblock %}
 
 {% block content %}
-
 <div class="space-y-8">
   <div>
-    <div class="mb-4">
-      <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Estudiantes</h3>
-      <p class="text-neutral-600">Total: {{ students|length }} estudiantes registrados</p>
+    <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Estudiantes</h3>
+        <p class="text-neutral-600">Total: {{ students|length }} estudiantes registrados</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <label for="students-sort" class="text-sm font-medium text-neutral-600">Ordenar por:</label>
+        <select id="students-sort" class="px-3 py-2 border border-neutral-300 rounded-md text-sm text-neutral-700 bg-white">
+          <option value="date_desc" selected>Fecha (más reciente)</option>
+          <option value="id_asc">ID</option>
+          <option value="first_name_asc">Nombre</option>
+          <option value="last_name_asc">Apellido</option>
+        </select>
+      </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
+      <div class="overflow-x-scroll pb-4 mb-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="w-full min-w-[2400px] whitespace-nowrap" style="min-width: 2400px; white-space: nowrap;">
           <thead class="bg-primary-50 border-b border-primary-200">
             <tr>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Nacimiento</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Contacto familiar</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">ID</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Nombre</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Apellido</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha de nacimiento</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Colegio</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Alergias</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Profesora</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Móvil</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">IBAN</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-neutral-100">
+          <tbody id="students-tbody" class="divide-y divide-neutral-100">
             {% for student in students %}
-            <tr class="hover:bg-neutral-50 transition-all duration-200">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span class="text-primary-600 font-semibold">{{ student.first_name.0 }}{{ student.last_name.0 }}</span>
-                  </div>
-                  <div>
-                    <div class="font-medium text-neutral-800">{{ student.full_name }}</div>
-                    <div class="text-sm text-neutral-500">ID: {{ student.id }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                <div>{{ student.birth_date|date:"d/m/Y" }}</div>
-                <div class="text-xs text-neutral-500">{{ student.age }} años</div>
-              </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                {% if student.group %}
-                  <div class="font-medium text-neutral-800">{{ student.group.group_name }}</div>
-                  <div class="text-xs text-neutral-500">
-                    {% if student.group.teacher %}
-                      {{ student.group.teacher.first_name }} {{ student.group.teacher.last_name }}
-                    {% else %}
-                      Sin profesor
-                    {% endif %}
-                  </div>
+            <tr class="hover:bg-neutral-50 transition-all duration-200"
+                data-id="{{ student.id }}"
+                data-first-name="{{ student.first_name|lower }}"
+                data-last-name="{{ student.last_name|lower }}"
+                data-date="{{ student.created_at|date:'c' }}">
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.id }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-medium">{{ student.first_name }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-medium">{{ student.last_name }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.birth_date|date:"d/m/Y" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.age }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.school|default:"—" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.allergies|default:"—" }}</td>
+              <td class="px-4 py-4">
+                {% if student.gdpr_signed %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Firmado</span>
                 {% else %}
-                  <span class="text-neutral-400">Sin grupo</span>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>
                 {% endif %}
               </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if student.group %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">{{ student.group.group_name }}</span>
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
                 {% for enrollment in student.enrollments.all %}
                   <div>{{ enrollment.enrollment_type.display_name }} ({{ enrollment.get_schedule_type_display }})</div>
                 {% empty %}
-                  <span class="text-neutral-400">Sin matrícula</span>
+                  <span class="text-neutral-400">No hay matrículas</span>
                 {% endfor %}
               </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                {% for parent in student.parents.all %}
-                  <div class="mb-1">
-                    <div class="font-medium text-neutral-800">{{ parent.full_name }}</div>
-                    <div class="text-xs text-neutral-500">{{ parent.phone }} · {{ parent.email }}</div>
-                  </div>
-                {% empty %}
-                  <span class="text-neutral-400">Sin padres asignados</span>
-                {% endfor %}
-              </td>
-              <td class="px-6 py-4">
-                {% if student.gdpr_signed %}
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <span class="material-symbols-outlined text-sm mr-1">check_circle</span>Firmado
-                  </span>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if student.group and student.group.teacher %}
+                  {{ student.group.teacher.first_name }} {{ student.group.teacher.last_name }}
                 {% else %}
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    <span class="material-symbols-outlined text-sm mr-1">cancel</span>Pendiente
-                  </span>
+                  <span class="text-neutral-400">—</span>
                 {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for parent in student.parents.all %}
+                  <div>{{ parent.phone }}</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay padres</span>
+                {% endfor %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for parent in student.parents.all %}
+                  <div>{{ parent.email }}</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay padres</span>
+                {% endfor %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for parent in student.parents.all %}
+                  <div>{{ parent.iban|default:"—" }}</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay padres</span>
+                {% endfor %}
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="6" class="px-6 py-8 text-center">
+              <td colspan="14" class="px-6 py-8 text-center">
                 <div class="flex flex-col items-center">
                   <span class="material-symbols-outlined text-6xl text-neutral-300 mb-4">school</span>
                   <h4 class="text-xl font-semibold text-neutral-600 mb-2">No hay estudiantes</h4>
@@ -106,48 +127,72 @@
   </div>
 
   <div>
-    <div class="mb-4">
-      <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Pagos</h3>
-      <p class="text-neutral-600">Total: {{ payments|length }} pagos registrados</p>
+    <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Pagos</h3>
+        <p class="text-neutral-600">Total: {{ payments|length }} pagos registrados</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <label for="payments-sort" class="text-sm font-medium text-neutral-600">Ordenar por:</label>
+        <select id="payments-sort" class="px-3 py-2 border border-neutral-300 rounded-md text-sm text-neutral-700 bg-white">
+          <option value="date_desc" selected>Fecha (más reciente)</option>
+          <option value="student_asc">Estudiante (A-Z)</option>
+        </select>
+      </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
+      <div class="overflow-x-scroll pb-4 mb-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="w-full min-w-[2400px] whitespace-nowrap" style="min-width: 2400px; white-space: nowrap;">
           <thead class="bg-primary-50 border-b border-primary-200">
             <tr>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Concepto</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Importe</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Método</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fechas</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Referencia</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">ID</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Teléfono</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Tipo de pago</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Método de pago</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Cantidad</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha vencimiento</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha pago</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Concepto</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Número referencia</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Notas</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Creado</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-neutral-100">
+          <tbody id="payments-tbody" class="divide-y divide-neutral-100">
             {% for payment in payments %}
-            <tr class="hover:bg-neutral-50 transition-all duration-200">
-              <td class="px-6 py-4 text-sm text-neutral-600">
+            <tr class="hover:bg-neutral-50 transition-all duration-200"
+                data-student="{% if payment.student %}{{ payment.student.first_name|lower }} {{ payment.student.last_name|lower }}{% endif %}"
+                data-date="{{ payment.created_at|date:'c' }}">
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.id }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-medium">
                 {% if payment.student %}
-                  <div class="font-medium text-neutral-800">{{ payment.student.full_name }}</div>
-                  {% if payment.parent %}
-                    <div class="text-xs text-neutral-500">{{ payment.parent.full_name }} · {{ payment.parent.phone }}</div>
-                  {% endif %}
+                  {{ payment.student.first_name }} {{ payment.student.last_name }}
                 {% else %}
-                  <span class="text-neutral-400">Sin estudiante</span>
+                  <span class="text-neutral-400">—</span>
                 {% endif %}
               </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                <div class="font-medium text-neutral-800">{{ payment.concept }}</div>
-                <div class="text-xs text-neutral-500">{{ payment.get_payment_type_display }}</div>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if payment.parent %}
+                  {{ payment.parent.phone }}
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
               </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                <div class="font-bold text-neutral-800">€{{ payment.amount }}</div>
-                <div class="text-xs text-neutral-500">{{ payment.currency }}</div>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if payment.enrollment %}
+                  {{ payment.enrollment.enrollment_type.display_name }} ({{ payment.enrollment.get_schedule_type_display }})
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
               </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">{{ payment.get_payment_method_display }}</td>
-              <td class="px-6 py-4">
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.get_payment_type_display }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.get_payment_method_display }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-semibold">€{{ payment.amount }}</td>
+              <td class="px-4 py-4">
                 {% if payment.payment_status == 'completed' %}
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Completado</span>
                 {% elif payment.payment_status == 'pending' %}
@@ -160,21 +205,16 @@
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ payment.get_payment_status_display }}</span>
                 {% endif %}
               </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                <div>Venc.: {{ payment.due_date|date:"d/m/Y" }}</div>
-                <div class="text-xs text-neutral-500">Pago: {% if payment.payment_date %}{{ payment.payment_date|date:"d/m/Y" }}{% else %}—{% endif %}</div>
-              </td>
-              <td class="px-6 py-4 text-sm text-neutral-600">
-                {% if payment.reference_number %}
-                  {{ payment.reference_number }}
-                {% else %}
-                  <span class="text-neutral-400">Sin referencia</span>
-                {% endif %}
-              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.due_date|date:"d/m/Y" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{% if payment.payment_date %}{{ payment.payment_date|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.concept }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.reference_number|default:"—" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.observations|default:"—" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.created_at|date:"d/m/Y H:i" }}</td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="7" class="px-6 py-8 text-center">
+              <td colspan="14" class="px-6 py-8 text-center">
                 <div class="flex flex-col items-center">
                   <span class="material-symbols-outlined text-6xl text-neutral-300 mb-4">payment</span>
                   <h4 class="text-xl font-semibold text-neutral-600 mb-2">No hay pagos</h4>
@@ -189,5 +229,51 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+  function sortRows(tbodyId, comparator) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const sortableRows = rows.filter(row => row.dataset && row.dataset.date);
+    sortableRows.sort(comparator);
+    sortableRows.forEach(row => tbody.appendChild(row));
+  }
+
+  function parseDate(value) {
+    const parsed = Date.parse(value || '');
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  function applyStudentsSort(mode) {
+    sortRows('students-tbody', (a, b) => {
+      if (mode === 'id_asc') return Number(a.dataset.id || 0) - Number(b.dataset.id || 0);
+      if (mode === 'first_name_asc') return (a.dataset.firstName || '').localeCompare(b.dataset.firstName || '');
+      if (mode === 'last_name_asc') return (a.dataset.lastName || '').localeCompare(b.dataset.lastName || '');
+      return parseDate(b.dataset.date) - parseDate(a.dataset.date);
+    });
+  }
+
+  function applyPaymentsSort(mode) {
+    sortRows('payments-tbody', (a, b) => {
+      if (mode === 'student_asc') return (a.dataset.student || '').localeCompare(b.dataset.student || '');
+      return parseDate(b.dataset.date) - parseDate(a.dataset.date);
+    });
+  }
+
+  const studentsSort = document.getElementById('students-sort');
+  const paymentsSort = document.getElementById('payments-sort');
+
+  if (studentsSort) {
+    studentsSort.addEventListener('change', (event) => applyStudentsSort(event.target.value));
+    applyStudentsSort(studentsSort.value);
+  }
+
+  if (paymentsSort) {
+    paymentsSort.addEventListener('change', (event) => applyPaymentsSort(event.target.value));
+    applyPaymentsSort(paymentsSort.value);
+  }
+</script>
 {% endblock %}

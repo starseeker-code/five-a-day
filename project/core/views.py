@@ -509,7 +509,7 @@ class StudentListView(ListView):
                 | Q(email__icontains=search_query)
             )
 
-        return queryset.order_by("last_name", "first_name")
+        return queryset.order_by("-created_at")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -841,7 +841,7 @@ def payments_list(request):
     # Get all active payments ordered by most recent first
     payments_queryset = Payment.objects.select_related(
         "student", "parent", "enrollment"
-    ).order_by("-created_at", "-due_date")
+    ).order_by("-due_date", "-created_at")
 
     # Add search functionality
     search_query = request.GET.get("search", "")

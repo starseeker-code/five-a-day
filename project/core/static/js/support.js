@@ -3,8 +3,6 @@
  * Maneja el modal de tickets de soporte y envío al backend
  */
 
-console.log('✅ support.js cargado correctamente');
-
 const SupportSystem = {
     // Mapeo de categorías a tipos de backend
     categoryMap: {
@@ -12,6 +10,13 @@ const SupportSystem = {
         'sistema': 'backend',
         'datos': 'database',
         'otro': 'exception'
+    },
+
+    categoryDisplayMap: {
+        interfaz: 'Interfaz / Problemas visuales',
+        sistema: 'Sistema / Errores internos',
+        datos: 'Datos / Base de datos',
+        otro: 'Otro'
     },
     
     // Estado del modal
@@ -79,6 +84,7 @@ const SupportSystem = {
         const modal = document.getElementById('support-modal');
         if (modal) {
             modal.classList.remove('hidden');
+            modal.style.display = 'flex';
             this.showCategoryStep();
         }
     },
@@ -90,6 +96,7 @@ const SupportSystem = {
         const modal = document.getElementById('support-modal');
         if (modal) {
             modal.classList.add('hidden');
+            modal.style.display = 'none';
             this.resetModal();
         }
     },
@@ -101,8 +108,14 @@ const SupportSystem = {
         const categoryStep = document.getElementById('support-step-category');
         const messageStep = document.getElementById('support-step-message');
         
-        if (categoryStep) categoryStep.classList.remove('hidden');
-        if (messageStep) messageStep.classList.add('hidden');
+        if (categoryStep) {
+            categoryStep.classList.remove('hidden');
+            categoryStep.style.display = 'block';
+        }
+        if (messageStep) {
+            messageStep.classList.add('hidden');
+            messageStep.style.display = 'none';
+        }
         
         this.selectedCategory = null;
     },
@@ -117,12 +130,17 @@ const SupportSystem = {
         const messageStep = document.getElementById('support-step-message');
         const categoryLabel = document.getElementById('support-category-label');
         
-        if (categoryStep) categoryStep.classList.add('hidden');
-        if (messageStep) messageStep.classList.remove('hidden');
+        if (categoryStep) {
+            categoryStep.classList.add('hidden');
+            categoryStep.style.display = 'none';
+        }
+        if (messageStep) {
+            messageStep.classList.remove('hidden');
+            messageStep.style.display = 'block';
+        }
         
         // Capitalizar primera letra
-        const displayCategory = category.charAt(0).toUpperCase() + category.slice(1);
-        if (categoryLabel) categoryLabel.textContent = displayCategory;
+        if (categoryLabel) categoryLabel.textContent = this.categoryDisplayMap[category] || 'Categoría';
         
         // Focus en el textarea
         const textarea = document.getElementById('support-message');
@@ -195,7 +213,7 @@ const SupportSystem = {
                 },
                 body: JSON.stringify({
                     category: this.categoryMap[this.selectedCategory] || 'exception',
-                    category_display: this.selectedCategory,
+                    category_display: this.categoryDisplayMap[this.selectedCategory] || this.selectedCategory,
                     message: message,
                     current_url: window.location.pathname
                 })
@@ -251,7 +269,12 @@ const SupportSystem = {
     }
 };
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+window.SupportSystem = SupportSystem;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        SupportSystem.init();
+    });
+} else {
     SupportSystem.init();
-});
+}

@@ -34,7 +34,7 @@
                     <span class="material-symbols-outlined">chevron_right</span>
                 </div>
                 <nav class="space-y-2">
-                    <a href="{% url 'home' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'home' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">dashboard</span>
                         <span class="hidden sidebar-text">Panel Principal</span>
                     </a>
@@ -48,40 +48,40 @@
                         </a>
                     </div>
                     
-                    <a href="{% url 'students_list' %}" class="sidebar-link flex items-center justify-between px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'students_list' %}" class="sidebar-link w-full flex items-center justify-between px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'students_list' or request.resolver_match.url_name == 'student_create' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <div class="flex items-center gap-3 w-full">
                             <span class="material-symbols-outlined mx-auto sidebar-icon">people</span>
                             <span class="hidden sidebar-text">Estudiantes</span>
                         </div>
                     </a>
-                    <a href="{% url 'payments_list' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'payments_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'payments_list' or request.resolver_match.url_name == 'create_payment' or request.resolver_match.url_name == 'payment_detail_view' or request.resolver_match.url_name == 'update_payment' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">payment_arrow_down</span>
                         <span class="hidden sidebar-text">Pagos</span>
                     </a>
-                    <a href="" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
                         <span class="hidden sidebar-text">Horario</span>
                     </a>
-                    <a href="{% url 'apps' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'apps' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'apps' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'apps' or request.resolver_match.url_name == 'fun_friday_form' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">apps</span>
                         <span class="hidden sidebar-text">Aplicaciones</span>
                     </a>
-                    <a href="{% url 'gestion' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'gestion' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
                         <span class="hidden sidebar-text">Gestión</span>
                     </a>
-                    <a href="{% url 'all_info' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md {% if request.resolver_match.url_name == 'database' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                    <a href="{% url 'all_info' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'all_info' %}bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">analytics</span>
                         <span class="hidden sidebar-text">Base de Datos</span>
                     </a>
                 </nav>
                 <div class="mt-auto pt-10">
-                    <a href="{% url 'logout' %}" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
+                    <a href="{% url 'logout' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
                         <span class="hidden sidebar-text">Cerrar Sesión</span>
                     </a>
                     <!-- Botón de Ayuda/Soporte -->
-                    <a href="#" id="support-open-btn" class="sidebar-link flex items-center gap-3 px-0 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200 mt-2">
+                    <a href="#" id="support-open-btn" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200 mt-2">
                         <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
                         <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
                     </a>
@@ -140,7 +140,7 @@
     {% block extra_js %}{% endblock %}
     
     <!-- Modal de Soporte -->
-    <div id="support-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div id="support-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <!-- Header -->
             <div class="px-6 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white flex justify-between items-center">
@@ -154,7 +154,7 @@
             </div>
             
             <!-- Step 1: Categoría -->
-            <div id="support-step-category" class="p-6">
+            <div id="support-step-category" class="p-6" style="display: block;">
                 <p class="text-neutral-600 text-sm mb-4 text-center">Selecciona el tipo de incidencia:</p>
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Interfaz -->
@@ -181,7 +181,7 @@
                             <span class="material-symbols-outlined text-green-600 text-2xl">database</span>
                         </div>
                         <span class="font-medium text-green-700">Datos</span>
-                        <span class="text-xs text-green-500">Info incorrecta</span>
+                        <span class="text-xs text-green-500">Base de datos</span>
                     </button>
                     
                     <!-- Otro -->
@@ -190,20 +190,17 @@
                             <span class="material-symbols-outlined text-amber-600 text-2xl">help</span>
                         </div>
                         <span class="font-medium text-amber-700">Otro</span>
-                        <span class="text-xs text-amber-500">Sugerencias</span>
+                        <span class="text-xs text-amber-500">Otro</span>
                     </button>
                 </div>
             </div>
             
             <!-- Step 2: Mensaje -->
-            <div id="support-step-message" class="hidden">
+            <div id="support-step-message" class="hidden" style="display: none;">
                 <div class="px-6 py-3 bg-neutral-50 border-b flex items-center justify-between">
                     <button type="button" id="support-back-btn" class="flex items-center gap-1 text-neutral-600 hover:text-neutral-800 transition-colors">
                         <span class="material-symbols-outlined text-sm">arrow_back</span>
                         <span id="support-category-label" class="font-medium">Categoría</span>
-                    </button>
-                    <button type="button" id="support-send-btn" class="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full transition-colors shadow-md hover:shadow-lg">
-                        <span class="material-symbols-outlined text-sm">send</span>
                     </button>
                 </div>
                 <div class="p-6">
@@ -224,6 +221,12 @@
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                         ¡Ticket enviado correctamente!
                     </p>
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" id="support-send-btn" class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md transition-colors shadow-sm hover:shadow-md flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">send</span>
+                            Enviar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
