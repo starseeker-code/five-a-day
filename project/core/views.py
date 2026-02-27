@@ -476,6 +476,10 @@ class StudentCreateView(CreateView):
             return self.form_invalid(form)
 
     def form_invalid(self, form):
+        messages.error(
+            self.request,
+            "No se pudo crear el estudiante. Revisa los campos obligatorios.",
+        )
         context = self.get_context_data(form=form)
         context["enrollment_form"] = EnrollmentForm(self.request.POST)
         return self.render_to_response(context)

@@ -98,9 +98,8 @@ class EnrollmentForm(forms.ModelForm):
         label='Precio manual (€)',
         help_text='Solo rellenar para matrículas de tipo "Especial"'
     )
-    academic_year = forms.CharField(
+    academic_year = forms.ChoiceField(
         required=True,
-        max_length=9,
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_academic_year'}),
         label='Curso académico',
         help_text='Ejemplo: 2025-2026'
@@ -111,14 +110,13 @@ class EnrollmentForm(forms.ModelForm):
         fields = [
             'enrollment_type', 'academic_year', 'schedule_type',
             'discount_percentage', 'enrollment_date',
-            'status', 'notes'
+            'notes'
         ]
         widgets = {
             'enrollment_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_type'}),
             'schedule_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_schedule_type'}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '100', 'step': '0.01'}),
             'enrollment_date': forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control', 'placeholder': 'dd/mm/yyyy'}),
-            'status': forms.Select(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Notas adicionales'}),
         }
         labels = {
@@ -127,7 +125,6 @@ class EnrollmentForm(forms.ModelForm):
             'schedule_type': 'Tipo de horario',
             'discount_percentage': 'Descuento (%)',
             'enrollment_date': 'Fecha de alta de matriculación',
-            'status': 'Estado',
             'notes': 'Notas',
         }
 
@@ -220,6 +217,7 @@ class EnrollmentForm(forms.ModelForm):
         enrollment.academic_year = academic_year
         enrollment.enrollment_period_start = date(start_year, 9, 1)
         enrollment.enrollment_period_end = date(end_year, 6, 30)
+        enrollment.status = enrollment.status or 'active'
         
         if commit:
             enrollment.save()
