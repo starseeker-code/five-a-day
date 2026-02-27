@@ -233,11 +233,12 @@
                 <p class="text-neutral-800">{{ payment.enrollment.get_schedule_type_display }}</p>
             </div>
             <div>
-                <label class="block text-sm font-medium text-neutral-600 mb-1">Período</label>
-                <p class="text-neutral-800">
-                    {{ payment.enrollment.enrollment_period_start|date:"d/m/Y" }} - 
-                    {{ payment.enrollment.enrollment_period_end|date:"d/m/Y" }}
-                </p>
+                <label class="block text-sm font-medium text-neutral-600 mb-1">Curso académico</label>
+                <p class="text-neutral-800">{{ payment.enrollment.academic_year }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-600 mb-1">Fecha de alta de matriculación</label>
+                <p class="text-neutral-800">{{ payment.enrollment.enrollment_date|date:"d/m/Y" }}</p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-neutral-600 mb-1">Estado</label>

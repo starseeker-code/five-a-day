@@ -222,6 +222,10 @@ TIME_ZONE = "Europe/Madrid"
 
 USE_I18N = True
 
+DATE_FORMAT = "d/m/Y"
+SHORT_DATE_FORMAT = "d/m/Y"
+DATE_INPUT_FORMATS = ["%d/%m/%Y", "%Y-%m-%d"]
+
 USE_TZ = True
 
 # ============================================================================

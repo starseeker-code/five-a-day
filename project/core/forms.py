@@ -4,6 +4,7 @@ from core.models import Payment, Student, Parent, Enrollment, EnrollmentType, Gr
 from django import forms
 from django.forms import inlineformset_factory
 from decimal import Decimal
+from datetime import date
 from .models import Student, Parent, Enrollment, EnrollmentType, Group, SiteConfiguration
 
 # Clases de Tailwind para inputs consistentes
@@ -11,6 +12,9 @@ TAILWIND_INPUT_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md 
 TAILWIND_SELECT_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
 TAILWIND_TEXTAREA_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
 TAILWIND_CHECKBOX_CLASSES = 'form-checkbox h-5 w-5 text-primary-600'
+
+
+DATE_INPUT_FORMATS = ["%d/%m/%Y", "%Y-%m-%d"]
 
 
 class StudentForm(ModelForm):
@@ -22,7 +26,7 @@ class StudentForm(ModelForm):
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
-            'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'birth_date': forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control', 'placeholder': 'dd/mm/yyyy'}),
             'school': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Colegio'}),
             'allergies': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Alergias'}),
             'gdpr_signed': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -37,6 +41,10 @@ class StudentForm(ModelForm):
             'gdpr_signed': 'GDPR Firmado',
             'group': 'Grupo',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['birth_date'].input_formats = DATE_INPUT_FORMATS
 
     def clean_birth_date(self):
         from datetime import date
@@ -90,47 +98,76 @@ class EnrollmentForm(forms.ModelForm):
         label='Precio manual (€)',
         help_text='Solo rellenar para matrículas de tipo "Especial"'
     )
+    academic_year = forms.CharField(
+        required=True,
+        max_length=9,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_academic_year'}),
+        label='Curso académico',
+        help_text='Ejemplo: 2025-2026'
+    )
     
     class Meta:
         model = Enrollment
         fields = [
-            'enrollment_type', 'enrollment_period_start', 
-            'enrollment_period_end', 'schedule_type',
+            'enrollment_type', 'academic_year', 'schedule_type',
             'discount_percentage', 'enrollment_date',
             'status', 'notes'
         ]
         widgets = {
             'enrollment_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_type'}),
-            'enrollment_period_start': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'enrollment_period_end': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'schedule_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_schedule_type'}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '100', 'step': '0.01'}),
-            'enrollment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'enrollment_date': forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control', 'placeholder': 'dd/mm/yyyy'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Notas adicionales'}),
         }
         labels = {
             'enrollment_type': 'Tipo de matrícula',
-            'enrollment_period_start': 'Inicio del período',
-            'enrollment_period_end': 'Fin del período',
+            'academic_year': 'Curso académico',
             'schedule_type': 'Tipo de horario',
             'discount_percentage': 'Descuento (%)',
-            'enrollment_date': 'Fecha de matrícula',
+            'enrollment_date': 'Fecha de alta de matriculación',
             'status': 'Estado',
             'notes': 'Notas',
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['enrollment_date'].input_formats = DATE_INPUT_FORMATS
+        self.fields['academic_year'].initial = self._get_default_academic_year()
+        self.fields['academic_year'].choices = [
+            (year, year) for year in self._build_academic_year_choices()
+        ]
+
+    def _get_default_academic_year(self):
+        today = date.today()
+        start_year = today.year if today.month >= 9 else today.year - 1
+        return f"{start_year}-{start_year + 1}"
+
+    def _build_academic_year_choices(self):
+        today = date.today()
+        current_start = today.year if today.month >= 9 else today.year - 1
+        return [f"{year}-{year + 1}" for year in range(current_start - 2, current_start + 4)]
+
+    def clean_academic_year(self):
+        academic_year = (self.cleaned_data.get('academic_year') or '').strip()
+        if not academic_year:
+            raise forms.ValidationError('El curso académico es obligatorio')
+
+        parts = academic_year.split('-')
+        if len(parts) != 2 or not all(part.isdigit() for part in parts):
+            raise forms.ValidationError('El formato debe ser YYYY-YYYY (ejemplo: 2025-2026)')
+
+        start_year, end_year = int(parts[0]), int(parts[1])
+        if end_year != start_year + 1:
+            raise forms.ValidationError('El curso académico debe tener años consecutivos')
+
+        return academic_year
+
     def clean(self):
         cleaned_data = super().clean()
-        start_date = cleaned_data.get('enrollment_period_start')
-        end_date = cleaned_data.get('enrollment_period_end')
         enrollment_type = cleaned_data.get('enrollment_type')
         manual_amount = cleaned_data.get('manual_amount')
-        
-        if start_date and end_date and start_date >= end_date:
-            raise forms.ValidationError(
-                'La fecha de inicio debe ser anterior a la fecha de fin'
-            )
         
         # Si es tipo "special", el precio manual es obligatorio
         if enrollment_type and enrollment_type.name == 'special':
@@ -152,6 +189,7 @@ class EnrollmentForm(forms.ModelForm):
         schedule_type = self.cleaned_data.get('schedule_type')
         manual_amount = self.cleaned_data.get('manual_amount')
         discount = self.cleaned_data.get('discount_percentage') or Decimal('0.00')
+        academic_year = self.cleaned_data.get('academic_year')
         
         # Obtener configuración del sitio
         config = SiteConfiguration.get_config()
@@ -173,9 +211,15 @@ class EnrollmentForm(forms.ModelForm):
         # Calcular precio final con descuento
         discount_amount = base_amount * (discount / Decimal('100'))
         final_amount = base_amount - discount_amount
+
+        start_year = int(academic_year.split('-')[0])
+        end_year = int(academic_year.split('-')[1])
         
         enrollment.enrollment_amount = base_amount
         enrollment.final_amount = final_amount
+        enrollment.academic_year = academic_year
+        enrollment.enrollment_period_start = date(start_year, 9, 1)
+        enrollment.enrollment_period_end = date(end_year, 6, 30)
         
         if commit:
             enrollment.save()
