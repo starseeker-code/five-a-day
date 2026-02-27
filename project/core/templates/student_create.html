@@ -37,31 +37,31 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.first_name.label }} *
+                            {{ form.first_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.first_name }}
                         {% if form.first_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.first_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.last_name.label }} *
+                            {{ form.last_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.last_name }}
                         {% if form.last_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.last_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.birth_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.birth_date.label }} *
+                            {{ form.birth_date.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.birth_date }}
                         {% if form.birth_date.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.birth_date.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -71,7 +71,7 @@
                         </label>
                         {{ form.email }}
                         {% if form.email.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.email.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -84,11 +84,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.group.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.group.label }} *
+                            {{ form.group.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.group }}
                         {% if form.group.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.group.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.group.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -98,7 +98,7 @@
                         </label>
                         {{ form.school }}
                         {% if form.school.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.school.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.school.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -111,43 +111,43 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ enrollment_form.enrollment_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_type.label }} *
+                            {{ enrollment_form.enrollment_type.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.enrollment_type }}
                         {% if enrollment_form.enrollment_type.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_type.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.enrollment_type.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ enrollment_form.academic_year.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.academic_year.label }} *
+                            {{ enrollment_form.academic_year.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.academic_year }}
                         {% if enrollment_form.academic_year.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.academic_year.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.academic_year.errors.0 }}</p>
                         {% endif %}
                     </div>
 
                     <div>
                         <label for="{{ enrollment_form.schedule_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.schedule_type.label }} *
+                            {{ enrollment_form.schedule_type.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.schedule_type }}
                         {% if enrollment_form.schedule_type.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.schedule_type.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.schedule_type.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <!-- Campo de precio manual (solo visible para tipo "special") -->
                     <div id="manual-amount-container" class="hidden">
                         <label for="id_manual_amount" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.manual_amount.label }} *
+                            {{ enrollment_form.manual_amount.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.manual_amount }}
                         <p class="mt-1 text-xs text-neutral-500">{{ enrollment_form.manual_amount.help_text }}</p>
                         {% if enrollment_form.manual_amount.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.manual_amount.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.manual_amount.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -168,17 +168,17 @@
                         </label>
                         {{ enrollment_form.discount_percentage }}
                         {% if enrollment_form.discount_percentage.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.discount_percentage.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.discount_percentage.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ enrollment_form.enrollment_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_date.label }} *
+                            {{ enrollment_form.enrollment_date.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.enrollment_date }}
                         {% if enrollment_form.enrollment_date.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_date.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.enrollment_date.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -195,7 +195,7 @@
                         </label>
                         {{ form.allergies }}
                         {% if form.allergies.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.allergies.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.allergies.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
