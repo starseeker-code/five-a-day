@@ -163,11 +163,14 @@ database_url_has_valid_host = bool(
     and ("." in database_url_host or database_url_host in ("localhost", "127.0.0.1"))
 )
 
-if database_url and database_url_has_valid_host:
+if database_url and not database_url_has_valid_host:
+    database_url = ""
+
+if database_url:
     # Render, Heroku u otro servicio que use DATABASE_URL
     DATABASES = {
         "default": dj_database_url.config(
-            default=database_url,
+            default=os.getenv("DATABASE_URL"),
             conn_max_age=600,
             conn_health_checks=True,
             ssl_require=True if not DEBUG else False,
