@@ -35,8 +35,8 @@ fi
 # Verificar variables de entorno críticas en Render
 # ============================================================================
 if [ "$IS_RENDER" = true ]; then
-    if [ -z "$DATABASE_URL" ]; then
-        echo "❌ ERROR: DATABASE_URL no está configurada en Render"
+    if [ -z "$DATABASE_URL" ] && [ -z "$POSTGRES_HOST" ]; then
+        echo "❌ ERROR: No hay configuración de base de datos (DATABASE_URL o POSTGRES_HOST)"
         exit 1
     fi
     

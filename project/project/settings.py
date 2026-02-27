@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from urllib.parse import urlparse
 
 load_dotenv()
 
@@ -142,17 +143,24 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # 2. PostgreSQL con variables de entorno individuales
 # 3. SQLite (desarrollo local)
 
-if os.getenv("DATABASE_URL"):
+database_url = os.getenv("DATABASE_URL", "").strip()
+parsed_database_url = urlparse(database_url) if database_url else None
+database_url_host = parsed_database_url.hostname if parsed_database_url else ""
+database_url_has_valid_host = bool(
+    database_url_host and ("." in database_url_host or database_url_host in ("localhost", "127.0.0.1"))
+)
+
+if database_url and database_url_has_valid_host:
     # Render, Heroku u otro servicio que use DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv("DATABASE_URL"),
+            default=database_url,
             conn_max_age=600,
             conn_health_checks=True,
             ssl_require=True if not DEBUG else False,
         )
     }
-elif os.getenv("DATABASE") == "postgres":
+elif os.getenv("DATABASE") == "postgres" or os.getenv("POSTGRES_HOST"):
     # Docker o servidor PostgreSQL local
     DATABASES = {
         'default': {
