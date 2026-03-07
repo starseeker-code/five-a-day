@@ -23,6 +23,12 @@ from core.email import email_service
 from django.conf import settings
 import os
 
+# Registry of scheduled apps/emails.
+# frequency options: 'every_friday' | 'monthly_day_1'
+SCHEDULED_APPS = [
+    {"name": "Fun Friday", "url_name": "fun_friday_form", "frequency": "every_friday", "active": True},
+]
+
 
 def parse_date_value(date_value):
     """Parse date strings supporting dd/mm/yyyy and yyyy-mm-dd formats."""
@@ -98,9 +104,10 @@ def logout_view(request):
 
 
 def home(request):
+    import calendar as cal_module
     from datetime import date
-    from django.db.models import Q
-    from .models import Payment, Student
+    from django.db.models import Sum
+    from .models import Payment, Student, TodoItem
 
     today = date.today()
     current_month = today.month
@@ -139,6 +146,38 @@ def home(request):
     ]
     has_more_birthdays = birthday_count > 5
 
+    # ESPACIO 1 - Próximas apps/emails programadas este mes
+    days_in_month = cal_module.monthrange(current_year, current_month)[1]
+    upcoming_events = []
+    for app in SCHEDULED_APPS:
+        if not app.get("active"):
+            continue
+        if app["frequency"] == "every_friday":
+            for day in range(today.day, days_in_month + 1):
+                d = date(current_year, current_month, day)
+                if d.weekday() == 4:  # Friday
+                    upcoming_events.append({"name": app["name"], "date": d, "url_name": app["url_name"]})
+        elif app["frequency"] == "monthly_day_1":
+            d = date(current_year, current_month, 1)
+            if d >= today:
+                upcoming_events.append({"name": app["name"], "date": d, "url_name": app["url_name"]})
+
+    upcoming_events.sort(key=lambda x: x["date"])
+    upcoming_events_count = len(upcoming_events)
+    next_event = upcoming_events[0] if upcoming_events else None
+
+    # ESPACIO 2 - Ingresos del mes (pagos completados este mes)
+    completed_payments = Payment.objects.filter(
+        payment_status="completed",
+        payment_date__month=current_month,
+        payment_date__year=current_year,
+    )
+    monthly_income_count = completed_payments.count()
+    monthly_income_total = completed_payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
+    # ToDo items
+    todos = TodoItem.objects.filter().order_by("due_date", "created_at")
+
     context = {
         "pending_payments_count": pending_count,
         "pending_students": pending_students_display,
@@ -148,9 +187,59 @@ def home(request):
         "birthdays": birthdays_display,
         "has_more_birthdays": has_more_birthdays,
         "current_month_name": today.strftime("%B"),
+        # ESPACIO 1
+        "upcoming_events_count": upcoming_events_count,
+        "upcoming_events": upcoming_events[:5],
+        "next_event": next_event,
+        # ESPACIO 2
+        "monthly_income_count": monthly_income_count,
+        "monthly_income_total": monthly_income_total,
+        # ToDo list
+        "todos": todos,
+        "today": today,
     }
 
     return render(request, "home.html", context)
+
+
+@require_http_methods(["POST"])
+def create_todo(request):
+    from .models import TodoItem
+
+    try:
+        data = json.loads(request.body)
+        text = data.get("text", "").strip()
+        due_date_str = data.get("due_date", "")
+
+        if not text:
+            return JsonResponse({"success": False, "error": "El texto no puede estar vacío"}, status=400)
+        if not due_date_str:
+            return JsonResponse({"success": False, "error": "La fecha es obligatoria"}, status=400)
+
+        due_date = datetime.strptime(due_date_str, "%Y-%m-%d").date()
+        todo = TodoItem.objects.create(text=text, due_date=due_date)
+
+        return JsonResponse({
+            "success": True,
+            "todo": {
+                "id": todo.id,
+                "text": todo.text,
+                "due_date_iso": todo.due_date.isoformat(),
+                "due_date_display": todo.due_date.strftime("%d/%m/%Y"),
+                "is_overdue": todo.is_overdue,
+            },
+        })
+    except (ValueError, json.JSONDecodeError) as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+
+@require_http_methods(["POST"])
+def complete_todo(request, todo_id):
+    from .models import TodoItem
+
+    todo = get_object_or_404(TodoItem, id=todo_id)
+    todo.delete()
+    return JsonResponse({"success": True})
 
 
 def all_info(request):

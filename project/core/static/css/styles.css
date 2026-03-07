@@ -1145,3 +1145,26 @@ body {
   overflow-y: hidden;
   white-space: nowrap
 }
+
+/* Status badge colors + missing utility classes — manually added */
+#webcrumbs .inline-flex { display: inline-flex; }
+
+#webcrumbs .bg-red-100   { background-color: #fee2e2 !important; }
+#webcrumbs .text-red-800 { color: #991b1b !important; }
+
+#webcrumbs .bg-green-100   { background-color: #dcfce7 !important; }
+#webcrumbs .text-green-800 { color: #166534 !important; }
+#webcrumbs .bg-green-600   { background-color: #16a34a !important; }
+#webcrumbs .text-green-600 { color: #16a34a !important; }
+
+#webcrumbs .bg-blue-100   { background-color: #dbeafe !important; }
+#webcrumbs .text-blue-800 { color: #1e40af !important; }
+
+#webcrumbs .bg-yellow-100   { background-color: #fef9c3 !important; }
+#webcrumbs .text-yellow-800 { color: #854d0e !important; }
+
+/* Pagination links */
+#webcrumbs .no-underline { text-decoration: none !important; }
+#webcrumbs .hover\:bg-primary-50:hover   { background-color: #fdf2f7; }
+#webcrumbs .hover\:border-primary-400:hover { border-color: #e87aac; }
+#webcrumbs .hover\:text-primary-700:hover   { color: #c30d53; }

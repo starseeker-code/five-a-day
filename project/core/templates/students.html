@@ -19,10 +19,10 @@
             <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos</p>
         </div>
         <div class="flex gap-2">
-            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">filter_list</span>
             </button>
-            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">search</span>
             </button>
         </div>
@@ -51,7 +51,7 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                <span class="text-primary-600 font-semibold">{{ student.first_name.0 }}{{ student.last_name.0 }}</span>
+                                <span class="material-symbols-outlined text-primary-600" style="font-size:22px">person</span>
                             </div>
                             <div>
                                 <div class="font-medium text-neutral-800">{{ student.full_name }}</div>
@@ -90,7 +90,7 @@
                                 Firmado
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
                                 <span class="material-symbols-outlined text-sm mr-1">cancel</span>
                                 Pendiente
                             </span>
@@ -108,7 +108,7 @@
                         {% endif %}
                     </td>
                     <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
-                        <a href="{% url 'student_detail' student.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" title="Ver estudiante">
+                        <a href="{% url 'student_detail' student.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver estudiante">
                             <span class="material-symbols-outlined text-base">visibility</span>
                         </a>
                     </td>

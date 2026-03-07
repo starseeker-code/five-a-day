@@ -7,6 +7,7 @@
 
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- CARD 1: Pagos pendientes este mes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-500 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
@@ -29,6 +30,7 @@
         </div>
     </div>
 
+    <!-- CARD 2: Cumpleaños este mes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-400 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
@@ -51,62 +53,349 @@
         </div>
     </div>
 
+    <!-- CARD 3 (ESPACIO 1): Próximas apps este mes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-600 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Espacio 1
+                    Próximas apps este mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">€8,250</p>
-                <p class="text-3xl font-bold text-neutral-800">WIP</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ upcoming_events_count }}</p>
             </div>
-            <span class="material-symbols-outlined text-primary-600 text-3xl">payments</span>
+            <span class="material-symbols-outlined text-primary-600 text-3xl">send</span>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            <span class="text-red-500 font-medium">AQUI PUEDE HABER INFORMACION DE INTERES</span>
+            {% if upcoming_events %}
+                {% for event in upcoming_events %}
+                    <a href="{% url event.url_name %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium">
+                        {{ event.name }}
+                    </a>
+                    <span class="text-neutral-400">({{ event.date|date:"d/m" }}){% if not forloop.last %}, {% endif %}</span>
+                {% endfor %}
+            {% else %}
+                <span class="text-neutral-400">Sin apps programadas este mes</span>
+            {% endif %}
         </div>
     </div>
 
+    <!-- CARD 4 (ESPACIO 2): Ingresos del mes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-300 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Espacio 2
+                    Ingresos del mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">94%</p>
-                <p class="text-3xl font-bold text-neutral-800">WIP</p>
+                <p class="text-3xl font-bold text-neutral-800">€{{ monthly_income_total|floatformat:0 }}</p>
             </div>
-            <span class="material-symbols-outlined text-primary-300 text-3xl">sentiment_satisfied</span>
+            <span class="material-symbols-outlined text-primary-300 text-3xl">payments</span>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            <span class="text-green-500 font-medium">AQUI PUEDE HABER INFORMACION DE INTERES</span>
+            {% if monthly_income_count > 0 %}
+                <span class="text-green-600 font-medium">{{ monthly_income_count }}</span>
+                pago{{ monthly_income_count|pluralize:"s" }} completado{{ monthly_income_count|pluralize:"s" }} este mes
+            {% else %}
+                <span class="text-neutral-400">Sin ingresos registrados este mes</span>
+            {% endif %}
         </div>
     </div>
 
+    <!-- CARD 5: Lista de Tareas -->
     <div class="bg-white rounded-lg p-6 col-span-1 md:col-span-2 lg:col-span-4">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold text-neutral-700">
-                Vista general del Panel
-            </h3>
-            <div class="flex space-x-2">
-                <button class="px-4 py-2 bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-all duration-200">
-                    Diario
-                </button>
-                <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
-                    Semanal
-                </button>
-                <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
-                    Mensual
-                </button>
-            </div>
+        <div class="flex items-center gap-2 mb-5">
+            <span class="material-symbols-outlined text-primary-500 text-2xl">checklist</span>
+            <h3 class="text-xl font-semibold text-neutral-700">Lista de tareas</h3>
         </div>
-        <p class="text-neutral-600 mb-4">
-            QUE INFORMACION UTIL SE OS OCURRE AQUI? (tal vez una lista de tareas por hacer?)</p>
-        </p>
-        <div class="h-64 bg-neutral-100 rounded-lg flex items-center justify-center">
-            <p class="text-neutral-500">Aquí irá el gráfico principal</p>
+
+        <!-- Input row -->
+        <div class="flex gap-2 mb-2 flex-wrap sm:flex-nowrap">
+            <input
+                type="text"
+                id="todoText"
+                placeholder="Nueva tarea..."
+                maxlength="500"
+                class="flex-1 min-w-0 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+            >
+            <div class="flex gap-1 shrink-0">
+                <button
+                    id="btnHoy"
+                    data-mode="hoy"
+                    class="todo-date-btn px-3 py-2 text-sm rounded-md bg-primary-100 text-primary-700 font-medium transition-all duration-150 hover:bg-primary-200 ring-2 ring-primary-400"
+                >
+                    Hoy
+                </button>
+                <button
+                    id="btnSemana"
+                    data-mode="semana"
+                    class="todo-date-btn px-3 py-2 text-sm rounded-md bg-neutral-100 text-neutral-700 font-medium transition-all duration-150 hover:bg-neutral-200"
+                >
+                    Esta semana
+                </button>
+                <button
+                    id="btnFecha"
+                    data-mode="fecha"
+                    class="todo-date-btn px-3 py-2 text-sm rounded-md bg-neutral-100 text-neutral-700 font-medium transition-all duration-150 hover:bg-neutral-200"
+                >
+                    Fecha
+                </button>
+                <input
+                    type="date"
+                    id="customDate"
+                    class="hidden px-2 py-1 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+            </div>
+            <button
+                id="addTodoBtn"
+                class="shrink-0 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-all duration-150 flex items-center gap-1 text-sm font-medium"
+                title="Añadir tarea"
+            >
+                <span class="material-symbols-outlined text-[20px]">add_task</span>
+            </button>
+        </div>
+        <p id="todoError" class="hidden text-xs text-red-500 mb-3"></p>
+
+        <!-- Todo list -->
+        <div id="todoList" class="mt-4 divide-y divide-neutral-100">
+            {% for todo in todos %}
+            <div
+                id="todo-{{ todo.id }}"
+                class="todo-item flex items-center gap-3 py-3 px-1 group hover:bg-neutral-50 rounded-lg transition-colors"
+                data-overdue="{% if todo.is_overdue %}true{% else %}false{% endif %}"
+            >
+                <input
+                    type="checkbox"
+                    class="todo-checkbox w-4 h-4 rounded border-neutral-300 text-primary-500 cursor-pointer accent-primary-500"
+                    data-id="{{ todo.id }}"
+                >
+                <span class="flex-1 text-sm {% if todo.is_overdue %}text-red-500 font-medium{% else %}text-neutral-700{% endif %}">
+                    {{ todo.text }}
+                </span>
+                <span class="text-xs {% if todo.is_overdue %}text-red-400 font-semibold{% else %}text-neutral-400{% endif %} shrink-0">
+                    {{ todo.due_date|date:"d/m/Y" }}
+                </span>
+            </div>
+            {% empty %}
+            <p id="emptyTodos" class="text-sm text-neutral-400 py-4 text-center">No hay tareas pendientes</p>
+            {% endfor %}
         </div>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const todoText = document.getElementById('todoText');
+    const addTodoBtn = document.getElementById('addTodoBtn');
+    const todoList = document.getElementById('todoList');
+    const todoError = document.getElementById('todoError');
+    const customDate = document.getElementById('customDate');
+    const dateBtns = document.querySelectorAll('.todo-date-btn');
+
+    let selectedDate = getTodayISO();
+    let activeMode = 'hoy';
+
+    // ── Date helpers ────────────────────────────────────────────
+    function getTodayISO() {
+        const d = new Date();
+        return d.toISOString().split('T')[0];
+    }
+
+    function getThisWeekFridayISO() {
+        const d = new Date();
+        const day = d.getDay(); // 0=Sun … 6=Sat
+        // Days until the next Friday (if today is Fri use today, if Sat/Sun → next Fri)
+        const daysUntilFriday = day <= 5 ? 5 - day : 7 - day + 5;
+        d.setDate(d.getDate() + daysUntilFriday);
+        return d.toISOString().split('T')[0];
+    }
+
+    function formatDisplayDate(isoStr) {
+        const [y, m, da] = isoStr.split('-');
+        return `${da}/${m}/${y}`;
+    }
+
+    // ── Button state management ──────────────────────────────────
+    function setActiveBtn(mode) {
+        activeMode = mode;
+        dateBtns.forEach(btn => {
+            const isActive = btn.dataset.mode === mode;
+            btn.classList.toggle('bg-primary-100', isActive);
+            btn.classList.toggle('text-primary-700', isActive);
+            btn.classList.toggle('ring-2', isActive);
+            btn.classList.toggle('ring-primary-400', isActive);
+            btn.classList.toggle('bg-neutral-100', !isActive);
+            btn.classList.toggle('text-neutral-700', !isActive);
+        });
+        customDate.classList.toggle('hidden', mode !== 'fecha');
+    }
+
+    document.getElementById('btnHoy').addEventListener('click', function () {
+        selectedDate = getTodayISO();
+        setActiveBtn('hoy');
+    });
+
+    document.getElementById('btnSemana').addEventListener('click', function () {
+        selectedDate = getThisWeekFridayISO();
+        setActiveBtn('semana');
+    });
+
+    document.getElementById('btnFecha').addEventListener('click', function () {
+        setActiveBtn('fecha');
+        customDate.focus();
+        if (customDate.value) selectedDate = customDate.value;
+    });
+
+    customDate.addEventListener('change', function () {
+        if (this.value) selectedDate = this.value;
+    });
+
+    // ── CSRF token helper ────────────────────────────────────────
+    function getCsrfToken() {
+        return document.cookie.split(';')
+            .map(c => c.trim())
+            .find(c => c.startsWith('csrftoken='))
+            ?.split('=')[1] || '';
+    }
+
+    // ── Show/hide error ──────────────────────────────────────────
+    function showError(msg) {
+        todoError.textContent = msg;
+        todoError.classList.remove('hidden');
+        setTimeout(() => todoError.classList.add('hidden'), 3000);
+    }
+
+    // ── Build todo row HTML ──────────────────────────────────────
+    function buildTodoRow(todo) {
+        const overdue = todo.is_overdue;
+        const textClass = overdue ? 'text-red-500 font-medium' : 'text-neutral-700';
+        const dateClass = overdue ? 'text-red-400 font-semibold' : 'text-neutral-400';
+        const row = document.createElement('div');
+        row.id = `todo-${todo.id}`;
+        row.className = 'todo-item flex items-center gap-3 py-3 px-1 group hover:bg-neutral-50 rounded-lg transition-colors';
+        row.dataset.overdue = overdue ? 'true' : 'false';
+        row.innerHTML = `
+            <input type="checkbox" class="todo-checkbox w-4 h-4 rounded border-neutral-300 text-primary-500 cursor-pointer accent-primary-500" data-id="${todo.id}">
+            <span class="flex-1 text-sm ${textClass}">${escapeHtml(todo.text)}</span>
+            <span class="text-xs ${dateClass} shrink-0">${todo.due_date_display}</span>
+        `;
+        row.querySelector('.todo-checkbox').addEventListener('change', handleCheckbox);
+        return row;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ── Insert row in correct due_date order ─────────────────────
+    function insertTodoSorted(row, isoDate) {
+        const emptyMsg = document.getElementById('emptyTodos');
+        if (emptyMsg) emptyMsg.remove();
+
+        const existing = todoList.querySelectorAll('.todo-item');
+        let inserted = false;
+        for (const el of existing) {
+            const elDate = el.querySelector('.todo-checkbox')
+                ? el.querySelector('span:last-child').textContent.trim()
+                : null;
+            // Compare using iso date stored in data attribute
+            const elIso = el.dataset.isoDate || '9999-12-31';
+            if (isoDate <= elIso) {
+                todoList.insertBefore(row, el);
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted) todoList.appendChild(row);
+        row.dataset.isoDate = isoDate;
+    }
+
+    // ── Add todo ─────────────────────────────────────────────────
+    addTodoBtn.addEventListener('click', submitTodo);
+    todoText.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') submitTodo();
+    });
+
+    function submitTodo() {
+        if (activeMode === 'fecha' && customDate.value) {
+            selectedDate = customDate.value;
+        }
+
+        const text = todoText.value.trim();
+        if (!text) { showError('Escribe una tarea antes de añadirla'); return; }
+        if (!selectedDate) { showError('Selecciona una fecha'); return; }
+
+        addTodoBtn.disabled = true;
+
+        fetch('{% url "create_todo" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({ text, due_date: selectedDate }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const row = buildTodoRow(data.todo);
+                insertTodoSorted(row, data.todo.due_date_iso);
+                todoText.value = '';
+            } else {
+                showError(data.error || 'Error al añadir la tarea');
+            }
+        })
+        .catch(() => showError('Error de conexión'))
+        .finally(() => { addTodoBtn.disabled = false; });
+    }
+
+    // ── Complete (delete) todo ───────────────────────────────────
+    function handleCheckbox(e) {
+        const checkbox = e.target;
+        const id = checkbox.dataset.id;
+        const row = document.getElementById(`todo-${id}`);
+
+        checkbox.disabled = true;
+        row.style.opacity = '0.4';
+
+        fetch(`/api/todos/${id}/complete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() },
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                row.remove();
+                if (!todoList.querySelector('.todo-item')) {
+                    const p = document.createElement('p');
+                    p.id = 'emptyTodos';
+                    p.className = 'text-sm text-neutral-400 py-4 text-center';
+                    p.textContent = 'No hay tareas pendientes';
+                    todoList.appendChild(p);
+                }
+            } else {
+                checkbox.disabled = false;
+                row.style.opacity = '1';
+            }
+        })
+        .catch(() => {
+            checkbox.disabled = false;
+            row.style.opacity = '1';
+        });
+    }
+
+    // Attach listeners to server-rendered rows
+    document.querySelectorAll('.todo-checkbox').forEach(cb => {
+        cb.addEventListener('change', handleCheckbox);
+    });
+
+    // Store iso dates on server-rendered rows for sorting
+    document.querySelectorAll('.todo-item').forEach(row => {
+        const dateSpan = row.querySelector('span:last-child');
+        if (dateSpan) {
+            const parts = dateSpan.textContent.trim().split('/');
+            if (parts.length === 3) {
+                row.dataset.isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

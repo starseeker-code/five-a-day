@@ -471,3 +471,20 @@ class StudentParent(models.Model):
 
     def __str__(self):
         return f"{self.parent} -> {self.student}"
+
+
+class TodoItem(models.Model):
+    text = models.CharField(max_length=500)
+    due_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'todo_items'
+        ordering = ['due_date', 'created_at']
+
+    def __str__(self):
+        return f"{self.text} ({self.due_date})"
+
+    @property
+    def is_overdue(self):
+        return self.due_date < date.today()

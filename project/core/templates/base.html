@@ -93,10 +93,54 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <button class="p-3 rounded-full text-neutral-500 hover:bg-neutral-100 transition-all duration-200 relative">
-                            <span class="material-symbols-outlined">notifications</span>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full"></span>
-                        </button>
+                        <!-- Notifications Bell -->
+                        <div class="relative" id="notif-container">
+                            <button id="notif-btn" class="p-3 rounded-full text-neutral-500 hover:bg-neutral-100 transition-all duration-200">
+                                <span class="material-symbols-outlined">notifications</span>
+                            </button>
+                            {% if notifications_count > 0 %}
+                            <div class="absolute bg-primary-500 text-white font-bold flex items-center justify-center rounded-full" style="width:1.25rem; height:1.25rem; top:2px; right:2px; font-size:10px; line-height:1; pointer-events:none;">
+                                {{ notifications_count }}
+                            </div>
+                            {% else %}
+                            <div class="absolute w-2 h-2 bg-neutral-300 rounded-full" style="top:4px; right:4px; pointer-events:none;"></div>
+                            {% endif %}
+                            <!-- Dropdown -->
+                            <div id="notif-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden">
+                                <div class="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
+                                    <h3 class="font-semibold text-neutral-700 text-sm">Notificaciones de hoy</h3>
+                                </div>
+                                {% if notifications_today_todos or notifications_today_apps %}
+                                    {% if notifications_today_todos %}
+                                    <div class="px-4 py-2 bg-primary-50">
+                                        <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Tareas de hoy</p>
+                                    </div>
+                                    {% for todo in notifications_today_todos %}
+                                    <div class="px-4 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
+                                        <span class="material-symbols-outlined text-primary-400 text-[18px] mt-0.5 shrink-0">task_alt</span>
+                                        <span class="text-sm text-neutral-700">{{ todo.text }}</span>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                    {% if notifications_today_apps %}
+                                    <div class="px-4 py-2 bg-primary-50">
+                                        <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Envios de hoy</p>
+                                    </div>
+                                    {% for app in notifications_today_apps %}
+                                    <div class="px-4 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
+                                        <span class="material-symbols-outlined text-primary-600 text-[18px] mt-0.5 shrink-0">send</span>
+                                        <a href="{% url app.url_name %}" class="text-sm text-primary-700 hover:underline font-medium">{{ app.name }}</a>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                {% else %}
+                                <div class="px-4 py-8 text-center">
+                                    <span class="material-symbols-outlined text-neutral-300 text-4xl">notifications_none</span>
+                                    <p class="text-sm text-neutral-400 mt-2">Sin notificaciones para hoy</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% block header_actions %}
                         <a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
                             <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
@@ -219,6 +263,28 @@
     
     <!-- Script de Soporte -->
     <script src="{% static 'js/support.js' %}"></script>
+
+    <!-- Notifications dropdown toggle -->
+    <script>
+    (function () {
+        const btn = document.getElementById('notif-btn');
+        const dropdown = document.getElementById('notif-dropdown');
+        if (!btn || !dropdown) return;
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function () {
+            dropdown.classList.add('hidden');
+        });
+
+        dropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    })();
+    </script>
     
     <style>
         /* Sidebar expandible con transición suave */

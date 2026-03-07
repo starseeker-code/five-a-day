@@ -75,6 +75,11 @@ urlpatterns = [
     path("apps/", apps_view, name="apps"),
     path("apps/fun-friday/", fun_friday_form, name="fun_friday_form"),
     # ============================================================================
+    # TODO LIST - Lista de tareas
+    # ============================================================================
+    path("api/todos/create/", create_todo, name="create_todo"),
+    path("api/todos/<int:todo_id>/complete/", complete_todo, name="complete_todo"),
+    # ============================================================================
     # SOPORTE - Sistema de tickets
     # ============================================================================
     path("api/support/submit/", submit_support_ticket, name="submit_support_ticket"),
