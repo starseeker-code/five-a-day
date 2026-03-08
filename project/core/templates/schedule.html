@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Horario{% endblock %}
+
+{% block sidebar_class %}w-[7.5rem]{% endblock %}
+{% block sidebar_hover %}{% endblock %}
+
+{% block page_title %}Horario Semanal{% endblock %}
+{% block page_subtitle %}Vista del horario de clases de lunes a viernes{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'fun_friday_view' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
+    <span class="material-symbols-outlined text-[20px]">celebration</span> Fun Friday
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Compact calendar table -->
+<div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full border-collapse" id="schedule-table">
+            <thead>
+                <tr id="day-header-row">
+                    <th style="width:56px;min-width:56px;max-width:56px;" class="bg-neutral-50 border-b border-r border-neutral-200 p-3 sticky left-0 z-10"></th>
+                </tr>
+            </thead>
+            <tbody id="schedule-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Day detail dropdowns -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="day-dropdowns" style="margin-top:3.5rem;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const groups = {{ groups_json|safe }};
+    const allStudents = {{ students_json|safe }};
+
+    // ── Color palette using inline styles (12 colors) ──────────
+    const COLOR_PALETTE = [
+        { bg: '#dbeafe', text: '#1d4ed8', sub: '#3b82f6', dot: '#60a5fa' },  // blue
+        { bg: '#d1fae5', text: '#047857', sub: '#10b981', dot: '#34d399' },  // emerald
+        { bg: '#fef3c7', text: '#b45309', sub: '#f59e0b', dot: '#fbbf24' },  // amber
+        { bg: '#ffe4e6', text: '#be123c', sub: '#f43f5e', dot: '#fb7185' },  // rose
+        { bg: '#ede9fe', text: '#6d28d9', sub: '#8b5cf6', dot: '#a78bfa' },  // violet
+        { bg: '#cffafe', text: '#0e7490', sub: '#06b6d4', dot: '#22d3ee' },  // cyan
+        { bg: '#ffedd5', text: '#c2410c', sub: '#f97316', dot: '#fb923c' },  // orange
+        { bg: '#ccfbf1', text: '#0f766e', sub: '#14b8a6', dot: '#2dd4bf' },  // teal
+        { bg: '#e0e7ff', text: '#4338ca', sub: '#6366f1', dot: '#818cf8' },  // indigo
+        { bg: '#ecfccb', text: '#4d7c0f', sub: '#84cc16', dot: '#a3e635' },  // lime
+        { bg: '#fae8ff', text: '#a21caf', sub: '#d946ef', dot: '#e879f9' },  // fuchsia
+        { bg: '#e0f2fe', text: '#0369a1', sub: '#0ea5e9', dot: '#38bdf8' },  // sky
+    ];
+    const FF_CLR = { bg: '#fce7f3', text: '#be185d', dot: '#f472b6' };
+
+    const groupColorMap = {};
+    groups.forEach((g, i) => { groupColorMap[g.id] = COLOR_PALETTE[i % COLOR_PALETTE.length]; });
+    const groupById = {};
+    groups.forEach(g => { groupById[g.id] = g; });
+
+    function pick(idx) { return groups.length ? groups[idx % groups.length] : null; }
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+    const COLS = 2;
+
+    // ── 3 rows ─────────────────────────────────────────────────
+    const ROW_TIMES = [
+        { start: '16:10', end: '17:30', fri: { start: '16:00', end: '17:20' } },
+        { start: '17:40', end: '19:00', fri: null },  // Friday: Fun Friday here
+        { start: '19:10', end: '20:30', fri: null },
+    ];
+
+    const NUM_ROWS = 3;
+    const schedule = Array.from({ length: NUM_ROWS }, () => new Array(5 * COLS).fill(null));
+
+    let cursor = 0;
+    for (let day = 0; day < 5; day++) {
+        for (let col = 0; col < COLS; col++) {
+            const colPos = day * COLS + col;
+            for (let row = 0; row < 3; row++) {
+                const rt = ROW_TIMES[row];
+                const times = day === 4 ? rt.fri : { start: rt.start, end: rt.end };
+                if (times) {
+                    const g = pick(cursor);
+                    if (g) schedule[row][colPos] = { groupId: g.id, start: times.start, end: times.end };
+                }
+                cursor++;
+            }
+            // Friday row 2: Fun Friday
+            if (day === 4) {
+                schedule[1][colPos] = { isFunFriday: true };
+            }
+        }
+    }
+
+    // ── Render header ──────────────────────────────────────────
+    const headerRow = document.getElementById('day-header-row');
+    DAY_NAMES.forEach((name, i) => {
+        const th = document.createElement('th');
+        th.colSpan = COLS;
+        th.className = 'bg-neutral-50 border-b border-neutral-200 p-3 text-center';
+        if (i < 4) th.classList.add('border-r', 'border-neutral-200');
+        th.style.width = 'calc((100% - 56px) / 5)';
+        th.innerHTML = '<span style="font-size:0.875rem;font-weight:600;color:#404040;">' + name + '</span>';
+        headerRow.appendChild(th);
+    });
+
+    // ── Render 3 rows ──────────────────────────────────────────
+    const tbody = document.getElementById('schedule-body');
+
+    for (let row = 0; row < NUM_ROWS; row++) {
+        const tr = document.createElement('tr');
+
+        // Time axis cell: start on top, end below
+        const timeTd = document.createElement('td');
+        timeTd.style.cssText = 'width:56px;min-width:56px;max-width:56px;padding:8px 6px;text-align:right;vertical-align:middle;background:#fafafa;position:sticky;left:0;z-index:10;';
+        if (row < NUM_ROWS - 1) timeTd.style.borderBottom = '1px solid #e5e5e5';
+        timeTd.style.borderRight = '1px solid #e5e5e5';
+        timeTd.innerHTML =
+            '<span style="display:block;font-size:11px;font-weight:600;color:#737373;line-height:1.2;">' + ROW_TIMES[row].start + '</span>' +
+            '<span style="display:block;font-size:10px;color:#d4d4d4;line-height:1.2;margin-top:2px;">' + ROW_TIMES[row].end + '</span>';
+        tr.appendChild(timeTd);
+
+        for (let c = 0; c < 5 * COLS; c++) {
+            const td = document.createElement('td');
+            const dayIdx = Math.floor(c / COLS);
+            const isLastColInDay = c === (dayIdx * COLS + COLS - 1);
+            const isLastDay = dayIdx === 4;
+
+            td.style.cssText = 'text-align:center;vertical-align:middle;padding:10px 4px;';
+            if (row < NUM_ROWS - 1) td.style.borderBottom = '1px solid #f0f0f0';
+            if (isLastColInDay && !isLastDay) td.style.borderRight = '1px solid #e5e5e5';
+
+            const cell = schedule[row][c];
+
+            if (cell && cell.isFunFriday) {
+                // Fun Friday spans both Friday cols, slightly shorter
+                if (c % COLS === 0) {
+                    td.colSpan = COLS;
+                    td.style.background = FF_CLR.bg;
+                    td.style.padding = '8px 4px 4px 4px';
+                    td.innerHTML = '<span style="font-size:0.75rem;font-weight:600;color:' + FF_CLR.text + ';">Fun Friday</span>';
+                    tr.appendChild(td);
+                    c++;
+                }
+                continue;
+            } else if (cell) {
+                const cl = groupColorMap[cell.groupId];
+                const g = groupById[cell.groupId];
+                td.style.background = cl.bg;
+                td.innerHTML = '<span style="font-size:0.75rem;font-weight:600;color:' + cl.text + ';">' + esc(g.name) + '</span>';
+            }
+
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+
+    // ── Flatten blocks for dropdowns ───────────────────────────
+    const blocksList = [];
+    for (let row = 0; row < 3; row++) {
+        for (let day = 0; day < 5; day++) {
+            for (let col = 0; col < COLS; col++) {
+                const cell = schedule[row][day * COLS + col];
+                if (cell && !cell.isFunFriday) blocksList.push({ day, col, ...cell });
+            }
+        }
+    }
+
+    // ── Render day dropdowns ───────────────────────────────────
+    const dc = document.getElementById('day-dropdowns');
+
+    DAY_NAMES.forEach((dayName, dayIdx) => {
+        const dayBlocks = blocksList.filter(b => b.day === dayIdx);
+        if (dayBlocks.length === 0) return;
+
+        const sid = 'day-s-' + dayIdx;
+        const iid = 'day-i-' + dayIdx;
+
+        let cards = '';
+        dayBlocks.forEach(b => {
+            const g = groupById[b.groupId];
+            const cl = groupColorMap[b.groupId];
+            const stuHtml = g.students.length > 0
+                ? g.students.map(n => '<span>' + esc(n) + '</span>').join('<span style="color:#d4d4d4;margin:0 3px;">·</span>')
+                : '<span style="color:#a3a3a3;font-style:italic;">Sin estudiantes</span>';
+
+            cards += '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;">' +
+                '<div style="width:4px;align-self:stretch;border-radius:9999px;background:' + cl.dot + ';flex-shrink:0;"></div>' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                        '<span style="font-size:0.875rem;font-weight:600;color:' + cl.text + ';">' + esc(g.name) + '</span>' +
+                        '<span style="font-size:11px;color:#a3a3a3;font-weight:500;">' + b.start + ' - ' + b.end + '</span>' +
+                        '<span style="font-size:11px;color:#a3a3a3;">·</span>' +
+                        '<span style="font-size:11px;color:#737373;">' + esc(g.teacher) + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#a3a3a3;margin-top:4px;line-height:1.6;">' + stuHtml + '</div>' +
+                '</div></div>';
+        });
+
+        const w = document.createElement('div');
+        w.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+        w.innerHTML =
+            '<button type="button" class="day-toggle w-full px-6 py-4 flex justify-between items-center bg-primary-50 hover:bg-primary-100 transition-colors duration-200 focus:outline-none" data-section="' + sid + '" data-icon="' + iid + '">' +
+                '<h3 class="text-lg font-semibold text-primary-700">' + dayName + '</h3>' +
+                '<span id="' + iid + '" class="material-symbols-outlined text-primary-600" style="transition:transform 0.2s;">expand_more</span>' +
+            '</button>' +
+            '<div id="' + sid + '" class="hidden">' +
+                '<div style="padding:24px;border-top:1px solid #f3e8ff;">' + cards + '</div>' +
+            '</div>';
+        dc.appendChild(w);
+    });
+
+    // ── 6th dropdown: Fun Friday ───────────────────────────────
+    (function () {
+        const sid = 'ff-section';
+        const iid = 'ff-icon';
+        let list = '';
+        allStudents.forEach(st => {
+            list += '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;">' +
+                '<input type="checkbox" class="ff-checkbox" style="width:14px;height:14px;accent-color:#ec4899;cursor:pointer;">' +
+                '<span style="font-size:0.875rem;color:#404040;">' + esc(st.first_name) + ' ' + esc(st.last_name) + '</span>' +
+            '</div>';
+        });
+        if (!allStudents.length) {
+            list = '<p style="font-size:0.875rem;color:#a3a3a3;padding:12px 0;text-align:center;">No hay estudiantes activos</p>';
+        }
+
+        const w = document.createElement('div');
+        w.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+        w.innerHTML =
+            '<button type="button" class="day-toggle w-full px-6 py-4 flex justify-between items-center bg-primary-50 hover:bg-primary-100 transition-colors duration-200 focus:outline-none" data-section="' + sid + '" data-icon="' + iid + '">' +
+                '<h3 class="text-lg font-semibold text-primary-700">Fun Friday</h3>' +
+                '<span id="' + iid + '" class="material-symbols-outlined text-primary-600" style="transition:transform 0.2s;">expand_more</span>' +
+            '</button>' +
+            '<div id="' + sid + '" class="hidden">' +
+                '<div style="padding:24px;border-top:1px solid #f3e8ff;">' + list + '</div>' +
+            '</div>';
+        dc.appendChild(w);
+    })();
+
+    // ── Toggle logic ───────────────────────────────────────────
+    document.querySelectorAll('.day-toggle').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const section = document.getElementById(this.dataset.section);
+            const icon = document.getElementById(this.dataset.icon);
+            section.classList.toggle('hidden');
+            icon.style.transform = section.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        });
+    });
+
+    // Checkbox strike-through
+    document.addEventListener('change', function (e) {
+        if (!e.target.matches('.ff-checkbox')) return;
+        const span = e.target.nextElementSibling;
+        if (e.target.checked) { span.style.textDecoration = 'line-through'; span.style.color = '#a3a3a3'; }
+        else { span.style.textDecoration = ''; span.style.color = '#404040'; }
+    });
+});
+</script>
+
+<style>
+    #schedule-table { table-layout: fixed; width: 100%; }
+</style>
+{% endblock %}

@@ -42,7 +42,7 @@
                             <span class="material-symbols-outlined mx-auto sidebar-icon">payment_arrow_down</span>
                             <span class="hidden sidebar-text">Pagos</span>
                         </a>
-                        <a href="" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <a href="{% url 'schedule_view' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'schedule_view' or request.resolver_match.url_name == 'fun_friday_view' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                             <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
                             <span class="hidden sidebar-text">Horario</span>
                         </a>

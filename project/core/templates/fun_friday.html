@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Fun Friday{% endblock %}
+
+{% block sidebar_class %}w-[7.5rem]{% endblock %}
+{% block sidebar_hover %}{% endblock %}
+
+{% block page_title %}Fun Friday{% endblock %}
+{% block page_subtitle %}Lista de estudiantes para el viernes de diversión{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'schedule_view' %}" class="header-action-btn bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
+    <span class="material-symbols-outlined text-[20px]">arrow_back</span> Horario
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 gap-6">
+    <!-- Student list card -->
+    <div class="bg-white rounded-lg p-6">
+        <div class="flex items-center gap-2 mb-5">
+            <span class="material-symbols-outlined text-primary-500 text-2xl">celebration</span>
+            <h3 class="text-xl font-semibold text-neutral-700">Lista de Estudiantes</h3>
+            <span class="ml-auto text-sm text-neutral-400">{{ students|length }} estudiante{{ students|length|pluralize:"s" }}</span>
+        </div>
+
+        <!-- Student list -->
+        <div class="divide-y divide-neutral-100">
+            {% for student in students %}
+            <div class="flex items-center gap-3 py-3 px-1 group hover:bg-neutral-50 rounded-lg transition-colors">
+                <input
+                    type="checkbox"
+                    class="fun-friday-checkbox w-4 h-4 rounded border-neutral-300 text-primary-500 cursor-pointer accent-primary-500"
+                    data-id="{{ student.id }}"
+                >
+                <span class="flex-1 text-sm text-neutral-700">
+                    {{ student.first_name }} {{ student.last_name }}
+                </span>
+                <span class="text-xs text-neutral-400 shrink-0 bg-neutral-100 px-2 py-0.5 rounded-full">
+                    {{ student.group.group_name }}
+                </span>
+            </div>
+            {% empty %}
+            <p class="text-sm text-neutral-400 py-4 text-center">No hay estudiantes activos</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Checkbox strike-through effect (visual only, no backend logic)
+    document.querySelectorAll('.fun-friday-checkbox').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            const row = this.closest('.flex');
+            const nameSpan = row.querySelector('.flex-1');
+            if (this.checked) {
+                nameSpan.classList.add('line-through', 'text-neutral-400');
+                nameSpan.classList.remove('text-neutral-700');
+            } else {
+                nameSpan.classList.remove('line-through', 'text-neutral-400');
+                nameSpan.classList.add('text-neutral-700');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

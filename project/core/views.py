@@ -2796,3 +2796,41 @@ Vista actual:   {current_url}
             {"success": False, "message": f"Error al enviar ticket: {str(e)}"},
             status=500,
         )
+
+
+# ============================================================================
+# SCHEDULE - Horario semanal
+# ============================================================================
+
+def schedule_view(request):
+    """Vista del horario semanal estilo Google Calendar."""
+    groups = Group.objects.filter(active=True).select_related('teacher').prefetch_related(
+        models.Prefetch('students', queryset=Student.objects.filter(active=True).order_by('first_name'))
+    ).order_by('group_name')
+
+    groups_data = []
+    for g in groups:
+        groups_data.append({
+            "id": g.id,
+            "name": g.group_name,
+            "teacher": g.teacher.first_name,
+            "students": [s.first_name for s in g.students.all()],
+        })
+
+    all_students = Student.objects.filter(active=True).order_by('first_name', 'last_name')
+    students_data = [{"first_name": s.first_name, "last_name": s.last_name} for s in all_students]
+
+    return render(request, "schedule.html", {
+        "groups_json": json.dumps(groups_data),
+        "students_json": json.dumps(students_data),
+    })
+
+
+# ============================================================================
+# FUN FRIDAY - Lista de estudiantes
+# ============================================================================
+
+def fun_friday_view(request):
+    """Vista de Fun Friday con lista de estudiantes."""
+    students = Student.objects.filter(active=True).select_related('group__teacher').order_by('group__group_name', 'first_name')
+    return render(request, "fun_friday.html", {"students": students})

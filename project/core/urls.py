@@ -83,6 +83,11 @@ urlpatterns = [
     path("apps/receipts/", receipts_form, name="receipts_form"),
     path("apps/enrollment/", enrollment_form, name="enrollment_form"),
     # ============================================================================
+    # SCHEDULE - Horario semanal
+    # ============================================================================
+    path("schedule/", schedule_view, name="schedule_view"),
+    path("fun-friday/", fun_friday_view, name="fun_friday_view"),
+    # ============================================================================
     # TODO LIST - Lista de tareas
     # ============================================================================
     path("api/todos/create/", create_todo, name="create_todo"),
