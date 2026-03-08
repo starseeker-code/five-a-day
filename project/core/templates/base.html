@@ -161,15 +161,14 @@
                 </a>
             </main>
         </div>
-    </div>
 
     {% block extra_js %}{% endblock %}
-    
+
     <!-- Modal de Soporte -->
-    <div id="support-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4" style="display: none;">
+    <div id="support-modal" class="hidden items-center justify-center p-4" style="display: none; position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 50;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <!-- Header -->
-            <div class="px-6 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white flex justify-between items-center">
+            <div class="px-6 text-white flex justify-between items-center" style="background: linear-gradient(to right, #fbbf24, #f97316); padding-top: 16px; padding-bottom: 16px;">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
                     <span class="material-symbols-outlined">help</span>
                     ¿Necesitas ayuda?
@@ -260,7 +259,8 @@
     
     <!-- CSRF Token para AJAX -->
     {% csrf_token %}
-    
+    </div>
+
     <!-- Script de Soporte -->
     <script src="{% static 'js/support.js' %}"></script>
 
@@ -392,6 +392,68 @@
             font-size: 20px;
             font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
         }
+        /* Remove underline from sidebar links */
+        .sidebar-link {
+            text-decoration: none !important;
+        }
+
+        /* Support modal - missing utility classes */
+        #webcrumbs .rounded-xl { border-radius: 12px; }
+        #webcrumbs .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        #webcrumbs .max-w-md { max-width: 28rem; }
+        #webcrumbs .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #webcrumbs .py-4 { padding-bottom: 16px; padding-top: 16px; }
+        #webcrumbs .py-8 { padding-bottom: 32px; padding-top: 32px; }
+        #webcrumbs .border-2 { border-width: 2px; }
+        #webcrumbs .border-transparent { border-color: transparent; }
+        #webcrumbs .text-4xl { font-size: 36px; line-height: 40px; }
+        #webcrumbs .resize-none { resize: none; }
+        #webcrumbs .text-neutral-400 { color: #a3a3a3 !important; }
+        #webcrumbs .border-neutral-300 { border-color: #d4d4d4; }
+        #webcrumbs .text-red-600 { color: #dc2626 !important; }
+
+        /* Amber */
+        #webcrumbs .bg-amber-50 { background-color: #fffbeb !important; }
+        #webcrumbs .bg-amber-100 { background-color: #fef3c7 !important; }
+        #webcrumbs .hover\:bg-amber-100:hover { background-color: #fef3c7 !important; }
+        #webcrumbs .text-amber-600 { color: #d97706 !important; }
+        #webcrumbs .text-amber-700 { color: #b45309 !important; }
+        #webcrumbs .text-amber-500 { color: #f59e0b !important; }
+        #webcrumbs .hover\:text-amber-700:hover { color: #b45309 !important; }
+        #webcrumbs .hover\:border-amber-400:hover { border-color: #fbbf24 !important; }
+
+        /* Blue */
+        #webcrumbs .bg-blue-50 { background-color: #eff6ff !important; }
+        #webcrumbs .hover\:bg-blue-100:hover { background-color: #dbeafe !important; }
+        #webcrumbs .text-blue-600 { color: #2563eb !important; }
+        #webcrumbs .text-blue-700 { color: #1d4ed8 !important; }
+        #webcrumbs .text-blue-500 { color: #3b82f6 !important; }
+        #webcrumbs .hover\:border-blue-400:hover { border-color: #60a5fa !important; }
+
+        /* Purple */
+        #webcrumbs .bg-purple-50 { background-color: #faf5ff !important; }
+        #webcrumbs .bg-purple-100 { background-color: #f3e8ff !important; }
+        #webcrumbs .hover\:bg-purple-100:hover { background-color: #f3e8ff !important; }
+        #webcrumbs .text-purple-600 { color: #9333ea !important; }
+        #webcrumbs .text-purple-700 { color: #7e22ce !important; }
+        #webcrumbs .text-purple-500 { color: #a855f7 !important; }
+        #webcrumbs .hover\:border-purple-400:hover { border-color: #c084fc !important; }
+
+        /* Green (extra) */
+        #webcrumbs .bg-green-50 { background-color: #f0fdf4 !important; }
+        #webcrumbs .hover\:bg-green-100:hover { background-color: #dcfce7 !important; }
+        #webcrumbs .text-green-700 { color: #15803d !important; }
+        #webcrumbs .hover\:border-green-400:hover { border-color: #4ade80 !important; }
+
+        /* Group hover for category buttons */
+        #webcrumbs :is(.group:hover .group-hover\:bg-blue-200) { background-color: #bfdbfe !important; }
+        #webcrumbs :is(.group:hover .group-hover\:bg-purple-200) { background-color: #e9d5ff !important; }
+        #webcrumbs :is(.group:hover .group-hover\:bg-green-200) { background-color: #bbf7d0 !important; }
+        #webcrumbs :is(.group:hover .group-hover\:bg-amber-200) { background-color: #fde68a !important; }
+
+        #webcrumbs .hover\:bg-white\/20:hover { background-color: rgba(255,255,255,0.2); }
+        #webcrumbs .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgb(249 58 118); }
+        #webcrumbs .focus\:border-primary-500:focus { border-color: rgb(249 58 118); }
     </style>
 </body>
 </html>

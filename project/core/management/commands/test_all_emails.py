@@ -7,6 +7,7 @@ Uso:
     python manage.py test_all_emails --list     # Lista las apps disponibles
     python manage.py test_all_emails --to other@email.com  # Otro destinatario
 """
+import os
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from datetime import date, timedelta
@@ -47,6 +48,7 @@ def get_email_apps():
                 "maximum_age": 12,
             },
             "description": "Invitación Fun Friday (semanal, manual)",
+            "inline_images": {"event_image": "core/static/images/logo.png"},
         },
         {
             "key": "payment_reminder",
@@ -261,11 +263,19 @@ class Command(BaseCommand):
                 f"  [{i}/{len(apps)}] {app['key']:25s} ", ending=""
             )
             try:
+                # Resolver rutas de imágenes inline relativas a BASE_DIR
+                inline_images = None
+                if app.get("inline_images"):
+                    inline_images = {
+                        cid: os.path.join(settings.BASE_DIR, path)
+                        for cid, path in app["inline_images"].items()
+                    }
                 success = email_service.send_email(
                     template_name=app["template"],
                     recipients=recipient,
                     subject=app["subject"],
                     context=app["context"],
+                    inline_images=inline_images,
                 )
                 if success:
                     sent += 1

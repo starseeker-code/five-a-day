@@ -219,13 +219,6 @@ class EmailService:
             )
             email.attach_alternative(html_content, "text/html")
             
-            # Siempre incluir el logo de la academia
-            logo_path = self._get_logo_path()
-            if inline_images is None:
-                inline_images = {}
-            if 'logo' not in inline_images and os.path.exists(logo_path):
-                inline_images['logo'] = logo_path
-            
             # Añadir imágenes inline si existen
             if inline_images:
                 email.mixed_subtype = 'related'
