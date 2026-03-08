@@ -15,7 +15,6 @@
 <div class="mb-6">
     <div class="flex justify-between items-center">
         <div>
-            <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Lista de Estudiantes</h3>
             <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos</p>
         </div>
         <div class="flex gap-2">
@@ -41,7 +40,7 @@
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padres</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Fun Friday</th>
                     <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
@@ -96,15 +95,11 @@
                             </span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4">
-                        {% if student.active %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Activo
-                            </span>
+                    <td class="px-6 py-4 text-center">
+                        {% if student.id in fun_friday_ids %}
+                            <span class="material-symbols-outlined text-green-600 text-base">check_circle</span>
                         {% else %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                                Inactivo
-                            </span>
+                            <span class="material-symbols-outlined text-neutral-300 text-base">cancel</span>
                         {% endif %}
                     </td>
                     <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">

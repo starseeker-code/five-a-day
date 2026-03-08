@@ -62,12 +62,12 @@
                 </h4>
                 <p class="text-3xl font-bold text-neutral-800">{{ upcoming_events_count }}</p>
             </div>
-            <span class="material-symbols-outlined text-primary-600 text-3xl">send</span>
+            <span class="material-symbols-outlined text-primary-600 text-3xl">email</span>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if upcoming_events %}
                 {% for event in upcoming_events %}
-                    <a href="{% url event.url_name %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium">
+                    <a href="{% if event.is_fun_friday %}{% url 'fun_friday_view' %}{% else %}{% url event.url_name %}{% endif %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium">
                         {{ event.name }}
                     </a>
                     <span class="text-neutral-400">({{ event.date|date:"d/m" }}){% if not forloop.last %}, {% endif %}</span>
@@ -85,17 +85,14 @@
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
                     Ingresos del mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">€{{ monthly_income_total|floatformat:0 }}</p>
+                <p class="text-3xl font-bold text-neutral-800">€{{ monthly_income_total|floatformat:0 }} <span class="text-lg font-normal text-neutral-400">/ €{{ expected_revenue|floatformat:0 }}</span></p>
             </div>
             <span class="material-symbols-outlined text-primary-300 text-3xl">payments</span>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            {% if monthly_income_count > 0 %}
-                <span class="text-green-600 font-medium">{{ monthly_income_count }}</span>
-                pago{{ monthly_income_count|pluralize:"s" }} completado{{ monthly_income_count|pluralize:"s" }} este mes
-            {% else %}
-                <span class="text-neutral-400">Sin ingresos registrados este mes</span>
-            {% endif %}
+            <span class="text-green-600 font-medium">€{{ monthly_income_total|floatformat:0 }}</span> cobrado
+            &middot;
+            <span class="text-neutral-500">€{{ expected_revenue|floatformat:0 }}</span> esperado
         </div>
     </div>
 

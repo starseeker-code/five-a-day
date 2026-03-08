@@ -15,14 +15,13 @@
 <div class="mb-6">
     <div class="flex justify-between items-center">
         <div>
-            <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Lista de Pagos</h3>
-            <p class="text-neutral-600">Total: {{ payments.count }} pagos registrados</p>
+            <p class="text-neutral-600">Esperado: <span class="font-semibold">€{{ expected_payments_total|floatformat:0 }}</span> &middot; Cobrado: <span class="font-semibold text-green-600">€{{ completed_payments_total|floatformat:0 }}</span> &middot; Total: {{ payments.paginator.count }} pagos</p>
         </div>
         <div class="flex gap-2">
-            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">filter_list</span>
             </button>
-            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">search</span>
             </button>
         </div>

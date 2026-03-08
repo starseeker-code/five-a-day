@@ -172,7 +172,7 @@ def home(request):
             for day in range(today.day, days_in_month + 1):
                 d = date(current_year, current_month, day)
                 if d.weekday() == 4:  # Friday
-                    upcoming_events.append({"name": app["name"], "date": d, "url_name": app["url_name"]})
+                    upcoming_events.append({"name": app["name"], "date": d, "url_name": app["url_name"], "is_fun_friday": app["name"] == "Fun Friday"})
         elif app["frequency"] == "monthly_day_1":
             d = date(current_year, current_month, 1)
             if d >= today:
@@ -182,7 +182,15 @@ def home(request):
     upcoming_events_count = len(upcoming_events)
     next_event = upcoming_events[0] if upcoming_events else None
 
-    # ESPACIO 2 - Ingresos del mes (pagos completados este mes)
+    # ESPACIO 2 - Ingresos del mes
+    # Expected revenue: all payments due this month (any status)
+    expected_payments = Payment.objects.filter(
+        due_date__month=current_month,
+        due_date__year=current_year,
+    )
+    expected_revenue = expected_payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
+    # Actual revenue: completed payments this month
     completed_payments = Payment.objects.filter(
         payment_status="completed",
         payment_date__month=current_month,
@@ -208,6 +216,7 @@ def home(request):
         "upcoming_events": upcoming_events[:5],
         "next_event": next_event,
         # ESPACIO 2
+        "expected_revenue": expected_revenue,
         "monthly_income_count": monthly_income_count,
         "monthly_income_total": monthly_income_total,
         # ToDo list
@@ -596,7 +605,6 @@ class StudentListView(ListView):
     model = Student
     template_name = "students.html"
     context_object_name = "students"
-    paginate_by = 20
 
     def get_queryset(self):
         queryset = (
@@ -621,6 +629,7 @@ class StudentListView(ListView):
         context["search_query"] = self.request.GET.get("search", "")
         context["groups"] = Group.objects.filter(active=True)
         context["parents"] = Parent.objects.all()
+        context["fun_friday_ids"] = set()
         return context
 
 
@@ -960,6 +969,24 @@ def payments_list(request):
             | Q(reference_number__icontains=search_query)
         )
 
+    # Monthly payment totals
+    today = date.today()
+    current_month = today.month
+    current_year = today.year
+
+    # Expected: all payments due this month
+    expected_payments_total = Payment.objects.filter(
+        due_date__month=current_month,
+        due_date__year=current_year,
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
+    # Completed: payments completed this month
+    completed_payments_total = Payment.objects.filter(
+        payment_status="completed",
+        payment_date__month=current_month,
+        payment_date__year=current_year,
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
     # Pagination - 10 payments per page, max 100 total
     paginator = Paginator(payments_queryset[:100], 10)
     page_number = request.GET.get("page", 1)
@@ -968,6 +995,8 @@ def payments_list(request):
     context = {
         "payments": payments,
         "search_query": search_query,
+        "expected_payments_total": expected_payments_total,
+        "completed_payments_total": completed_payments_total,
     }
 
     return render(request, "payments/payments_list.html", context)
