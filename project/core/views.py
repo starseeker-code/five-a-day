@@ -20,14 +20,30 @@ from datetime import date, datetime
 from core.transactions import all_students, all_payments
 from core.forms import StudentForm, ParentForm, EnrollmentForm, ParentFormSet
 from core.email import email_service
+from django.template.loader import render_to_string
 from django.conf import settings
 import os
 
 # Registry of scheduled apps/emails.
-# frequency options: 'every_friday' | 'monthly_day_1'
+# frequency options: 'every_friday' | 'monthly_day_1' | 'manual' | 'yearly_april'
+#                    'monthly_last_day' | 'on_student_creation' | 'daily'
+#                    'quarterly' | 'on_enrollment'
 SCHEDULED_APPS = [
     {"name": "Fun Friday", "url_name": "fun_friday_form", "frequency": "every_friday", "active": True},
+    {"name": "Pago Mensual", "url_name": "payment_reminder_form", "frequency": "monthly_day_1", "active": True},
+    {"name": "Vacaciones", "url_name": "vacation_closure_form", "frequency": "manual", "active": True},
+    {"name": "Certificado Renta", "url_name": "tax_certificate_form", "frequency": "yearly_april", "active": True},
+    {"name": "Informe Mensual", "url_name": "monthly_report_form", "frequency": "monthly_last_day", "active": True},
+    {"name": "Bienvenida", "url_name": "welcome_form", "frequency": "on_student_creation", "active": True},
+    {"name": "Cumpleaños", "url_name": "birthday_form", "frequency": "daily", "active": True},
+    {"name": "Recibos", "url_name": "receipts_form", "frequency": "quarterly", "active": True},
+    {"name": "Matrículas", "url_name": "enrollment_form", "frequency": "on_enrollment", "active": True},
 ]
+
+# Nombres de días y meses en español (shared across app views)
+DIAS_ES = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+MESES_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 
 
 def parse_date_value(date_value):
@@ -2001,36 +2017,11 @@ Esta semana haremos manualidades creativas con materiales reciclados.
                 },
             )
 
-        # Nombres de días y meses en español
-        DIAS = [
-            "lunes",
-            "martes",
-            "miércoles",
-            "jueves",
-            "viernes",
-            "sábado",
-            "domingo",
-        ]
-        MESES = [
-            "enero",
-            "febrero",
-            "marzo",
-            "abril",
-            "mayo",
-            "junio",
-            "julio",
-            "agosto",
-            "septiembre",
-            "octubre",
-            "noviembre",
-            "diciembre",
-        ]
-
-        day_name = DIAS[event_date.weekday()]
-        month_name = MESES[event_date.month - 1]
+        day_name = DIAS_ES[event_date.weekday()]
+        month_name = MESES_ES[event_date.month - 1]
 
         # Obtener emails de padres con estudiantes activos
-        parents = Parent.objects.filter(students__active=True).distinct()
+        parents = Parent.objects.filter(children__active=True).distinct()
 
         parent_emails = [p.email for p in parents if p.email]
 
@@ -2072,7 +2063,18 @@ Esta semana haremos manualidades creativas con materiales reciclados.
 
         return redirect("home")
 
-    # GET - Mostrar formulario
+    # GET - Mostrar formulario con email preview
+    email_html = render_to_string('emails/fun_friday.html', {
+        'day_name': DIAS_ES[next_friday.weekday()],
+        'day_number': next_friday.day,
+        'month': MESES_ES[next_friday.month - 1],
+        'start_time': '17:00',
+        'end_time': '18:30',
+        'activity_description': default_html,
+        'meeting_point': 'En la puerta principal del centro',
+        'minimum_age': 5,
+        'maximum_age': 12,
+    })
     return render(
         request,
         "apps/fun_friday_form.html",
@@ -2080,8 +2082,621 @@ Esta semana haremos manualidades creativas con materiales reciclados.
             "next_friday": next_friday.isoformat(),
             "parent_count": parent_count,
             "default_html": default_html,
+            "email_html": email_html,
         },
     )
+
+
+# ============================================================================
+# RECORDATORIO DE PAGO - Formulario de envío
+# ============================================================================
+
+
+def payment_reminder_form(request):
+    """
+    Vista para enviar recordatorios de pago mensual/trimestral.
+    GET: Muestra formulario con valores por defecto
+    POST: Envía recordatorio a todos los padres con estudiantes activos
+    """
+    from .models import Parent
+    from .email import send_payment_reminder_email
+
+    today = date.today()
+    parent_count = Parent.objects.filter(children__active=True).distinct().count()
+
+    # Defaults: pago del 1 al 5 del mes actual
+    default_start = today.replace(day=1)
+    try:
+        default_end = today.replace(day=5)
+    except ValueError:
+        default_end = today.replace(day=28)
+
+    current_month = MESES_ES[today.month - 1]
+
+    if request.method == "POST":
+        payment_start_date_str = request.POST.get("payment_start_date")
+        payment_end_date_str = request.POST.get("payment_end_date")
+        month = request.POST.get("month", current_month)
+        iban_number = request.POST.get("iban_number", "")
+        telephone_number_bizum = request.POST.get("telephone_number_bizum", "")
+        reduced_price_cheque_idioma = request.POST.get("reduced_price_cheque_idioma", "34€")
+
+        if not all([payment_start_date_str, payment_end_date_str, iban_number, telephone_number_bizum]):
+            messages.error(request, "❌ Todos los campos obligatorios son requeridos")
+        else:
+            try:
+                start_date = date.fromisoformat(payment_start_date_str)
+                end_date = date.fromisoformat(payment_end_date_str)
+            except ValueError:
+                messages.error(request, "❌ Fecha inválida")
+                return redirect("payment_reminder_form")
+
+            parents = Parent.objects.filter(children__active=True).distinct()
+            parent_emails = [p.email for p in parents if p.email]
+
+            if not parent_emails:
+                messages.warning(request, "⚠️ No hay padres con email para enviar")
+                return redirect("apps")
+
+            success_count = 0
+            error_count = 0
+            for email_addr in parent_emails:
+                try:
+                    result = send_payment_reminder_email(
+                        recipients=email_addr,
+                        payment_start_day_name=DIAS_ES[start_date.weekday()],
+                        payment_start_day_number=start_date.day,
+                        payment_end_day_name=DIAS_ES[end_date.weekday()],
+                        payment_end_day_number=end_date.day,
+                        month=month,
+                        iban_number=iban_number,
+                        reduced_price_cheque_idioma=reduced_price_cheque_idioma,
+                        telephone_number_bizum=telephone_number_bizum,
+                    )
+                    if result:
+                        success_count += 1
+                    else:
+                        error_count += 1
+                except Exception:
+                    error_count += 1
+
+            if success_count > 0:
+                messages.success(request, f"✅ Recordatorio enviado a {success_count} padre(s)")
+            if error_count > 0:
+                messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
+            return redirect("apps")
+
+    email_html = render_to_string('emails/recordatorio_pago_mensual_trimestral.html', {
+        'payment_start_day_name': DIAS_ES[default_start.weekday()],
+        'payment_start_day_number': default_start.day,
+        'payment_end_day_name': DIAS_ES[default_end.weekday()],
+        'payment_end_day_number': default_end.day,
+        'month': current_month,
+        'iban_number': 'ES00 0000 0000 0000 0000 0000',
+        'reduced_price_cheque_idioma': '34€',
+        'telephone_number_bizum': '600 000 000',
+    })
+    return render(request, "apps/payment_reminder_form.html", {
+        "parent_count": parent_count,
+        "default_start_date": default_start.isoformat(),
+        "default_end_date": default_end.isoformat(),
+        "months": MESES_ES,
+        "current_month": current_month,
+        "default_iban": "",
+        "default_bizum": "",
+        "default_cheque_price": "34€",
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# CIERRE POR VACACIONES - Formulario de envío
+# ============================================================================
+
+
+def vacation_closure_form(request):
+    """
+    Vista para enviar avisos de cierre por vacaciones.
+    GET: Muestra formulario
+    POST: Envía aviso a todos los padres con estudiantes activos
+    """
+    from .models import Parent
+    from .email import send_vacation_closure_email
+
+    parent_count = Parent.objects.filter(children__active=True).distinct().count()
+
+    if request.method == "POST":
+        closure_start_str = request.POST.get("closure_start_date")
+        closure_end_str = request.POST.get("closure_end_date")
+        closure_reason = request.POST.get("closure_reason", "")
+        reopening_str = request.POST.get("reopening_date")
+
+        if not all([closure_start_str, closure_end_str, closure_reason, reopening_str]):
+            messages.error(request, "❌ Todos los campos obligatorios son requeridos")
+        else:
+            try:
+                closure_start = date.fromisoformat(closure_start_str)
+                closure_end = date.fromisoformat(closure_end_str)
+                reopening = date.fromisoformat(reopening_str)
+            except ValueError:
+                messages.error(request, "❌ Fecha inválida")
+                return redirect("vacation_closure_form")
+
+            parents = Parent.objects.filter(children__active=True).distinct()
+            parent_emails = [p.email for p in parents if p.email]
+
+            if not parent_emails:
+                messages.warning(request, "⚠️ No hay padres con email para enviar")
+                return redirect("apps")
+
+            success_count = 0
+            error_count = 0
+            for email_addr in parent_emails:
+                try:
+                    result = send_vacation_closure_email(
+                        recipients=email_addr,
+                        start_closure_day_name=DIAS_ES[closure_start.weekday()],
+                        start_closure_day_number=closure_start.day,
+                        end_closure_day_name=DIAS_ES[closure_end.weekday()],
+                        end_closure_day_number=closure_end.day,
+                        month_closure=MESES_ES[closure_start.month - 1],
+                        closure_reason=closure_reason,
+                        reopening_day_name=DIAS_ES[reopening.weekday()],
+                        reopening_day_number=reopening.day,
+                        month_reopening=MESES_ES[reopening.month - 1],
+                    )
+                    if result:
+                        success_count += 1
+                    else:
+                        error_count += 1
+                except Exception:
+                    error_count += 1
+
+            if success_count > 0:
+                messages.success(request, f"✅ Aviso de cierre enviado a {success_count} padre(s)")
+            if error_count > 0:
+                messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
+            return redirect("apps")
+
+    email_html = render_to_string('emails/recordatorio_cierre_vacaciones.html', {
+        'start_closure_day_name': 'lunes',
+        'start_closure_day_number': 23,
+        'end_closure_day_name': 'viernes',
+        'end_closure_day_number': 3,
+        'month_closure': 'diciembre',
+        'closure_reason': 'Navidad',
+        'reopening_day_name': 'lunes',
+        'reopening_day_number': 8,
+        'month_reopening': 'enero',
+    })
+    return render(request, "apps/vacation_closure_form.html", {
+        "parent_count": parent_count,
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# CERTIFICADO RENTA - Generación y envío
+# ============================================================================
+
+
+def tax_certificate_form(request):
+    """
+    Vista para generar y enviar certificados fiscales.
+    GET: Muestra formulario con año por defecto
+    POST: Genera y envía certificados a todos los padres con pagos
+    """
+    from .models import Parent, Payment
+    from .email import send_all_tax_certificates
+
+    today = date.today()
+    default_year = today.year - 1  # Año fiscal anterior
+
+    parents_with_payments = Parent.objects.filter(
+        payments__payment_status='completed',
+        payments__payment_date__year=default_year
+    ).distinct().count()
+
+    if request.method == "POST":
+        year = int(request.POST.get("year", default_year))
+        results = send_all_tax_certificates(year)
+
+        if results['sent'] > 0:
+            messages.success(request, f"✅ Certificados enviados a {results['sent']} padre(s)")
+        if results.get('skipped', 0) > 0:
+            messages.info(request, f"ℹ️ {results['skipped']} padre(s) omitidos (sin email)")
+        if results.get('failed', 0) > 0:
+            messages.warning(request, f"⚠️ {results['failed']} certificado(s) fallaron")
+        return redirect("apps")
+
+    email_html = render_to_string('emails/certificado_renta.html', {
+        'year': default_year,
+        'parent_name': 'Nombre del padre',
+    })
+    return render(request, "apps/tax_certificate_form.html", {
+        "default_year": default_year,
+        "parents_with_payments": parents_with_payments,
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# INFORME MENSUAL - Formulario de envío
+# ============================================================================
+
+
+def monthly_report_form(request):
+    """
+    Vista para enviar informes mensuales a los padres.
+    GET: Muestra formulario con mes/año actual
+    POST: Envía informes personalizados a cada padre
+    """
+    from .models import Parent, Student, Group
+    from .email import send_monthly_report
+
+    today = date.today()
+    current_month = MESES_ES[today.month - 1]
+    parent_count = Parent.objects.filter(children__active=True).distinct().count()
+    total_students = Student.objects.filter(active=True).count()
+    total_groups = Group.objects.filter(active=True).count()
+
+    if request.method == "POST":
+        month = request.POST.get("month", current_month)
+        year = int(request.POST.get("year", today.year))
+
+        parents = Parent.objects.filter(
+            children__active=True
+        ).distinct().prefetch_related('children__group')
+
+        success_count = 0
+        error_count = 0
+        for parent in parents:
+            if not parent.email:
+                continue
+            students_data = [
+                {'name': s.full_name, 'group': s.group.group_name if s.group else 'Sin grupo'}
+                for s in parent.children.filter(active=True)
+            ]
+            try:
+                result = send_monthly_report(
+                    recipient=parent.email,
+                    report_data={
+                        'month': month,
+                        'year': year,
+                        'parent_name': parent.full_name,
+                        'students': students_data,
+                        'total_students': len(students_data),
+                    }
+                )
+                if result:
+                    success_count += 1
+                else:
+                    error_count += 1
+            except Exception:
+                error_count += 1
+
+        if success_count > 0:
+            messages.success(request, f"✅ Informes enviados a {success_count} padre(s)")
+        if error_count > 0:
+            messages.warning(request, f"⚠️ {error_count} informe(s) no pudieron enviarse")
+        return redirect("apps")
+
+    email_html = render_to_string('emails/monthly_report.html', {
+        'month': current_month,
+        'year': today.year,
+        'parent_name': 'Nombre del padre',
+        'students': [{'name': 'Alumno Ejemplo', 'group': 'Grupo A'}],
+        'total_students': 1,
+    })
+    return render(request, "apps/monthly_report_form.html", {
+        "months": MESES_ES,
+        "current_month": current_month,
+        "current_year": today.year,
+        "parent_count": parent_count,
+        "total_students": total_students,
+        "total_groups": total_groups,
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# BIENVENIDA - Email de alta de estudiante
+# ============================================================================
+
+
+def welcome_form(request):
+    """
+    Vista para reenviar emails de bienvenida manualmente.
+    GET: Muestra selector de estudiante y preview
+    POST: Envía email de bienvenida al padre del estudiante seleccionado
+    """
+    from .models import Student, Parent
+    from .email import send_welcome_email
+
+    students = Student.objects.filter(active=True).select_related('group').order_by('last_name', 'first_name')
+
+    if request.method == "POST":
+        student_id = request.POST.get("student_id")
+        if not student_id:
+            messages.error(request, "❌ Selecciona un estudiante")
+        else:
+            try:
+                student = Student.objects.select_related('group').prefetch_related('parents').get(id=student_id)
+                parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+                if not parent:
+                    messages.error(request, f"❌ {student.full_name} no tiene padre con email registrado")
+                else:
+                    result = send_welcome_email(
+                        parent_email=parent.email,
+                        parent_name=parent.full_name,
+                        student_name=student.full_name,
+                        group_name=student.group.group_name if student.group else None,
+                    )
+                    if result:
+                        messages.success(request, f"✅ Email de bienvenida enviado a {parent.email}")
+                    else:
+                        messages.error(request, "❌ Error al enviar el email")
+            except Student.DoesNotExist:
+                messages.error(request, "❌ Estudiante no encontrado")
+        return redirect("welcome_form")
+
+    email_html = render_to_string('emails/welcome_student.html', {
+        'parent_name': 'Nombre del padre',
+        'student_name': 'Nombre del alumno',
+        'group_name': 'Grupo A',
+        'enrollment_type': 'Mensual',
+        'schedule_type': 'Jornada completa',
+        'start_date': '01/09/2025',
+    })
+    return render(request, "apps/welcome_form.html", {
+        "students": students,
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# CUMPLEAÑOS - Gestión de emails de cumpleaños
+# ============================================================================
+
+
+def birthday_form(request):
+    """
+    Vista para gestionar y enviar manualmente emails de cumpleaños.
+    GET: Muestra cumpleaños de hoy y del mes, con preview
+    POST: Envía manualmente los emails de cumpleaños de hoy
+    """
+    from .models import Student
+    from .email import email_service
+
+    today = date.today()
+    birthday_students = Student.objects.filter(
+        birth_date__month=today.month,
+        birth_date__day=today.day,
+        active=True
+    ).select_related('group')
+
+    month_birthdays = Student.objects.filter(
+        birth_date__month=today.month,
+        active=True
+    ).select_related('group').order_by('birth_date__day')
+
+    if request.method == "POST":
+        if not birthday_students.exists():
+            messages.info(request, "ℹ️ No hay cumpleaños hoy")
+            return redirect("birthday_form")
+
+        success_count = 0
+        error_count = 0
+        for student in birthday_students:
+            parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+            if not parent:
+                continue
+            try:
+                result = email_service.send_email(
+                    template_name='happy_birthday',
+                    recipients=parent.email,
+                    subject=f'🎉 ¡Feliz Cumpleaños {student.first_name}!',
+                    context={'name': student.first_name}
+                )
+                if result:
+                    success_count += 1
+                else:
+                    error_count += 1
+            except Exception:
+                error_count += 1
+
+        if success_count > 0:
+            messages.success(request, f"✅ Email de cumpleaños enviado a {success_count} estudiante(s)")
+        if error_count > 0:
+            messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
+        return redirect("birthday_form")
+
+    email_html = render_to_string('emails/happy_birthday.html', {
+        'name': 'Alumno',
+    })
+    return render(request, "apps/birthday_form.html", {
+        "today": today.strftime('%d/%m/%Y'),
+        "birthday_students": birthday_students,
+        "month_birthdays": month_birthdays,
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# RECIBOS - Generación y envío trimestral/mensual
+# ============================================================================
+
+
+def receipts_form(request):
+    """
+    Vista para enviar recibos trimestrales (niños) o mensuales (adultos).
+    GET: Muestra formulario con opciones de trimestre/mes
+    POST: Envía recibos a los padres correspondientes
+    """
+    from .models import Parent, Student
+    from .email import send_quarterly_receipt_email
+
+    today = date.today()
+    current_month = MESES_ES[today.month - 1]
+    parent_count = Parent.objects.filter(children__active=True).distinct().count()
+
+    # Calcular trimestre actual
+    quarter_idx = (today.month - 1) // 3
+    quarter_start = quarter_idx * 3
+    quarter_months = [MESES_ES[quarter_start], MESES_ES[quarter_start + 1], MESES_ES[quarter_start + 2]]
+
+    if request.method == "POST":
+        receipt_type = request.POST.get("receipt_type", "quarterly_child")
+
+        if receipt_type == "quarterly_child":
+            month_1 = request.POST.get("month_1", quarter_months[0])
+            month_2 = request.POST.get("month_2", quarter_months[1])
+            month_3 = request.POST.get("month_3", quarter_months[2])
+
+            parents = Parent.objects.filter(
+                children__active=True
+            ).distinct().prefetch_related('children')
+
+            success_count = 0
+            error_count = 0
+            for parent in parents:
+                if not parent.email:
+                    continue
+                for student in parent.children.filter(active=True):
+                    try:
+                        result = send_quarterly_receipt_email(
+                            parent_email=parent.email,
+                            student_name=student.full_name,
+                            month_1=month_1,
+                            month_2=month_2,
+                            month_3=month_3,
+                        )
+                        if result:
+                            success_count += 1
+                        else:
+                            error_count += 1
+                    except Exception:
+                        error_count += 1
+        else:
+            adult_month = request.POST.get("adult_month", current_month)
+            # Send adult receipts using the recibo_adulto template
+            parents = Parent.objects.filter(
+                children__active=True
+            ).distinct()
+
+            success_count = 0
+            error_count = 0
+            for parent in parents:
+                if not parent.email:
+                    continue
+                try:
+                    result = email_service.send_email(
+                        template_name='recibo_adulto',
+                        recipients=parent.email,
+                        subject=f'🧾 Recibo Mensual - {adult_month.title()}',
+                        context={'month': adult_month},
+                    )
+                    if result:
+                        success_count += 1
+                    else:
+                        error_count += 1
+                except Exception:
+                    error_count += 1
+
+        if success_count > 0:
+            messages.success(request, f"✅ Recibos enviados: {success_count}")
+        if error_count > 0:
+            messages.warning(request, f"⚠️ {error_count} recibo(s) no pudieron enviarse")
+        return redirect("apps")
+
+    email_html = render_to_string('emails/recibo_trimestre_niño.html', {
+        'student_name': 'Alumno Ejemplo',
+        'month_1': quarter_months[0],
+        'month_2': quarter_months[1],
+        'month_3': quarter_months[2],
+    })
+    return render(request, "apps/receipts_form.html", {
+        "months": MESES_ES,
+        "current_month": current_month,
+        "quarter_months": quarter_months,
+        "parent_count": parent_count,
+        "email_html": email_html,
+    })
+
+
+# ============================================================================
+# MATRÍCULAS - Confirmación de matrícula
+# ============================================================================
+
+
+def enrollment_form(request):
+    """
+    Vista para enviar confirmación de matrícula manualmente.
+    GET: Muestra formulario con selector de estudiante
+    POST: Envía confirmación al padre del estudiante seleccionado
+    """
+    from .models import Student
+    from .email import send_enrollment_confirmation_email
+
+    today = date.today()
+    current_month = MESES_ES[today.month - 1]
+    students = Student.objects.filter(active=True).select_related('group').order_by('last_name', 'first_name')
+
+    # Academic year: if month >= September, current/next year, else previous/current
+    if today.month >= 9:
+        default_academic_year = f"{today.year}-{today.year + 1}"
+    else:
+        default_academic_year = f"{today.year - 1}-{today.year}"
+
+    if request.method == "POST":
+        student_id = request.POST.get("student_id")
+        enrollment_type = request.POST.get("enrollment_type", "child")
+        gender = request.POST.get("gender", "m")
+        academic_year = request.POST.get("academic_year", default_academic_year)
+        month = request.POST.get("month", current_month)
+
+        if not student_id:
+            messages.error(request, "❌ Selecciona un estudiante")
+        else:
+            try:
+                student = Student.objects.prefetch_related('parents').get(id=student_id)
+                parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+                if not parent:
+                    messages.error(request, f"❌ {student.full_name} no tiene padre con email registrado")
+                else:
+                    template = 'matricula_niño' if enrollment_type == 'child' else 'matricula_adulto'
+                    result = email_service.send_email(
+                        template_name=template,
+                        recipients=parent.email,
+                        subject=f'🎉 Confirmación de Matrícula - {student.full_name}',
+                        context={
+                            'student': student.full_name,
+                            'genero': gender,
+                            'academic_year': academic_year,
+                            'month': month,
+                        },
+                    )
+                    if result:
+                        messages.success(request, f"✅ Confirmación de matrícula enviada a {parent.email}")
+                    else:
+                        messages.error(request, "❌ Error al enviar el email")
+            except Student.DoesNotExist:
+                messages.error(request, "❌ Estudiante no encontrado")
+        return redirect("enrollment_form")
+
+    email_html = render_to_string('emails/matricula_niño.html', {
+        'student': 'Alumno Ejemplo',
+        'genero': 'm',
+        'academic_year': default_academic_year,
+        'month': 'septiembre',
+    })
+    return render(request, "apps/enrollment_form.html", {
+        "students": students,
+        "months": MESES_ES,
+        "current_month": current_month,
+        "default_academic_year": default_academic_year,
+        "email_html": email_html,
+    })
 
 
 # ============================================================================

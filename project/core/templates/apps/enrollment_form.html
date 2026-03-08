@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Matrículas - Confirmación{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center">
+            <div class="w-14 h-14 bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl flex items-center justify-center mr-4">
+                <span class="material-symbols-outlined text-white text-3xl">school</span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-neutral-800">Confirmación de Matrícula</h1>
+                <p class="text-neutral-500">Enviar confirmación de matrícula (niños o adultos)</p>
+            </div>
+        </div>
+        <a href="{% url 'apps' %}" class="text-neutral-500 hover:text-neutral-700 flex items-center">
+            <span class="material-symbols-outlined mr-1">arrow_back</span>
+            Volver
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Info automática -->
+    <div class="bg-sky-50 rounded-xl p-6 border border-sky-200 mb-6">
+        <div class="flex items-start">
+            <span class="material-symbols-outlined text-sky-500 mr-3 mt-0.5">auto_awesome</span>
+            <div>
+                <h3 class="text-sm font-semibold text-sky-800 mb-1">Envío en confirmación de matrícula</h3>
+                <p class="text-sm text-sky-700">Este email se puede enviar automáticamente al confirmar una matrícula. Usa este formulario para enviarlo manualmente si es necesario.</p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="enrollmentForm" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Tipo de Matrícula -->
+        <div class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">school</span>
+                Datos de Matrícula
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="enrollment_type" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Tipo <span class="text-red-500">*</span>
+                    </label>
+                    <select id="enrollment_type" name="enrollment_type" required
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="child">Niño/a</option>
+                        <option value="adult">Adulto/a</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Género <span class="text-red-500">*</span>
+                    </label>
+                    <select id="gender" name="gender" required
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="m">Masculino</option>
+                        <option value="f">Femenino</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="student_id" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Estudiante <span class="text-red-500">*</span>
+                    </label>
+                    <select id="student_id" name="student_id" required
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">Selecciona un estudiante...</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.last_name }}, {{ student.first_name }} ({{ student.group.group_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="academic_year" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Año académico <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="academic_year" name="academic_year" value="{{ default_academic_year }}" required
+                           placeholder="2025-2026"
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                <div>
+                    <label for="month" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Mes de inicio <span class="text-red-500">*</span>
+                    </label>
+                    <select id="month" name="month" required
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for m in months %}
+                        <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Preview -->
+        {% include 'apps/_email_preview.html' %}
+
+        <!-- Botones -->
+        <div class="flex justify-end space-x-4">
+            <a href="{% url 'apps' %}" class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium">
+                Cancelar
+            </a>
+            <button type="submit" id="submitBtn"
+                    class="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white rounded-lg hover:from-sky-600 hover:to-blue-600 transition-all font-medium flex items-center">
+                <span class="material-symbols-outlined mr-2">send</span>
+                Enviar Confirmación
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('enrollmentForm');
+    var submitBtn = document.getElementById('submitBtn');
+    form.addEventListener('submit', function(e) {
+        var studentSelect = document.getElementById('student_id');
+        if (!studentSelect.value) {
+            e.preventDefault();
+            alert('Selecciona un estudiante');
+            return;
+        }
+        if (!confirm('¿Enviar confirmación de matrícula al padre del estudiante seleccionado?')) {
+            e.preventDefault();
+            return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
+    });
+});
+</script>
+{% endblock %}

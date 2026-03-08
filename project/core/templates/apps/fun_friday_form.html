@@ -15,7 +15,7 @@
                 <p class="text-neutral-500">Enviar invitación a todos los padres</p>
             </div>
         </div>
-        <a href="{% url 'home' %}" class="text-neutral-500 hover:text-neutral-700 flex items-center">
+        <a href="{% url 'apps' %}" class="text-neutral-500 hover:text-neutral-700 flex items-center">
             <span class="material-symbols-outlined mr-1">arrow_back</span>
             Volver
         </a>
@@ -171,6 +171,9 @@
             </div>
         </div>
 
+        <!-- Email Preview -->
+        {% include 'apps/_email_preview.html' %}
+
         <!-- Resumen antes de enviar -->
         <div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
             <h2 class="text-lg font-semibold text-amber-800 mb-2 flex items-center">
@@ -187,7 +190,7 @@
 
         <!-- Botones -->
         <div class="flex justify-end space-x-4">
-            <a href="{% url 'home' %}" 
+            <a href="{% url 'apps' %}"
                class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium">
                 Cancelar
             </a>

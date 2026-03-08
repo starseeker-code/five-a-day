@@ -1,0 +1,59 @@
+{% comment %}
+    Reusable email preview component.
+    Include in any app form template to show a rendered email preview.
+
+    Required context variable:
+        email_html  - rendered email HTML string (from render_to_string)
+
+    Usage:
+        include 'apps/_email_preview.html'
+{% endcomment %}
+<div class="bg-white rounded-xl p-6 border border-neutral-200">
+    <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+        <span class="material-symbols-outlined text-primary-500 mr-2">drafts</span>
+        Vista Previa del Email
+    </h2>
+
+    <button type="button"
+            id="emailPreviewBtn"
+            class="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center">
+        <span class="material-symbols-outlined text-sm mr-1" id="emailPreviewIcon">visibility</span>
+        <span id="emailPreviewLabel">Ver vista previa del email</span>
+    </button>
+
+    <div id="emailPreviewContainer" class="hidden mt-4">
+        <div class="border border-neutral-200 rounded-lg overflow-hidden">
+            <div class="bg-neutral-100 px-4 py-2 text-xs text-neutral-500 border-b flex items-center justify-between">
+                <span class="flex items-center">
+                    <span class="material-symbols-outlined text-xs mr-1">mail</span>
+                    Vista previa (datos de ejemplo)
+                </span>
+                <span class="text-neutral-400">El email real usará los datos del formulario</span>
+            </div>
+            <div class="p-4 max-h-[600px] overflow-y-auto bg-white">
+                {{ email_html|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var btn = document.getElementById('emailPreviewBtn');
+    var container = document.getElementById('emailPreviewContainer');
+    var icon = document.getElementById('emailPreviewIcon');
+    var label = document.getElementById('emailPreviewLabel');
+    if (btn && container) {
+        btn.addEventListener('click', function() {
+            container.classList.toggle('hidden');
+            if (container.classList.contains('hidden')) {
+                icon.textContent = 'visibility';
+                label.textContent = 'Ver vista previa del email';
+            } else {
+                icon.textContent = 'visibility_off';
+                label.textContent = 'Ocultar vista previa';
+            }
+        });
+    }
+})();
+</script>

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Recibos - Generación y Envío{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center">
+            <div class="w-14 h-14 bg-gradient-to-br from-slate-400 to-gray-600 rounded-2xl flex items-center justify-center mr-4">
+                <span class="material-symbols-outlined text-white text-3xl">receipt</span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-neutral-800">Recibos</h1>
+                <p class="text-neutral-500">Enviar recibos trimestrales (niños) o mensuales (adultos)</p>
+            </div>
+        </div>
+        <a href="{% url 'apps' %}" class="text-neutral-500 hover:text-neutral-700 flex items-center">
+            <span class="material-symbols-outlined mr-1">arrow_back</span>
+            Volver
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="receiptsForm" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Tipo de Recibo -->
+        <div class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">receipt_long</span>
+                Tipo de Recibo
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="receipt_type" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Tipo <span class="text-red-500">*</span>
+                    </label>
+                    <select id="receipt_type" name="receipt_type" required
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="quarterly_child">Trimestral (Niños)</option>
+                        <option value="monthly_adult">Mensual (Adultos)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Período Trimestral (niños) -->
+        <div id="quarterlyFields" class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">date_range</span>
+                Trimestre
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="month_1" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Mes 1 <span class="text-red-500">*</span>
+                    </label>
+                    <select id="month_1" name="month_1"
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for m in months %}
+                        <option value="{{ m }}" {% if m == quarter_months.0 %}selected{% endif %}>{{ m|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="month_2" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Mes 2 <span class="text-red-500">*</span>
+                    </label>
+                    <select id="month_2" name="month_2"
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for m in months %}
+                        <option value="{{ m }}" {% if m == quarter_months.1 %}selected{% endif %}>{{ m|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="month_3" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Mes 3 <span class="text-red-500">*</span>
+                    </label>
+                    <select id="month_3" name="month_3"
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for m in months %}
+                        <option value="{{ m }}" {% if m == quarter_months.2 %}selected{% endif %}>{{ m|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Período Mensual (adultos) -->
+        <div id="monthlyFields" class="bg-white rounded-xl p-6 border border-neutral-200 hidden">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">calendar_month</span>
+                Mes del Recibo
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="adult_month" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Mes <span class="text-red-500">*</span>
+                    </label>
+                    <select id="adult_month" name="adult_month"
+                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for m in months %}
+                        <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Preview -->
+        {% include 'apps/_email_preview.html' %}
+
+        <!-- Resumen -->
+        <div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
+            <h2 class="text-lg font-semibold text-amber-800 mb-2 flex items-center">
+                <span class="material-symbols-outlined text-amber-600 mr-2">info</span>
+                Antes de enviar
+            </h2>
+            <ul class="text-sm text-amber-700 space-y-1">
+                <li>Se enviarán recibos a <strong>{{ parent_count }}</strong> padre(s)</li>
+                <li>Cada recibo se adjuntará como PDF al email</li>
+                <li>Este proceso puede tardar varios minutos</li>
+            </ul>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end space-x-4">
+            <a href="{% url 'apps' %}" class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium">
+                Cancelar
+            </a>
+            <button type="submit" id="submitBtn"
+                    class="px-6 py-3 bg-gradient-to-r from-slate-500 to-gray-600 text-white rounded-lg hover:from-slate-600 hover:to-gray-700 transition-all font-medium flex items-center">
+                <span class="material-symbols-outlined mr-2">send</span>
+                Enviar Recibos
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var receiptType = document.getElementById('receipt_type');
+    var quarterlyFields = document.getElementById('quarterlyFields');
+    var monthlyFields = document.getElementById('monthlyFields');
+
+    receiptType.addEventListener('change', function() {
+        if (this.value === 'quarterly_child') {
+            quarterlyFields.classList.remove('hidden');
+            monthlyFields.classList.add('hidden');
+        } else {
+            quarterlyFields.classList.add('hidden');
+            monthlyFields.classList.remove('hidden');
+        }
+    });
+
+    var form = document.getElementById('receiptsForm');
+    var submitBtn = document.getElementById('submitBtn');
+    form.addEventListener('submit', function(e) {
+        if (!confirm('¿Estás seguro de enviar los recibos a {{ parent_count }} padre(s)?')) {
+            e.preventDefault();
+            return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
+    });
+});
+</script>
+{% endblock %}
