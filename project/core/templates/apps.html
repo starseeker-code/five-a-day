@@ -30,6 +30,14 @@
 
 {% block content %}
 <div class="px-4 py-6">
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            <span class="material-symbols-outlined text-primary-600 text-5xl">apps</span>
+            <h1 class="text-3xl font-bold tracking-tight text-neutral-800">Aplicaciones</h1>
+        </div>
+        <p class="text-neutral-600">Automatizaciones de email y otras herramientas.</p>
+    </div>
+
     <div class="apps-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <a href="{% url 'fun_friday_form' %}"
               class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
