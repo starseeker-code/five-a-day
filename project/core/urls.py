@@ -12,7 +12,6 @@ urlpatterns = [
     # ============================================================================
     path("", home, name="home"),
     path("database/", all_info, name="all_info"),
-    path("email/", email_test, name="email_test"),  # Prueba de emails
     # ============================================================================
     # PARENT MANAGEMENT - Gestión de Padres
     # ============================================================================

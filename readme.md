@@ -37,7 +37,7 @@ Documentacion: [Github - readme.md](https://github.com/starseeker-code/five-a-da
 
 Estado: 🟢
 
-Version actual: **v0.17**
+Version actual: **v0.30.2**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
 |:-----------------:|:-------------------:|:---------------------------:|
@@ -75,13 +75,13 @@ Version actual: **v0.17**
 <details>
 <summary>🟢 Versión 1.0 (6-7 semanas | 120-140h)</summary>
 
-- [ ] Frontend definitivo (dashboard mejorado con feedback)
+- [x] Frontend definitivo (dashboard mejorado con feedback)
 - [ ] Exportación automática a Google Sheets
 - [ ] Gestión de documentos PDF (facturas, certificados)
-- [ ] Sistema de notificaciones mejorado
-- [ ] Optimización de queries y rendimiento
+- [x] Sistema de notificaciones mejorado
+- [x] Optimización de queries y rendimiento
 - [ ] Documentación y manual de usuario
-- [ ] Correcciones post-lanzamiento
+- [x] Correcciones post-lanzamiento
 
 </details>
 

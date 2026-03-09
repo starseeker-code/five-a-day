@@ -282,82 +282,8 @@ def apps_view(request):
     return render(request, "apps.html")
 
 
-def email_test(request):
-    """
-    Vista para probar el envío de emails.
-    Uso: /email/?email=destinatario@example.com
-    Envía un email de cumpleaños inmediatamente y uno de bienvenida a los 5 segundos.
-    """
-    recipient = request.GET.get("email")
-
-    if not recipient:
-        return JsonResponse(
-            {
-                "error": 'Parámetro "email" requerido',
-                "uso": "/email/?email=tu@email.com",
-                "ejemplo": "/email/?email=test@gmail.com",
-            },
-            status=400,
-        )
-
-    try:
-        from datetime import datetime
-        import threading
-        import time
-
-        # Enviar email de cumpleaños inmediatamente
-        success_birthday = email_service.send_email(
-            template_name="happy_birthday",
-            recipients=recipient,
-            subject="🎉 ¡Feliz Cumpleaños! - Five a Day (Prueba)",
-            context={"name": "Estudiante de Prueba", "year": datetime.now().year},
-        )
-
-        # Función para enviar email de bienvenida después de 5 segundos
-        def send_welcome_delayed():
-            time.sleep(5)
-            email_service.send_email(
-                template_name="welcome_student",
-                recipients=recipient,
-                subject="🎓 ¡Bienvenido a Five a Day! (Prueba)",
-                context={
-                    "student_name": "Estudiante de Prueba",
-                    "parent_name": "Padre/Madre de Prueba",
-                    "group_name": "Grupo de Ejemplo",
-                    "teacher_name": "Profesor de Prueba",
-                    "schedule_type": "Completo",
-                    "enrollment_fee": "50.00",
-                    "monthly_fee": "100.00",
-                    "year": datetime.now().year,
-                },
-            )
-
-        # Lanzar el email de bienvenida en un hilo separado
-        threading.Thread(target=send_welcome_delayed, daemon=True).start()
-
-        if success_birthday:
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": f"Email de cumpleaños enviado a {recipient}. Email de bienvenida se enviará en 5 segundos.",
-                    "templates": ["happy_birthday", "welcome_student (en 5s)"],
-                }
-            )
-        else:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Error al enviar email. Verifica la configuración SMTP.",
-                },
-                status=500,
-            )
-
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
-
 
 # ---> Estudiantes | Pagos || DASHBOARDS (Home + Info) | Aplicaciones | Facturacion | UI! || Gastos | Renta | UI!! || Configuracion | Contacto y ayuda
-# TESTING CODE ("testing/")
 
 
 class StudentsView(CreateView):

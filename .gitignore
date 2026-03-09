@@ -243,3 +243,4 @@ logs/
 
 # Docs with secrets
 /docs
+.claude/settings.local.json
