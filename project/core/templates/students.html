@@ -78,9 +78,10 @@
                         {{ student.age }} años
                     </td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                            {{ student.group.group_name }}
-                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ student.group.color }};"></span>
+                            <span class="text-sm text-neutral-800">{{ student.group.group_name }}</span>
+                        </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-neutral-600">
                         {% for parent in student.parents.all %}

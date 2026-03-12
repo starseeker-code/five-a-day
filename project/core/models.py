@@ -372,8 +372,9 @@ class Teacher(models.Model):
 
 class Group(models.Model):
     group_name = models.CharField(max_length=100, unique=True)
+    color = models.CharField(max_length=7, default='#6366f1')
     teacher = models.ForeignKey(
-        Teacher, 
+        Teacher,
         on_delete=models.PROTECT,
         related_name='groups'
     )

@@ -14,7 +14,7 @@ TAILWIND_TEXTAREA_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-
 TAILWIND_CHECKBOX_CLASSES = 'form-checkbox h-5 w-5 text-primary-600'
 
 
-DATE_INPUT_FORMATS = ["%d/%m/%Y", "%Y-%m-%d"]
+DATE_INPUT_FORMATS = ["%Y-%m-%d", "%d/%m/%Y"]
 
 
 class StudentForm(ModelForm):
@@ -26,7 +26,7 @@ class StudentForm(ModelForm):
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
-            'birth_date': forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control', 'placeholder': 'dd/mm/yyyy'}),
+            'birth_date': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
             'school': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Colegio'}),
             'allergies': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Alergias'}),
             'gdpr_signed': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -116,7 +116,7 @@ class EnrollmentForm(forms.ModelForm):
             'enrollment_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_type'}),
             'schedule_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_schedule_type'}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '100', 'step': '0.01'}),
-            'enrollment_date': forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control', 'placeholder': 'dd/mm/yyyy'}),
+            'enrollment_date': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Notas adicionales'}),
         }
         labels = {

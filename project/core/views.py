@@ -982,7 +982,7 @@ def create_payment(request):
             messages.error(request, f"Error al crear el pago: {str(e)}")
             return redirect("payments_list")
 
-    return redirect("payments_list")
+    return render(request, "payments/payment_create.html", {})
 
 
 def payment_detail(request, payment_id):
@@ -1284,134 +1284,6 @@ def search_payments(request):
         )
 
     return JsonResponse({"results": results})
-
-
-@require_http_methods(["POST"])
-def create_payment(request):
-    """
-    AJAX endpoint to create new payment
-    """
-    try:
-        # Parse form data (works with both FormData and JSON)
-        if request.content_type == "application/json":
-            data = json.loads(request.body)
-        else:
-            data = request.POST
-
-        # Get required data
-        student_id = data.get("student_id")
-        parent_id = data.get("parent_id")
-
-        # Validate required fields
-        if not student_id or not parent_id:
-            if request.content_type == "application/json":
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "error": "Student ID and Parent ID are required",
-                    },
-                    status=400,
-                )
-            messages.error(request, "Debe seleccionar estudiante y padre/tutor.")
-            return redirect("payments_list")
-
-        # Validate student and parent exist
-        student = get_object_or_404(Student, id=student_id)
-        parent = get_object_or_404(Parent, id=parent_id)
-
-        # Validate relationship
-        if not student.parents.filter(id=parent_id).exists():
-            if request.content_type == "application/json":
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "error": "El padre/tutor seleccionado no está asociado con este estudiante.",
-                    },
-                    status=400,
-                )
-            messages.error(
-                request,
-                "El padre/tutor seleccionado no está asociado con este estudiante.",
-            )
-            return redirect("payments_list")
-
-        # Get enrollment if exists
-        enrollment = student.enrollments.filter(status="active").first()
-
-        due_date = parse_date_value(data.get("due_date"))
-        payment_date = parse_date_value(data.get("payment_date"))
-
-        # Create payment
-        payment = Payment.objects.create(
-            student=student,
-            parent=parent,
-            enrollment=enrollment,
-            payment_type=data.get("payment_type"),
-            payment_method=data.get("payment_method"),
-            amount=Decimal(data.get("amount")),
-            currency=data.get("currency", "EUR"),
-            payment_status=data.get("payment_status", "pending"),
-            due_date=due_date,
-            payment_date=payment_date,
-            concept=data.get("concept"),
-            reference_number=data.get("reference_number", ""),
-            observations=data.get("observations", ""),
-        )
-
-        if request.content_type != "application/json":
-            messages.success(
-                request, f"Pago creado exitosamente para {student.full_name}."
-            )
-            return redirect("payments_list")
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": f"Pago creado exitosamente para {student.full_name}.",
-                "payment": {
-                    "id": payment.id,
-                    "student_name": payment.student.full_name,
-                    "parent_name": payment.parent.full_name,
-                    "amount": str(payment.amount),
-                    "currency": payment.currency,
-                    "payment_status": payment.get_payment_status_display(),
-                    "due_date": (
-                        payment.due_date.strftime("%Y-%m-%d")
-                        if payment.due_date
-                        else ""
-                    ),
-                    "concept": payment.concept,
-                },
-            }
-        )
-
-    except InvalidOperation:
-        if request.content_type == "application/json":
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Monto inválido. Por favor ingrese un número válido.",
-                },
-                status=400,
-            )
-        messages.error(request, "Monto inválido. Por favor ingrese un número válido.")
-        return redirect("payments_list")
-    except ValidationError as e:
-        if request.content_type == "application/json":
-            return JsonResponse(
-                {"success": False, "error": str(e)},
-                status=400,
-            )
-        messages.error(request, str(e))
-        return redirect("payments_list")
-    except Exception as e:
-        if request.content_type == "application/json":
-            return JsonResponse(
-                {"success": False, "error": f"Error al crear el pago: {str(e)}"},
-                status=500,
-            )
-        messages.error(request, f"Error al crear el pago: {str(e)}")
-        return redirect("payments_list")
 
 
 @require_http_methods(["POST"])
@@ -1823,7 +1695,10 @@ def create_group(request):
             )
 
         group = Group.objects.create(
-            group_name=data["group_name"], teacher=teacher, active=True
+            group_name=data["group_name"],
+            color=data.get("color", "#6366f1"),
+            teacher=teacher,
+            active=True,
         )
 
         return JsonResponse(

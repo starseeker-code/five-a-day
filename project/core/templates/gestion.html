@@ -124,9 +124,10 @@
                             {% for group in groups %}
                             <tr class="hover:bg-neutral-50 transition-colors duration-200">
                                 <td class="px-4 py-3">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                                        {{ group.group_name }}
-                                    </span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ group.color }};"></span>
+                                        <span class="text-sm font-medium text-neutral-800">{{ group.group_name }}</span>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 text-neutral-700">
                                     {{ group.teacher.full_name }}
@@ -162,45 +163,48 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block modals %}
 <!-- Modal: Nuevo Profesor -->
-<div id="modal-teacher" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+<div id="modal-teacher" style="display:none; position:fixed; inset:0; background-color:rgba(0,0,0,0.5); z-index:50; align-items:center; justify-content:center;">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
-        <div class="px-6 py-4 bg-blue-500 text-white flex justify-between items-center">
-            <h3 class="text-lg font-semibold">Nuevo Profesor</h3>
-            <button type="button" onclick="closeModal('modal-teacher')" class="hover:bg-blue-600 p-1 rounded transition-colors">
-                <span class="material-symbols-outlined">close</span>
+        <div class="px-6 py-4 flex justify-between items-center" style="background-color:#fff; border-bottom:1px solid #f3f4f6;">
+            <h3 class="text-lg font-semibold" style="color:#ec4899;">Nuevo Profesor</h3>
+            <button type="button" onclick="closeModal('modal-teacher')" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;" onmouseover="this.style.backgroundColor='#fdf2f8'" onmouseout="this.style.backgroundColor='transparent'">
+                <span class="material-symbols-outlined text-xl">close</span>
             </button>
         </div>
-        <form id="form-teacher" class="p-6 space-y-4">
+        <form id="form-teacher" class="p-6 space-y-5">
             <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Nombre *</label>
-                <input type="text" name="first_name" required 
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Nombre *</label>
+                <input type="text" name="first_name" required
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
             </div>
             <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Apellidos *</label>
-                <input type="text" name="last_name" required 
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Apellidos *</label>
+                <input type="text" name="last_name" required
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
             </div>
             <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Email *</label>
-                <input type="email" name="email" required 
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Email *</label>
+                <input type="email" name="email" required
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
             </div>
             <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Teléfono</label>
-                <input type="tel" name="phone" 
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Teléfono</label>
+                <input type="tel" name="phone"
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
             </div>
             <div class="flex items-center gap-2">
-                <input type="checkbox" name="admin" id="teacher-admin" class="rounded border-neutral-300 text-blue-500 focus:ring-blue-500">
+                <input type="checkbox" name="admin" id="teacher-admin" class="rounded border-neutral-300 text-pink-400 focus:ring-pink-400">
                 <label for="teacher-admin" class="text-sm text-neutral-700">Administrador</label>
             </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="closeModal('modal-teacher')" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-md hover:bg-neutral-300 transition-colors">
+            <div class="flex justify-between items-center" style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid #f3f4f6;">
+                <button type="button" onclick="closeModal('modal-teacher')" class="transition-colors" style="background-color:#fce7f3; color:#831843; font-weight:700; padding:0.6rem 1.75rem; border-radius:0.625rem;">
                     Cancelar
                 </button>
-                <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2">
+                <button type="submit" class="transition-colors flex items-center gap-2" style="background-color:#fbcfe8; color:#831843; font-weight:700; padding:0.5rem 1.5rem; border-radius:0.375rem;">
                     <span class="material-symbols-outlined text-sm">save</span>
                     Crear Profesor
                 </button>
@@ -210,36 +214,44 @@
 </div>
 
 <!-- Modal: Nuevo Grupo -->
-<div id="modal-group" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+<div id="modal-group" style="display:none; position:fixed; inset:0; background-color:rgba(0,0,0,0.5); z-index:50; align-items:center; justify-content:center;">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
-        <div class="px-6 py-4 bg-green-500 text-white flex justify-between items-center">
-            <h3 class="text-lg font-semibold">Nuevo Grupo</h3>
-            <button type="button" onclick="closeModal('modal-group')" class="hover:bg-green-600 p-1 rounded transition-colors">
-                <span class="material-symbols-outlined">close</span>
+        <div class="px-6 py-4 flex justify-between items-center" style="background-color:#fff; border-bottom:1px solid #f3f4f6;">
+            <h3 class="text-lg font-semibold" style="color:#ec4899;">Nuevo Grupo</h3>
+            <button type="button" onclick="closeModal('modal-group')" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;" onmouseover="this.style.backgroundColor='#fdf2f8'" onmouseout="this.style.backgroundColor='transparent'">
+                <span class="material-symbols-outlined text-xl">close</span>
             </button>
         </div>
-        <form id="form-group" class="p-6 space-y-4">
+        <form id="form-group" class="p-6 space-y-5">
             <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Nombre del Grupo *</label>
-                <input type="text" name="group_name" required 
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                       placeholder="Ej: Group 1, Adults, etc.">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Nombre del Grupo *</label>
+                <input type="text" name="group_name" required
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400"
+                       placeholder="Ej: A, B, C, ...">
             </div>
             <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Profesora *</label>
-                <select name="teacher_id" id="select-teacher" required 
-                        class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Color del grupo</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" name="color" id="group-color" value="#6366f1"
+                           class="w-10 h-10 rounded cursor-pointer border border-neutral-300 p-0.5">
+                    <span class="text-sm text-neutral-500">Color para identificar el grupo en el horario</span>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Profesora *</label>
+                <select name="teacher_id" id="select-teacher" required
+                        class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
                     <option value="">Seleccionar profesor...</option>
                     {% for teacher in teachers %}
                     <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="closeModal('modal-group')" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-md hover:bg-neutral-300 transition-colors">
+            <div class="flex justify-between items-center" style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid #f3f4f6;">
+                <button type="button" onclick="closeModal('modal-group')" class="transition-colors" style="background-color:#fce7f3; color:#831843; font-weight:700; padding:0.6rem 1.75rem; border-radius:0.625rem;">
                     Cancelar
                 </button>
-                <button type="submit" class="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center gap-2">
+                <button type="submit" class="transition-colors flex items-center gap-2" style="background-color:#fbcfe8; color:#831843; font-weight:700; padding:0.5rem 1.5rem; border-radius:0.375rem;">
                     <span class="material-symbols-outlined text-sm">save</span>
                     Crear Grupo
                 </button>
@@ -255,7 +267,6 @@
         <span id="toast-message"></span>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -275,12 +286,12 @@
     
     // Mostrar/ocultar modal
     function openModal(modalId) {
-        document.getElementById(modalId).classList.remove('hidden');
+        document.getElementById(modalId).style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
-    
+
     function closeModal(modalId) {
-        document.getElementById(modalId).classList.add('hidden');
+        document.getElementById(modalId).style.display = 'none';
         document.body.style.overflow = '';
     }
     
@@ -463,6 +474,7 @@
         const formData = new FormData(this);
         const data = {
             group_name: formData.get('group_name'),
+            color: formData.get('color') || '#6366f1',
             teacher_id: parseInt(formData.get('teacher_id'))
         };
         
@@ -503,8 +515,8 @@
     // Cerrar modales con Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            document.querySelectorAll('[id^="modal-"]:not(.hidden)').forEach(modal => {
-                closeModal(modal.id);
+            document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+                if (modal.style.display !== 'none') closeModal(modal.id);
             });
         }
     });

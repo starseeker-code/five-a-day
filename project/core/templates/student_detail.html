@@ -59,7 +59,7 @@
                 <div><span class="font-medium text-neutral-600">Fecha nacimiento:</span> {{ student.birth_date|date:"d/m/Y" }}</div>
                 <div><span class="font-medium text-neutral-600">Edad:</span> {{ student.age }} años</div>
                 <div><span class="font-medium text-neutral-600">Colegio:</span> {{ student.school|default:"—" }}</div>
-                <div><span class="font-medium text-neutral-600">Grupo:</span> {% if student.group %}{{ student.group.group_name }}{% else %}—{% endif %}</div>
+                <div class="flex items-center gap-1"><span class="font-medium text-neutral-600">Grupo:</span> {% if student.group %}<span class="w-2.5 h-2.5 rounded-full inline-block ml-1" style="background-color: {{ student.group.color }};"></span> {{ student.group.group_name }}{% else %}—{% endif %}</div>
                 <div><span class="font-medium text-neutral-600">Alergias:</span> {{ student.allergies|default:"—" }}</div>
                 <div><span class="font-medium text-neutral-600">Creado:</span> {{ student.created_at|date:"d/m/Y H:i" }}</div>
                 <div><span class="font-medium text-neutral-600">Actualizado:</span> {{ student.updated_at|date:"d/m/Y H:i" }}</div>
