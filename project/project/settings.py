@@ -4,7 +4,7 @@ import os
 import dj_database_url
 from urllib.parse import urlparse
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env', override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

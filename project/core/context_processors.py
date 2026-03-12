@@ -1,4 +1,5 @@
 from datetime import date
+from django.conf import settings
 from .models import TodoItem
 from .views import SCHEDULED_APPS
 
@@ -28,4 +29,5 @@ def today_notifications(request):
         "notifications_today_todos": todos,
         "notifications_today_apps": apps_today,
         "notifications_count": notifications_count,
+        "support_email": getattr(settings, "SUPPORT_EMAIL", ""),
     }

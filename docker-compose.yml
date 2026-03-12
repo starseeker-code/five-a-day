@@ -85,6 +85,7 @@ services:
       # Email Configuration
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_SECRET: ${EMAIL_SECRET:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
       
       # Authentication (temporal)
       LOGIN_USERNAME: ${LOGIN_USERNAME:-admin}

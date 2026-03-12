@@ -24,11 +24,18 @@
         <div>
             <p class="text-neutral-600">Esperado: <span class="font-semibold">€{{ expected_payments_total|floatformat:0 }}</span> &middot; Cobrado: <span class="font-semibold text-green-600">€{{ completed_payments_total|floatformat:0 }}</span> &middot; Total: {{ payments.paginator.count }} pagos</p>
         </div>
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">filter_list</span>
+        <div class="flex gap-2 items-center">
+            <input
+                id="paymentSearchInput"
+                type="text"
+                placeholder="Buscar por nombre..."
+                class="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-48"
+                style="display: none;"
+            >
+            <button id="paymentSortBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Ordenar: Fecha ↑">
+                <span class="material-symbols-outlined text-sm" id="paymentSortIcon">sort</span>
             </button>
-            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+            <button id="paymentSearchBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Buscar">
                 <span class="material-symbols-outlined text-sm">search</span>
             </button>
         </div>
@@ -52,9 +59,9 @@
                     <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-100">
+            <tbody id="paymentsTableBody" class="divide-y divide-neutral-100">
                 {% for payment in payments %}
-                <tr class="hover:bg-neutral-50 transition-all duration-200">
+                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ payment.student.full_name }}" data-date="{{ payment.due_date|date:'Y-m-d' }}">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -641,5 +648,59 @@
 
     // Set today as default due date
     document.getElementById('due_date').value = getTodayDisplayDate();
+
+    // ==================== SEARCH & SORT ====================
+    const paymentSearchBtn = document.getElementById('paymentSearchBtn');
+    const paymentSearchInput = document.getElementById('paymentSearchInput');
+    const paymentSortBtn = document.getElementById('paymentSortBtn');
+    const paymentSortIcon = document.getElementById('paymentSortIcon');
+    const paymentsTableBody = document.getElementById('paymentsTableBody');
+
+    paymentSearchBtn.addEventListener('click', () => {
+        const visible = paymentSearchInput.style.display !== 'none';
+        if (visible) {
+            paymentSearchInput.style.display = 'none';
+            paymentSearchInput.value = '';
+            filterPayments('');
+        } else {
+            paymentSearchInput.style.display = 'block';
+            paymentSearchInput.focus();
+        }
+    });
+
+    paymentSearchInput.addEventListener('input', () => filterPayments(paymentSearchInput.value));
+
+    function filterPayments(query) {
+        const q = query.toLowerCase().trim();
+        paymentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            row.style.display = (q === '' || row.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+        });
+    }
+
+    let paymentSortState = 0;
+    const paymentSortCfg = [
+        { field: 'date', dir: 'asc',  icon: 'calendar_month', title: 'Fecha ↑' },
+        { field: 'date', dir: 'desc', icon: 'calendar_month', title: 'Fecha ↓' },
+        { field: 'name', dir: 'asc',  icon: 'sort_by_alpha',  title: 'Nombre A→Z' },
+        { field: 'name', dir: 'desc', icon: 'sort_by_alpha',  title: 'Nombre Z→A' },
+    ];
+
+    paymentSortBtn.addEventListener('click', () => {
+        paymentSortState = (paymentSortState + 1) % 4;
+        const cfg = paymentSortCfg[paymentSortState];
+        paymentSortIcon.textContent = cfg.icon;
+        paymentSortBtn.title = cfg.title;
+        const rows = Array.from(paymentsTableBody.querySelectorAll('tr[data-name]'));
+        rows.sort((a, b) => {
+            if (cfg.field === 'name') {
+                const na = a.dataset.name.toLowerCase(), nb = b.dataset.name.toLowerCase();
+                return cfg.dir === 'asc' ? na.localeCompare(nb) : nb.localeCompare(na);
+            }
+            return cfg.dir === 'asc'
+                ? a.dataset.date.localeCompare(b.dataset.date)
+                : b.dataset.date.localeCompare(a.dataset.date);
+        });
+        rows.forEach(row => paymentsTableBody.appendChild(row));
+    });
 </script>
 {% endblock %}

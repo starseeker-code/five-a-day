@@ -24,11 +24,18 @@
         <div>
             <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos</p>
         </div>
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">filter_list</span>
+        <div class="flex gap-2 items-center">
+            <input
+                id="studentSearchInput"
+                type="text"
+                placeholder="Buscar por nombre..."
+                class="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-48"
+                style="display: none;"
+            >
+            <button id="studentSortBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Ordenar: ID ↑">
+                <span class="material-symbols-outlined text-sm" id="studentSortIcon">sort</span>
             </button>
-            <button class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+            <button id="studentSearchBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Buscar">
                 <span class="material-symbols-outlined text-sm">search</span>
             </button>
         </div>
@@ -51,9 +58,9 @@
                     <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-100">
+            <tbody id="studentsTableBody" class="divide-y divide-neutral-100">
                 {% for student in students %}
-                <tr class="hover:bg-neutral-50 transition-all duration-200">
+                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ student.full_name }}" data-date="{{ student.id }}">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -315,6 +322,62 @@
                 alert('Error al cargar los datos del estudiante');
             });
     }
+
+    // ==================== SEARCH & SORT ====================
+    const studentSearchBtn = document.getElementById('studentSearchBtn');
+    const studentSearchInput = document.getElementById('studentSearchInput');
+    const studentSortBtn = document.getElementById('studentSortBtn');
+    const studentSortIcon = document.getElementById('studentSortIcon');
+    const studentsTableBody = document.getElementById('studentsTableBody');
+
+    // Search toggle
+    studentSearchBtn.addEventListener('click', () => {
+        const visible = studentSearchInput.style.display !== 'none';
+        if (visible) {
+            studentSearchInput.style.display = 'none';
+            studentSearchInput.value = '';
+            filterStudents('');
+        } else {
+            studentSearchInput.style.display = 'block';
+            studentSearchInput.focus();
+        }
+    });
+
+    studentSearchInput.addEventListener('input', () => filterStudents(studentSearchInput.value));
+
+    function filterStudents(query) {
+        const q = query.toLowerCase().trim();
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            row.style.display = (q === '' || row.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+        });
+    }
+
+    // Sort — cycles: date ↑ → date ↓ → name A→Z → name Z→A → repeat
+    let studentSortState = 0;
+    const studentSortCfg = [
+        { field: 'date', dir: 'asc',  icon: 'calendar_month', title: 'Fecha ↑' },
+        { field: 'date', dir: 'desc', icon: 'calendar_month', title: 'Fecha ↓' },
+        { field: 'name', dir: 'asc',  icon: 'sort_by_alpha',  title: 'Nombre A→Z' },
+        { field: 'name', dir: 'desc', icon: 'sort_by_alpha',  title: 'Nombre Z→A' },
+    ];
+
+    studentSortBtn.addEventListener('click', () => {
+        studentSortState = (studentSortState + 1) % 4;
+        const cfg = studentSortCfg[studentSortState];
+        studentSortIcon.textContent = cfg.icon;
+        studentSortBtn.title = cfg.title;
+        const rows = Array.from(studentsTableBody.querySelectorAll('tr[data-name]'));
+        rows.sort((a, b) => {
+            if (cfg.field === 'name') {
+                const na = a.dataset.name.toLowerCase(), nb = b.dataset.name.toLowerCase();
+                return cfg.dir === 'asc' ? na.localeCompare(nb) : nb.localeCompare(na);
+            } else {
+                const da = parseInt(a.dataset.date), db = parseInt(b.dataset.date);
+                return cfg.dir === 'asc' ? da - db : db - da;
+            }
+        });
+        rows.forEach(row => studentsTableBody.appendChild(row));
+    });
 
     // Form validation
     form.addEventListener('submit', (e) => {

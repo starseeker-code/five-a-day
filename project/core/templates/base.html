@@ -181,6 +181,12 @@
             <!-- Step 1: Categoría -->
             <div id="support-step-category" class="p-6" style="display: block;">
                 <p class="text-neutral-600 text-sm mb-4 text-center">Selecciona el tipo de incidencia:</p>
+                {% if support_email %}
+                <p class="text-neutral-400 text-xs mb-4 text-center">
+                    <span class="material-symbols-outlined text-xs align-middle">mail</span>
+                    <a href="mailto:{{ support_email }}" class="hover:underline">{{ support_email }}</a>
+                </p>
+                {% endif %}
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Interfaz -->
                     <button type="button" class="support-category-btn group p-4 rounded-xl bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="interfaz">
