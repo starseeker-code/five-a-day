@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% load static %}
+
+{% block content %}
+
+<p>Buenos días,</p>
+<br>
+<p>Adjuntamos el certificado para la declaración de la renta del año {{ year }}. Compruebe que esté correcto, por favor.</p>
+<br>
+<p>Kind regards,</p>
+
+{% endblock %}

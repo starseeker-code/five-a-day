@@ -2,178 +2,297 @@
 
 {% block title %}Five a Day - Base de Datos{% endblock %}
 
+{% block page_title %}Base de Datos{% endblock %}
+{% block page_subtitle %}Vista consolidada de estudiantes y pagos{% endblock %}
+
+{% block header_actions %}
+<a href="/admin/" target="_blank" rel="noopener noreferrer" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+  <span class="material-symbols-outlined text-[20px]">database</span> Admin Django
+</a>
+{% endblock %}
+
 {% block content %}
+<div class="mb-8">
+    <div class="flex items-center gap-3 mb-2">
+        <span class="material-symbols-outlined text-primary-600 text-5xl">analytics</span>
+        <h1 class="text-3xl font-bold tracking-tight text-neutral-800">Base de Datos</h1>
+    </div>
+    <p class="text-neutral-600">Vista completa de todos los estudiantes y pagos registrados en el sistema. Para gestión avanzada, accede al panel de administración de Django.</p>
+</div>
+<div class="space-y-8 max-w-[1600px] mx-auto">
+  <div>
+    <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Estudiantes</h3>
+        <p class="text-neutral-600">Total: {{ students|length }} estudiantes registrados</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <label for="students-sort" class="text-sm font-medium text-neutral-600">Ordenar por:</label>
+        <select id="students-sort" class="px-3 py-2 border border-neutral-300 rounded-md text-sm text-neutral-700 bg-white">
+          <option value="date_desc" selected>Fecha (más reciente)</option>
+          <option value="id_asc">ID</option>
+          <option value="first_name_asc">Nombre</option>
+          <option value="last_name_asc">Apellido</option>
+        </select>
+        <a href="{% url 'export_database_excel' %}" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" style="text-decoration:none;">
+            <span class="material-symbols-outlined text-sm">download</span>
+        </a>
+      </div>
+    </div>
 
-<div id="panel-container" class="px-4 py-6">
-  <div class="grid gap-6">
-    <div class="database p-6 bg-white rounded-lg shadow-lg">
-      <h2 class="text-2xl font-semibold mb-4">Estudiantes</h2>
-      <div class="overflow-auto">
-        <table class="panel-table w-full" cellpadding="5" cellspacing="0">
-          <thead>
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="overflow-x-scroll pb-4 mb-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="w-full min-w-[2400px] whitespace-nowrap mx-auto" style="min-width: 2400px; white-space: nowrap;">
+          <thead class="bg-primary-50 border-b border-primary-200">
             <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Fecha de nacimiento</th>
-              <th>Edad</th>
-              <th>Colegio</th>
-              <th>Alergias</th>
-              <th>GDPR</th>
-              <th>Grupo</th>
-              <th>Matricula</th>
-              <th>Profesora</th>
-              <th>Movil</th>
-              <th>Email</th>
-              <th>IBAN</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">ID</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Nombre</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Apellido</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha de nacimiento</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Colegio</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Alergias</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Profesora</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Móvil</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">IBAN</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="students-tbody" class="divide-y divide-neutral-100">
             {% for student in students %}
-              <tr>
-                <td>{{ student.id }}</td>
-                <td>{{ student.first_name }}</td>
-                <td>{{ student.last_name }}</td>
-                <td>{{ student.birth_date }}</td>
-                <td>{{ student.age }}</td>
-                <td>{{ student.school }}</td>
-                <td>{{ student.allergies }}</td>
-                <td>{{ student.gdpr_signed }}</td>
-                <td>
-                  {% if student.group %}
-                    {{ student.group.group_name }}
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
-                <td>
-                  {% for enrollment in student.enrollments.all %}
-                    {{ enrollment.get_schedule_type_display }}<br>
-                  {% empty %}
-                    No hay matriculas!
-                  {% endfor %}
-                </td>
-                <td>
-                  {% if student.group and student.group.teacher %}
-                    {{ student.group.teacher.first_name }} {{ student.group.teacher.last_name }}
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
-                <td>
-                  {% if student.parents.all %}
-                    {% for parent in student.parents.all %}
-                      {{ parent.phone }}<br>
-                    {% empty %}
-                      Ningun padre relacionado!
-                    {% endfor %}
-                  {% else %}
-                    No hay padres!
-                  {% endif %}
-                </td>
-                <td>
-                  {% if student.parents.all %}
-                    {% for parent in student.parents.all %}
-                      {{ parent.email }}<br>
-                    {% empty %}
-                      No hay padres relacionados!
-                    {% endfor %}
-                  {% else %}
-                    No hay padres!
-                  {% endif %}
-                </td>
-                <td>
-                  {% if student.parents.all %}
-                    {% for parent in student.parents.all %}
-                      {{ parent.iban }}<br>
-                    {% empty %}
-                      No hay padres relacionados!
-                    {% endfor %}
-                  {% else %}
-                    No hay padres!
-                  {% endif %}
-                </td>
-              </tr>
+            <tr class="hover:bg-neutral-50 transition-all duration-200"
+                data-id="{{ student.id }}"
+                data-first-name="{{ student.first_name|lower }}"
+                data-last-name="{{ student.last_name|lower }}"
+                data-date="{{ student.created_at|date:'c' }}">
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.id }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-medium">{{ student.first_name }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-medium">{{ student.last_name }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.birth_date|date:"d/m/Y" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.age }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.school|default:"—" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ student.allergies|default:"—" }}</td>
+              <td class="px-4 py-4">
+                {% if student.gdpr_signed %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Firmado</span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">Pendiente</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if student.group %}
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ student.group.color }};"></span>
+                    <span class="text-sm text-neutral-800">{{ student.group.group_name }}</span>
+                  </div>
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for enrollment in student.enrollments.all %}
+                  <div>{{ enrollment.enrollment_type.display_name }} ({{ enrollment.get_schedule_type_display }})</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay matrículas</span>
+                {% endfor %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if student.group and student.group.teacher %}
+                  {{ student.group.teacher.first_name }} {{ student.group.teacher.last_name }}
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for parent in student.parents.all %}
+                  <div>{{ parent.phone }}</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay padres</span>
+                {% endfor %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for parent in student.parents.all %}
+                  <div>{{ parent.email }}</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay padres</span>
+                {% endfor %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% for parent in student.parents.all %}
+                  <div>{{ parent.iban|default:"—" }}</div>
+                {% empty %}
+                  <span class="text-neutral-400">No hay padres</span>
+                {% endfor %}
+              </td>
+            </tr>
             {% empty %}
-              <tr>
-                <td colspan="14">No hay estudiantes todavia! D:</td>
-              </tr>
+            <tr>
+              <td colspan="14" class="px-6 py-8 text-center">
+                <div class="flex flex-col items-center">
+                  <span class="material-symbols-outlined text-6xl text-neutral-300 mb-4">school</span>
+                  <h4 class="text-xl font-semibold text-neutral-600 mb-2">No hay estudiantes</h4>
+                  <p class="text-neutral-500">Todavía no hay registros de estudiantes.</p>
+                </div>
+              </td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
+  </div>
 
-    <div class="database p-6 bg-white rounded-lg shadow-lg">
-      <h2 class="text-2xl font-semibold mb-4">Pagos</h2>
-      <div class="overflow-auto">
-        <table class="panel-table w-full" cellpadding="5" cellspacing="0">
-          <thead>
+  <div>
+    <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Pagos</h3>
+        <p class="text-neutral-600">Total: {{ payments|length }} pagos registrados</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <label for="payments-sort" class="text-sm font-medium text-neutral-600">Ordenar por:</label>
+        <select id="payments-sort" class="px-3 py-2 border border-neutral-300 rounded-md text-sm text-neutral-700 bg-white">
+          <option value="date_desc" selected>Fecha (más reciente)</option>
+          <option value="student_asc">Estudiante (A-Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="overflow-x-scroll pb-4 mb-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="w-full min-w-[2400px] whitespace-nowrap mx-auto" style="min-width: 2400px; white-space: nowrap;">
+          <thead class="bg-primary-50 border-b border-primary-200">
             <tr>
-              <th>ID</th>
-              <th>Estudiante</th>
-              <th>Telefono</th>
-              <th>Matricula</th>
-              <th>Tipo de pago</th>
-              <th>Metodo de pago</th>
-              <th>Cantidad</th>
-              <th>Status</th>
-              <th>Fecha vencimiento</th>
-              <th>Fecha pago</th>
-              <th>Concepto</th>
-              <th>Numero referencia</th>
-              <th>Notas</th>
-              <th>Creado</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">ID</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Teléfono</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Tipo de pago</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Método de pago</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Cantidad</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha vencimiento</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha pago</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Concepto</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Número referencia</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Notas</th>
+              <th class="px-4 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Creado</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="payments-tbody" class="divide-y divide-neutral-100">
             {% for payment in payments %}
-              <tr>
-                <td>{{ payment.id }}</td>
-                <td>
-                  {% if payment.student %}
-                    {{ payment.student.first_name }} {{ payment.student.last_name }}
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
-                <td>
-                  {% if payment.parent %}
-                    {{ payment.parent.phone }}
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
-                <td>
-                  {% if payment.enrollment %}
-                    {{ payment.enrollment.enrollment_type.display_name }}<br>
-                    ({{ payment.enrollment.get_schedule_type_display }})
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
-                <td>{{ payment.get_payment_type_display }}</td>
-                <td>{{ payment.get_payment_method_display }}</td>
-                <td>{{ payment.amount }}</td>
-                <td>{{ payment.get_payment_status_display }}</td>
-                <td>{{ payment.due_date }}</td>
-                <td>{{ payment.payment_date }}</td>
-                <td>{{ payment.concept }}</td>
-                <td>{{ payment.reference_number }}</td>
-                <td>{{ payment.observations }}</td>
-                <td>{{ payment.created_at }}</td>
-              </tr>
+            <tr class="hover:bg-neutral-50 transition-all duration-200"
+                data-student="{% if payment.student %}{{ payment.student.first_name|lower }} {{ payment.student.last_name|lower }}{% endif %}"
+                data-date="{{ payment.created_at|date:'c' }}">
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.id }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-medium">
+                {% if payment.student %}
+                  {{ payment.student.first_name }} {{ payment.student.last_name }}
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if payment.parent %}
+                  {{ payment.parent.phone }}
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">
+                {% if payment.enrollment %}
+                  {{ payment.enrollment.enrollment_type.display_name }} ({{ payment.enrollment.get_schedule_type_display }})
+                {% else %}
+                  <span class="text-neutral-400">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.get_payment_type_display }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.get_payment_method_display }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-semibold">€{{ payment.amount }}</td>
+              <td class="px-4 py-4">
+                {% if payment.payment_status == 'completed' %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">Completado</span>
+                {% elif payment.payment_status == 'pending' %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">Pendiente</span>
+                {% elif payment.payment_status == 'failed' %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">Fallido</span>
+                {% elif payment.payment_status == 'cancelled' %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-neutral-100 text-neutral-800">Cancelado</span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ payment.get_payment_status_display }}</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.due_date|date:"d/m/Y" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{% if payment.payment_date %}{{ payment.payment_date|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.concept }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.reference_number|default:"—" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.observations|default:"—" }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+            </tr>
             {% empty %}
-              <tr>
-                <td colspan="14">No hay pagos todavia!</td>
-              </tr>
+            <tr>
+              <td colspan="14" class="px-6 py-8 text-center">
+                <div class="flex flex-col items-center">
+                  <span class="material-symbols-outlined text-6xl text-neutral-300 mb-4">payment</span>
+                  <h4 class="text-xl font-semibold text-neutral-600 mb-2">No hay pagos</h4>
+                  <p class="text-neutral-500">Todavía no hay registros de pagos.</p>
+                </div>
+              </td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
-
   </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+  function sortRows(tbodyId, comparator) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const sortableRows = rows.filter(row => row.dataset && row.dataset.date);
+    sortableRows.sort(comparator);
+    sortableRows.forEach(row => tbody.appendChild(row));
+  }
+
+  function parseDate(value) {
+    const parsed = Date.parse(value || '');
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  function applyStudentsSort(mode) {
+    sortRows('students-tbody', (a, b) => {
+      if (mode === 'id_asc') return Number(a.dataset.id || 0) - Number(b.dataset.id || 0);
+      if (mode === 'first_name_asc') return (a.dataset.firstName || '').localeCompare(b.dataset.firstName || '');
+      if (mode === 'last_name_asc') return (a.dataset.lastName || '').localeCompare(b.dataset.lastName || '');
+      return parseDate(b.dataset.date) - parseDate(a.dataset.date);
+    });
+  }
+
+  function applyPaymentsSort(mode) {
+    sortRows('payments-tbody', (a, b) => {
+      if (mode === 'student_asc') return (a.dataset.student || '').localeCompare(b.dataset.student || '');
+      return parseDate(b.dataset.date) - parseDate(a.dataset.date);
+    });
+  }
+
+  const studentsSort = document.getElementById('students-sort');
+  const paymentsSort = document.getElementById('payments-sort');
+
+  if (studentsSort) {
+    studentsSort.addEventListener('change', (event) => applyStudentsSort(event.target.value));
+    applyStudentsSort(studentsSort.value);
+  }
+
+  if (paymentsSort) {
+    paymentsSort.addEventListener('change', (event) => applyPaymentsSort(event.target.value));
+    applyPaymentsSort(paymentsSort.value);
+  }
+</script>
 {% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% load static %}
+
+{% block content %}
+
+<p>Buenos días,</p>
+<br>
+<p>Adjuntamos el recibo correspondiente a la mensualidad de {{ month }}. Compruebe que esté correcto, por favor.</p>
+<br>
+<p>Kind regards,</p>
+
+{% endblock %}

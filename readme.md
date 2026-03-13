@@ -1,9 +1,9 @@
-
+```rust
 # 📚 Five a Day eVolution - Sistema de Gestión Académica
 
-[![Versión](https://img.shields.io/badge/versión-v0.1-brightgreen?style=for-the-badge)](#)
-[![Última actualización](https://img.shields.io/badge/última%20actualización-2025--08--09-blue?style=for-the-badge)](#)
-[![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange?style=for-the-badge)](#)
+[![Versión](https://img.shields.io/badge/versión-v0.17.3-brightgreen?style=for-the-badge)](#)
+[![Última actualización](https://img.shields.io/badge/última%20actualización-2025--01--09-blue?style=for-the-badge)](#)
+[![Estado](https://img.shields.io/badge/estado-pre--producción-yellow?style=for-the-badge)](#)
 
 ![Logo](https://github.com/starseeker-code/five-a-day/blob/main/docs/resources/logo.png)
 
@@ -37,7 +37,7 @@ Documentacion: [Github - readme.md](https://github.com/starseeker-code/five-a-da
 
 Estado: 🟢
 
-Version actual: **v0.2**
+Version actual: **v0.30.2**
 
 | Última mejora | Fecha último commit | Próxima feature planificada |
 |:-----------------:|:-------------------:|:---------------------------:|
@@ -53,7 +53,7 @@ Version actual: **v0.2**
 - [X] Configuración inicial del proyecto (Poetry + Django + Git)
 - [X] Modelos principales en Django
 - [x] Django Admin personalizado
-- [ ] Lógica contable básica (tracking de pagos, informes)
+- [x] Lógica contable básica (tracking de pagos, informes)
 - [x] Vistas básicas y templates mínimos
 - [ ] Scripts de migración de datos a csv/excel
 - [x] Testing manual y ajustes
@@ -63,25 +63,25 @@ Version actual: **v0.2**
 <details>
 <summary>🔷 Versión Beta (5-6 semanas | 100-120h)</summary>
 
-- [ ] Dockerización + PostgreSQL
-- [ ] Mejora del frontend (templates y UX)
+- [x] Dockerización + PostgreSQL
+- [x] Mejora del frontend (templates y UX)
 - [ ] Integración con Google Sheets
 - [ ] Integración básica con Gmail
-- [ ] Primera automatización (recordatorio de pago)
-- [ ] Despliegue inicial en servidor
+- [x] Primera automatización (recordatorio de pago)
+- [x] Despliegue inicial en servidor
 
 </details>
 
 <details>
 <summary>🟢 Versión 1.0 (6-7 semanas | 120-140h)</summary>
 
-- [ ] Frontend definitivo (dashboard mejorado, formularios AJAX)
+- [x] Frontend definitivo (dashboard mejorado con feedback)
 - [ ] Exportación automática a Google Sheets
 - [ ] Gestión de documentos PDF (facturas, certificados)
-- [ ] Sistema de notificaciones mejorado
-- [ ] Optimización de queries y rendimiento
+- [x] Sistema de notificaciones mejorado
+- [x] Optimización de queries y rendimiento
 - [ ] Documentación y manual de usuario
-- [ ] Correcciones post-lanzamiento
+- [x] Correcciones post-lanzamiento
 
 </details>
 
@@ -188,6 +188,7 @@ Version actual: **v0.2**
 <details>
 <summary>Esquema ER</summary>
 
+```
 ```mermaid
 erDiagram
     %% CORE ENTITIES
@@ -520,7 +521,7 @@ EMAIL_USE_TLS=True
 EMAIL_HOST_USER=tu-email@gmail.com
 EMAIL_HOST_PASSWORD=tu_app_password
 ```
-
+```rust
 </details>
 
 
@@ -555,14 +556,6 @@ Google Sheets API: Exportación y sincronización de datos.
 Gmail API: Envío de correos electrónicos personalizados.
 Twilio: Envío de notificaciones SMS.
 Stripe: Pagos online y conciliación automática.
-
-## 🚀 Despliegue en Producción
-
-Configurar servidor con Nginx + Gunicorn.
-Instalar Docker y docker-compose.
-Configurar backups automáticos de base de datos.
-Configurar SSL/HTTPS.
-Activar tareas programadas con Celery Beat.
 
 ## Futuras mejoras
 
@@ -602,3 +595,5 @@ WIP
 <!-- /AUTO-SECTION:DEPENDENCIAS -->
 
 
+
+```

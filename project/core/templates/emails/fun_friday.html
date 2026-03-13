@@ -1,0 +1,32 @@
+{% extends 'emails/base_email.html' %}
+{% load static %}
+
+{% block content %}
+
+<p>Dear families,</p>
+<br>
+<p>El día {{ day_name }} {{ day_number }} de {{ month }} de <span style="color: red;">{{ start_time }} a {{ end_time }}</span> en el centro Five a Day tenemos nuestra actividad Fun Fridays.</p>
+<br>
+{% if activity_description %}
+{{ activity_description|safe }}
+<br>
+{% endif %}
+{% if meeting_point %}
+<p><span style="color: red;">{{ meeting_point }}</span></p>
+<br>
+{% endif %}
+<p>Pueden venir todos aquellos niños y niñas que lo deseen que pertenezcan al centro en edades comprendidas entre los {{ minimum_age }} y los {{ maximum_age }} años.</p>
+<br>
+<p>Es necesario apuntarse en el centro o a través de este mail dando el nombre. (Plazas limitadas).</p>
+<p><span style="color: red;">Debido a la alta demanda para participar en los Fun Fridays, los estudiantes que no hayan asistido al Fun Friday anterior tendrán prioridad y así sucesivamente. Gracias por vuestra comprensión y colaboración.</span></p>
+<br>
+{% if event_image %}
+<img src="cid:event_image"
+     alt="Fun Friday"
+     width="320"
+     style="max-width: 100%; height: auto;">
+<br>
+{% endif %}
+<p>Kind regards,</p>
+
+{% endblock %}

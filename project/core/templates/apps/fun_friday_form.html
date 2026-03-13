@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Fun Friday - Enviar Invitación{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-neutral-800">Fun Friday</h1>
+            <p class="text-neutral-700">Enviar invitación a todos los padres</p>
+        </div>
+        <a href="{% url 'apps' %}" class="text-primary-600 hover:text-primary-700" style="text-decoration: none;" title="Volver"><span class="material-symbols-outlined" style="font-size: 2rem; display: block;">arrow_back</span></a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="funFridayForm" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Información del Evento -->
+        <div class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">event</span>
+                Información del Evento
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Fecha -->
+                <div>
+                    <label for="event_date" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Fecha del evento <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" 
+                           id="event_date" 
+                           name="event_date" 
+                           value="{{ next_friday }}"
+                           required
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <p class="text-xs text-neutral-400 mt-1">Auto-calculado al próximo viernes</p>
+                </div>
+                
+                <!-- Hora Inicio -->
+                <div>
+                    <label for="start_time" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Hora de inicio <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time" 
+                           id="start_time" 
+                           name="start_time" 
+                           value="17:00"
+                           required
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                
+                <!-- Hora Fin -->
+                <div>
+                    <label for="end_time" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Hora de fin <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time" 
+                           id="end_time" 
+                           name="end_time" 
+                           value="18:30"
+                           required
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                
+                <!-- Punto de Encuentro -->
+                <div>
+                    <label for="meeting_point" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Punto de encuentro
+                    </label>
+                    <input type="text" 
+                           id="meeting_point" 
+                           name="meeting_point" 
+                           placeholder="Ej: En la puerta principal del centro"
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Edades -->
+        <div class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">child_care</span>
+                Rango de Edades
+            </h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="min_age" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Edad mínima <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" 
+                           id="min_age" 
+                           name="min_age" 
+                           value="5"
+                           min="3"
+                           max="18"
+                           required
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                
+                <div>
+                    <label for="max_age" class="block text-sm font-medium text-neutral-700 mb-1">
+                        Edad máxima <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" 
+                           id="max_age" 
+                           name="max_age" 
+                           value="12"
+                           min="3"
+                           max="18"
+                           required
+                           class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Descripción de la Actividad (HTML) -->
+        <div class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">edit_note</span>
+                Descripción de la Actividad
+            </h2>
+            
+            <div>
+                <label for="activity_description" class="block text-sm font-medium text-neutral-700 mb-1">
+                    Contenido HTML <span class="text-red-500">*</span>
+                </label>
+                <textarea id="activity_description" 
+                          name="activity_description" 
+                          rows="8"
+                          required
+                          placeholder="Escribe o pega el HTML de la descripción de la actividad..."
+                          class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm">{{ default_html }}</textarea>
+                <p class="text-xs text-neutral-400 mt-1">
+                    Puedes usar HTML para dar formato. Ejemplo: &lt;strong&gt;texto&lt;/strong&gt; para negrita.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Email Preview -->
+        {% include 'apps/_email_preview.html' %}
+
+        <!-- Resumen antes de enviar -->
+        <div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
+            <h2 class="text-lg font-semibold text-amber-800 mb-2 flex items-center">
+                <span class="material-symbols-outlined text-amber-600 mr-2">info</span>
+                Antes de enviar
+            </h2>
+            <ul class="text-sm text-amber-700 space-y-1">
+                <li>• Se enviará a <strong>{{ parent_count }}</strong> padre(s) con estudiantes activos</li>
+                <li>• Verifica que las fechas y horas son correctas</li>
+                <li>• El HTML será validado antes de enviar</li>
+                <li>• Este proceso puede tardar unos segundos</li>
+            </ul>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end space-x-4" style="margin-top: 1.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem;">
+            <a href="{% url 'apps' %}"
+               class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium" style="text-decoration: none;">
+                Cancelar
+            </a>
+            <button type="submit"
+                    id="submitBtn"
+                    class="px-6 py-3 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+                <span class="material-symbols-outlined">send</span>
+                Enviar Fun Friday
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const activityDescription = document.getElementById('activity_description');
+    const form = document.getElementById('funFridayForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Validación antes de enviar
+    form.addEventListener('submit', function(e) {
+        const htmlContent = activityDescription.value.trim();
+        
+        // Validación básica de HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const parseErrors = doc.querySelectorAll('parsererror');
+        
+        // Verificar que el HTML no está vacío
+        if (!htmlContent) {
+            e.preventDefault();
+            alert('❌ La descripción de la actividad no puede estar vacía');
+            return;
+        }
+
+        // Verificar rango de edades
+        const minAge = parseInt(document.getElementById('min_age').value);
+        const maxAge = parseInt(document.getElementById('max_age').value);
+        if (minAge > maxAge) {
+            e.preventDefault();
+            alert('❌ La edad mínima no puede ser mayor que la edad máxima');
+            return;
+        }
+
+        // Confirmar envío
+        const parentCount = {{ parent_count }};
+        if (!confirm(`¿Estás seguro de enviar el Fun Friday a ${parentCount} padre(s)?`)) {
+            e.preventDefault();
+            return;
+        }
+
+        // Deshabilitar botón durante envío
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Detalle del Estudiante{% endblock %}
+
+{% block page_title %}Detalle del Estudiante{% endblock %}
+{% block page_subtitle %}Información completa del estudiante{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'students_list' %}" class="header-action-btn bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">arrow_back</span> Volver a Estudiantes
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-neutral-800 mb-2">{{ student.full_name }}</h2>
+                <p class="text-neutral-600">Estudiante ID: #{{ student.id }}</p>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold text-primary-600">{{ student.age }} años</div>
+                <div class="text-sm text-neutral-500">{{ student.birth_date|date:"d/m/Y" }}</div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+            {% if student.active %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    <span class="material-symbols-outlined text-sm mr-2">check_circle</span>Activo
+                </span>
+            {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-800">
+                    <span class="material-symbols-outlined text-sm mr-2">block</span>Inactivo
+                </span>
+            {% endif %}
+
+            {% if student.gdpr_signed %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    <span class="material-symbols-outlined text-sm mr-2">verified_user</span>GDPR firmado
+                </span>
+            {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                    <span class="material-symbols-outlined text-sm mr-2">gpp_bad</span>GDPR pendiente
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined">school</span>Datos del Estudiante
+            </h3>
+            <div class="space-y-3 text-sm">
+                <div><span class="font-medium text-neutral-600">Nombre:</span> {{ student.first_name }}</div>
+                <div><span class="font-medium text-neutral-600">Apellidos:</span> {{ student.last_name }}</div>
+                <div><span class="font-medium text-neutral-600">Fecha nacimiento:</span> {{ student.birth_date|date:"d/m/Y" }}</div>
+                <div><span class="font-medium text-neutral-600">Edad:</span> {{ student.age }} años</div>
+                <div><span class="font-medium text-neutral-600">Colegio:</span> {{ student.school|default:"—" }}</div>
+                <div class="flex items-center gap-1"><span class="font-medium text-neutral-600">Grupo:</span> {% if student.group %}<span class="w-2.5 h-2.5 rounded-full inline-block ml-1" style="background-color: {{ student.group.color }};"></span> {{ student.group.group_name }}{% else %}—{% endif %}</div>
+                <div><span class="font-medium text-neutral-600">Alergias:</span> {{ student.allergies|default:"—" }}</div>
+                <div><span class="font-medium text-neutral-600">Creado:</span> {{ student.created_at|date:"d/m/Y H:i" }}</div>
+                <div><span class="font-medium text-neutral-600">Actualizado:</span> {{ student.updated_at|date:"d/m/Y H:i" }}</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined">family_restroom</span>Padres / Tutores
+            </h3>
+            <div class="space-y-3">
+                {% for parent in parents %}
+                <div class="p-4 border border-neutral-200 rounded-md">
+                    <div class="font-medium text-neutral-800 mb-1">{{ parent.full_name }}</div>
+                    <div class="text-sm text-neutral-600">DNI: {{ parent.dni }}</div>
+                    <div class="text-sm text-neutral-600">Email: {{ parent.email }}</div>
+                    <div class="text-sm text-neutral-600">Teléfono: {{ parent.phone }}</div>
+                    <div class="text-sm text-neutral-600">IBAN: {{ parent.iban|default:"—" }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Actualizado: {{ parent.updated_at|date:"d/m/Y H:i" }}</div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-neutral-500">Sin padres/tutores asociados.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined">assignment</span>Matrículas
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-primary-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Tipo</th>
+                        <th class="px-4 py-3 text-left">Horario</th>
+                        <th class="px-4 py-3 text-left">Curso académico</th>
+                        <th class="px-4 py-3 text-left">Fecha alta</th>
+                        <th class="px-4 py-3 text-left">Importe</th>
+                        <th class="px-4 py-3 text-left">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100">
+                    {% for enrollment in enrollments %}
+                    <tr>
+                        <td class="px-4 py-3">{{ enrollment.enrollment_type.display_name }}</td>
+                        <td class="px-4 py-3">{{ enrollment.get_schedule_type_display }}</td>
+                        <td class="px-4 py-3">{{ enrollment.academic_year }}</td>
+                        <td class="px-4 py-3">{{ enrollment.enrollment_date|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3">€{{ enrollment.final_amount }}</td>
+                        <td class="px-4 py-3">{{ enrollment.get_status_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-4 text-neutral-500">Sin matrículas registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Fun Friday Attendance -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined" style="color:#ec4899;">celebration</span>
+            Fun Friday
+        </h3>
+        <div class="flex flex-wrap gap-6">
+            <!-- Date list -->
+            <div class="flex-1 min-w-0">
+                {% if fun_friday_dates %}
+                <div class="space-y-1" id="ff-date-list">
+                    {% for entry in fun_friday_dates %}
+                    <div class="flex items-center justify-between py-1.5 px-3 rounded-md hover:bg-neutral-50" data-date="{{ entry.date|date:'Y-m-d' }}">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm" style="color:#ec4899;">event</span>
+                            <span class="text-sm text-neutral-700 font-medium">{{ entry.date|date:"d/m/Y" }}</span>
+                            {% with today=entry.date %}
+                            {% endwith %}
+                        </div>
+                        <button onclick="removeFunFriday('{{ entry.date|date:'Y-m-d' }}')"
+                            class="text-neutral-400 hover:text-red-500 transition-colors p-1 rounded">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-neutral-400" id="ff-empty-msg">Sin fechas registradas.</p>
+                {% endif %}
+            </div>
+            <!-- Add date form -->
+            <div class="shrink-0">
+                <p class="text-xs font-medium text-neutral-500 mb-2">Añadir fecha</p>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="ff-new-date"
+                        class="px-3 py-1.5 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-pink-300 focus:border-pink-400">
+                    <button onclick="addFunFriday()"
+                        class="px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
+                        style="background:#fbcfe8;color:#500724;">
+                        Añadir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined">payments</span>Pagos del Estudiante
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-primary-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">ID</th>
+                        <th class="px-4 py-3 text-left">Concepto</th>
+                        <th class="px-4 py-3 text-left">Cantidad</th>
+                        <th class="px-4 py-3 text-left">Método</th>
+                        <th class="px-4 py-3 text-left">Estado</th>
+                        <th class="px-4 py-3 text-left">Vencimiento</th>
+                        <th class="px-4 py-3 text-left">Pago</th>
+                        <th class="px-4 py-3 text-left">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100">
+                    {% for payment in payments %}
+                    <tr>
+                        <td class="px-4 py-3">{{ payment.id }}</td>
+                        <td class="px-4 py-3">{{ payment.concept }}</td>
+                        <td class="px-4 py-3">€{{ payment.amount }}</td>
+                        <td class="px-4 py-3">{{ payment.get_payment_method_display }}</td>
+                        <td class="px-4 py-3">{{ payment.get_payment_status_display }}</td>
+                        <td class="px-4 py-3">{{ payment.due_date|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3">{% if payment.payment_date %}{{ payment.payment_date|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                        <td class="px-4 py-3">
+                            <a href="{% url 'payment_detail_view' payment.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver pago"><span class="material-symbols-outlined text-base">visibility</span></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-4 py-4 text-neutral-500">Sin pagos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const STUDENT_ID = {{ student.id }};
+function getCsrf() {
+    return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+}
+function addFunFriday() {
+    const inp = document.getElementById('ff-new-date');
+    const d = inp.value;
+    if (!d) return;
+    fetch(`/api/students/${STUDENT_ID}/fun-friday/add/`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+        body: JSON.stringify({date: d}),
+    }).then(r=>r.json()).then(data => {
+        if (data.success) { inp.value=''; location.reload(); }
+        else alert(data.error);
+    });
+}
+function removeFunFriday(d) {
+    if (!confirm('¿Eliminar esta fecha?')) return;
+    fetch(`/api/students/${STUDENT_ID}/fun-friday/remove/`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+        body: JSON.stringify({date: d}),
+    }).then(r=>r.json()).then(data => {
+        if (data.success) location.reload();
+        else alert(data.error);
+    });
+}
+</script>
+{% endblock %}

@@ -66,6 +66,7 @@ services:
       DJANGO_ENV: ${DJANGO_ENV:-development}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
       
       # Database
@@ -84,10 +85,19 @@ services:
       # Email Configuration
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_SECRET: ${EMAIL_SECRET:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
+      EMAIL_TEST_1: ${EMAIL_TEST_1:-}
+      EMAIL_TEST_2: ${EMAIL_TEST_2:-}
       
       # Authentication (temporal)
       LOGIN_USERNAME: ${LOGIN_USERNAME:-admin}
       LOGIN_PASSWORD: ${LOGIN_PASSWORD:-admin123}
+
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_ALLOWED_EMAIL: ${GOOGLE_ALLOWED_EMAIL:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
     
     # Volúmenes para desarrollo (hot reload)
     volumes:

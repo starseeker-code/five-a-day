@@ -7,6 +7,171 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from . import constants
 
+
+def current_academic_year(reference_date=None):
+    """Return academic year in YYYY-YYYY format (starts in September)."""
+    reference_date = reference_date or date.today()
+    if reference_date.month >= 9:
+        start_year = reference_date.year
+    else:
+        start_year = reference_date.year - 1
+    return f"{start_year}-{start_year + 1}"
+
+
+# ============================================================================
+# SITE CONFIGURATION - Singleton para configuración del sitio
+# ============================================================================
+
+class SiteConfiguration(models.Model):
+    """
+    Modelo singleton para almacenar configuración editable del sitio.
+    Solo debe existir una instancia de este modelo.
+    """
+    
+    # Matrícula (Enrollment Fees)
+    children_enrollment_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('40.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Matrícula niños'
+    )
+    adult_enrollment_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Matrícula adultos'
+    )
+    
+    # Mensualidades (Monthly Fees)
+    full_time_monthly_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('54.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Mensualidad jornada completa'
+    )
+    part_time_monthly_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('36.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Mensualidad media jornada'
+    )
+    adult_group_monthly_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('60.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Mensualidad grupo adultos'
+    )
+
+    # Descuentos (Discounts)
+    language_cheque_discount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Cheque idioma (€ fijo)'
+    )
+    quarterly_enrollment_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('5.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Matrícula trimestral (%)'
+    )
+    old_student_discount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('10.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Alumno antiguo (€ fijo)'
+    )
+    full_year_bonus = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Año completo (€ fijo, no adultos)'
+    )
+    sibling_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('5.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Hermanos (% mensual)'
+    )
+    half_month_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('50.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Medio mes — septiembre (%)'
+    )
+    one_week_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('75.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Solo 1 semana — primer mes (%)'
+    )
+    three_week_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('25.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Solo 3 semanas (%)'
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'site_configuration'
+        verbose_name = 'Configuración del sitio'
+        verbose_name_plural = 'Configuración del sitio'
+
+    def __str__(self):
+        return 'Configuración del sitio'
+
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)"""
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of the singleton"""
+        pass
+
+    @classmethod
+    def get_config(cls):
+        """
+        Obtiene la configuración del sitio (crea una si no existe).
+        Usa valores por defecto de constants.py si no hay configuración.
+        """
+        try:
+            config = cls.objects.get(pk=1)
+        except cls.DoesNotExist:
+            config = cls.objects.create(
+                pk=1,
+                children_enrollment_fee=constants.CHILDREN_ENROLLMENT_FEE,
+                adult_enrollment_fee=constants.ADULT_ENROLLMENT_FEE,
+                full_time_monthly_fee=constants.FULL_TIME_MONTHLY_FEE,
+                part_time_monthly_fee=constants.PART_TIME_MONTHLY_FEE,
+                adult_group_monthly_fee=constants.ADULT_GROUP_MONTHLY_FEE,
+                language_cheque_discount=constants.LANGUAGE_CHEQUE_DISCOUNT[0],
+                quarterly_enrollment_discount=constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
+                old_student_discount=constants.OLD_STUDENT_DISCOUNT[0],
+                full_year_bonus=constants.FULL_YEAR_BONUS[0],
+                sibling_discount=constants.SIBLING_DISCOUNT[0],
+                half_month_discount=constants.HALF_MONTH_DISCOUNT[0],
+                one_week_discount=constants.ONE_WEEK_DISCOUNT[0],
+                three_week_discount=constants.THREE_WEEK_DISCOUNT[0],
+            )
+        return config
+
+
 class EnrollmentType(models.Model):
     name = models.CharField(
         max_length=20, 
@@ -49,6 +214,7 @@ class Enrollment(models.Model):
     
     enrollment_period_start = models.DateField()
     enrollment_period_end = models.DateField()
+    academic_year = models.CharField(max_length=9, default=current_academic_year)
     schedule_type = models.CharField(
         max_length=20,
         choices=constants.SCHEDULE_TYPE_CHOICES,
@@ -272,8 +438,9 @@ class Teacher(models.Model):
 
 class Group(models.Model):
     group_name = models.CharField(max_length=100, unique=True)
+    color = models.CharField(max_length=7, default='#6366f1')
     teacher = models.ForeignKey(
-        Teacher, 
+        Teacher,
         on_delete=models.PROTECT,
         related_name='groups'
     )
@@ -290,6 +457,25 @@ class Group(models.Model):
 
     def __str__(self):
         return self.group_name
+
+
+class ScheduleSlot(models.Model):
+    """Persists which group is assigned to each schedule slot (row, day, col)."""
+    row = models.IntegerField()   # 0, 1, 2
+    day = models.IntegerField()   # 0=Mon … 4=Fri
+    col = models.IntegerField()   # 0 or 1
+    group = models.ForeignKey(
+        Group, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='schedule_slots'
+    )
+
+    class Meta:
+        unique_together = [('row', 'day', 'col')]
+        ordering = ['row', 'day', 'col']
+
+    def __str__(self):
+        return f"Slot row={self.row} day={self.day} col={self.col}"
+
 
 class Parent(models.Model):
     last_name = models.CharField(max_length=100)
@@ -367,7 +553,40 @@ class StudentParent(models.Model):
 
     class Meta:
         db_table = 'student_parents'
-        unique_together = ('student', 'parent')  # Prevent duplicate relationships
+        unique_together = ('student', 'parent')
 
     def __str__(self):
         return f"{self.parent} -> {self.student}"
+
+
+class FunFridayAttendance(models.Model):
+    """Tracks which Fridays a student attended (or is registered for) Fun Friday."""
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name='fun_friday_dates'
+    )
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('student', 'date')]
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.student.full_name} - {self.date}"
+
+
+class TodoItem(models.Model):
+    text = models.CharField(max_length=500)
+    due_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'todo_items'
+        ordering = ['due_date', 'created_at']
+
+    def __str__(self):
+        return f"{self.text} ({self.due_date})"
+
+    @property
+    def is_overdue(self):
+        return self.due_date < date.today()

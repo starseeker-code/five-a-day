@@ -1,6 +1,6 @@
 """
 Middleware de autenticación simple
-Protege todas las rutas excepto /login/
+Protege todas las rutas excepto /login/ y /health/
 """
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -9,7 +9,7 @@ from django.urls import reverse
 class SimpleAuthMiddleware:
     """
     Middleware que requiere autenticación para acceder a cualquier vista
-    excepto la página de login
+    excepto la página de login y health check
     """
     
     def __init__(self, get_response):
@@ -19,8 +19,10 @@ class SimpleAuthMiddleware:
         # URLs públicas que no requieren autenticación
         public_urls = [
             reverse('login'),
-            '/static/',  # Archivos estáticos
-            '/media/',   # Archivos media
+            '/health/',         # Health check para Render
+            '/static/',         # Archivos estáticos
+            '/media/',          # Archivos media
+            '/auth/google/',    # Google OAuth flow
         ]
         
         # Verificar si la URL actual es pública

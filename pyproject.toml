@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "five-a-day"
-version = "0.9.0"
+version = "0.30.2"
 description = "Five a Day management software"
 authors = ["Joaquin Hernandez Martinez <proyecto_noether@outlook.com>"]
 readme = "README.md"
@@ -28,6 +28,9 @@ django-rest-framework = "^0.1.0"
 python-dotenv = "^1.2.1"
 psycopg2-binary = "^2.9.9"
 gunicorn = "^21.2.0"
+whitenoise = "^6.11.0"
+dj-database-url = "^3.0.1"
+openpyxl = "^3.1.5"
 
 [build-system]
 requires = ["poetry-core"]

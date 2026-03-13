@@ -30,38 +30,38 @@
             {% csrf_token %}
             <input type="hidden" name="parent_id" value="{{ parent_id }}">
             
-            <!-- Información Personal -->
+            <!-- Información del Estudiante -->
             <div class="mb-6">
-                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Personal</h3>
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información del Estudiante</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.first_name.label }} *
+                            {{ form.first_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.first_name }}
                         {% if form.first_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.first_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.last_name.label }} *
+                            {{ form.last_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.last_name }}
                         {% if form.last_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.last_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ form.birth_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.birth_date.label }} *
+                            {{ form.birth_date.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.birth_date }}
                         {% if form.birth_date.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.birth_date.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -71,7 +71,7 @@
                         </label>
                         {{ form.email }}
                         {% if form.email.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.email.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -84,11 +84,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.group.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.group.label }} *
+                            {{ form.group.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.group }}
                         {% if form.group.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.group.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.group.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -98,7 +98,7 @@
                         </label>
                         {{ form.school }}
                         {% if form.school.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.school.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.school.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -111,42 +111,55 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ enrollment_form.enrollment_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_type.label }} *
+                            {{ enrollment_form.enrollment_type.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.enrollment_type }}
                         {% if enrollment_form.enrollment_type.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_type.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.enrollment_type.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
+                        <label for="{{ enrollment_form.academic_year.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.academic_year.label }} <span style="color:#dc2626;">*</span>
+                        </label>
+                        {{ enrollment_form.academic_year }}
+                        {% if enrollment_form.academic_year.errors %}
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.academic_year.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
                         <label for="{{ enrollment_form.schedule_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.schedule_type.label }} *
+                            {{ enrollment_form.schedule_type.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.schedule_type }}
                         {% if enrollment_form.schedule_type.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.schedule_type.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.schedule_type.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
-                    <div>
-                        <label for="{{ enrollment_form.enrollment_period_start.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_period_start.label }} *
+                    <!-- Campo de precio manual (solo visible para tipo "special") -->
+                    <div id="manual-amount-container" class="hidden">
+                        <label for="id_manual_amount" class="block text-sm font-medium text-neutral-700 mb-2">
+                            {{ enrollment_form.manual_amount.label }} <span style="color:#dc2626;">*</span>
                         </label>
-                        {{ enrollment_form.enrollment_period_start }}
-                        {% if enrollment_form.enrollment_period_start.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_period_start.errors.0 }}</p>
+                        {{ enrollment_form.manual_amount }}
+                        <p class="mt-1 text-xs text-neutral-500">{{ enrollment_form.manual_amount.help_text }}</p>
+                        {% if enrollment_form.manual_amount.errors %}
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.manual_amount.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
-                    <div>
-                        <label for="{{ enrollment_form.enrollment_period_end.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_period_end.label }} *
+                    <!-- Precio calculado (informativo) -->
+                    <div id="calculated-price-container">
+                        <label class="block text-sm font-medium text-neutral-700 mb-2">
+                            Precio mensual calculado
                         </label>
-                        {{ enrollment_form.enrollment_period_end }}
-                        {% if enrollment_form.enrollment_period_end.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_period_end.errors.0 }}</p>
-                        {% endif %}
+                        <div class="w-full px-3 py-2 border border-neutral-200 rounded-md bg-neutral-50 text-neutral-700">
+                            <span id="calculated-price">--</span> €/mes
+                        </div>
+                        <p class="mt-1 text-xs text-neutral-500">Se calcula automáticamente según el tipo de horario</p>
                     </div>
                     
                     <div>
@@ -155,17 +168,17 @@
                         </label>
                         {{ enrollment_form.discount_percentage }}
                         {% if enrollment_form.discount_percentage.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.discount_percentage.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.discount_percentage.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
                         <label for="{{ enrollment_form.enrollment_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_date.label }} *
+                            {{ enrollment_form.enrollment_date.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.enrollment_date }}
                         {% if enrollment_form.enrollment_date.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ enrollment_form.enrollment_date.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.enrollment_date.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -182,7 +195,7 @@
                         </label>
                         {{ form.allergies }}
                         {% if form.allergies.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.allergies.errors.0 }}</p>
+                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.allergies.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
@@ -209,7 +222,8 @@
                 </a>
                 <div class="flex gap-3">
                     {% if parent %}
-                    <button type="submit" name="create_sibling" value="true" class="px-6 py-2 bg-neutral-600 text-white rounded-md hover:bg-neutral-700 transition-all duration-200">
+                    <button type="submit" name="create_sibling" value="true" class="px-6 py-3 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">group_add</span>
                         Crear y Añadir Hermano
                     </button>
                     {% endif %}
@@ -221,4 +235,78 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Configuración de precios desde el servidor
+    const priceConfig = {
+        'full_time': {{ price_config.full_time }},
+        'part_time': {{ price_config.part_time }},
+        'adult_group': {{ price_config.adult_group }}
+    };
+    
+    const enrollmentTypeSelect = document.getElementById('id_enrollment_type');
+    const scheduleTypeSelect = document.getElementById('id_schedule_type');
+    const manualAmountContainer = document.getElementById('manual-amount-container');
+    const calculatedPriceContainer = document.getElementById('calculated-price-container');
+    const calculatedPrice = document.getElementById('calculated-price');
+    const discountInput = document.querySelector('[name="discount_percentage"]');
+    
+    // Función para actualizar la UI según el tipo de matrícula
+    function updateEnrollmentUI() {
+        const selectedOption = enrollmentTypeSelect.options[enrollmentTypeSelect.selectedIndex];
+        const enrollmentTypeName = selectedOption ? selectedOption.text.toLowerCase() : '';
+        
+        // Detectar si es tipo "special" (puede variar según cómo se muestre)
+        const isSpecial = enrollmentTypeName.includes('special') || enrollmentTypeName.includes('especial');
+        
+        if (isSpecial) {
+            // Mostrar campo de precio manual, ocultar precio calculado
+            manualAmountContainer.classList.remove('hidden');
+            calculatedPriceContainer.classList.add('hidden');
+        } else {
+            // Ocultar campo de precio manual, mostrar precio calculado
+            manualAmountContainer.classList.add('hidden');
+            calculatedPriceContainer.classList.remove('hidden');
+            updateCalculatedPrice();
+        }
+    }
+    
+    // Función para calcular y mostrar el precio
+    function updateCalculatedPrice() {
+        const scheduleType = scheduleTypeSelect.value;
+        const discount = parseFloat(discountInput.value) || 0;
+        
+        let basePrice = 0;
+        if (scheduleType === 'full_time') {
+            basePrice = priceConfig.full_time;
+        } else if (scheduleType === 'part_time') {
+            basePrice = priceConfig.part_time;
+        } else if (scheduleType === 'adult_group') {
+            basePrice = priceConfig.adult_group;
+        }
+        
+        // Aplicar descuento
+        const discountAmount = basePrice * (discount / 100);
+        const finalPrice = basePrice - discountAmount;
+        
+        // Mostrar precio
+        if (discount > 0) {
+            calculatedPrice.innerHTML = `<span class="line-through text-neutral-400">${basePrice.toFixed(2)}</span> <span class="text-green-600 font-medium">${finalPrice.toFixed(2)}</span>`;
+        } else {
+            calculatedPrice.textContent = basePrice.toFixed(2);
+        }
+    }
+    
+    // Event listeners
+    enrollmentTypeSelect.addEventListener('change', updateEnrollmentUI);
+    scheduleTypeSelect.addEventListener('change', updateCalculatedPrice);
+    discountInput.addEventListener('input', updateCalculatedPrice);
+    
+    // Inicializar al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        updateEnrollmentUI();
+    });
+</script>
 {% endblock %}

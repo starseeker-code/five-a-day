@@ -1,0 +1,16 @@
+{% extends 'emails/base_email.html' %}
+{% load static %}
+
+{% block content %}
+
+<p>Buenos días familias,</p>
+<br>
+<p>Les recordamos que la academia permanecerá cerrada desde el {{ start_closure_day_name }} {{ start_closure_day_number }} hasta el {{ end_closure_day_name }} {{ end_closure_day_number }} de {{ month_closure }} por motivo de {{ closure_reason }}.</p>
+<br>
+<p>Por tanto, retomaremos las clases el {{ reopening_day_name }} {{ reopening_day_number }} de {{ month_reopening }}.</p>
+<br>
+<p>No dudéis en contactar con nosotras ante cualquier duda.</p>
+<br>
+<p>Kind regards,</p>
+
+{% endblock %}

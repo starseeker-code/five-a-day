@@ -7,45 +7,107 @@ urlpatterns = [
     # ============================================================================
     path("login/", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
-    
+    path("auth/google/", google_oauth_redirect, name="google_oauth_redirect"),
+    path("auth/google/callback/", google_oauth_callback, name="google_oauth_callback"),
     # ============================================================================
     # HOME AND DASHBOARD
     # ============================================================================
     path("", home, name="home"),
     path("database/", all_info, name="all_info"),
-    path("email/", email_test, name="email_test"),  # Prueba de emails
-    
     # ============================================================================
     # PARENT MANAGEMENT - Gestión de Padres
     # ============================================================================
-    path('parents/create/', ParentCreateView.as_view(), name='parent_create'),
-    
+    path("parents/create/", ParentCreateView.as_view(), name="parent_create"),
     # ============================================================================
     # STUDENT MANAGEMENT - Gestión de Estudiantes
     # ============================================================================
-    path('students/', StudentListView.as_view(), name='students_list'),
-    path('students/create/', StudentCreateView.as_view(), name='student_create'),
-    path('students/<int:student_id>/', StudentDetailView.as_view(), name='student_detail'),
-    path('students/<int:student_id>/update/', StudentUpdateView.as_view(), name='student_update'),
-    
+    path("students/", StudentListView.as_view(), name="students_list"),
+    path("students/create/", StudentCreateView.as_view(), name="student_create"),
+    path(
+        "students/<int:student_id>/", StudentDetailView.as_view(), name="student_detail"
+    ),
+    path(
+        "students/<int:student_id>/update/",
+        StudentUpdateView.as_view(),
+        name="student_update",
+    ),
+    path("api/students/<int:student_id>/fun-friday/toggle/", toggle_fun_friday_this_week, name="toggle_fun_friday_this_week"),
+    path("api/students/<int:student_id>/fun-friday/add/", add_fun_friday_attendance, name="add_fun_friday_attendance"),
+    path("api/students/<int:student_id>/fun-friday/remove/", remove_fun_friday_attendance, name="remove_fun_friday_attendance"),
     # ============================================================================
     # PAYMENT MANAGEMENT - Gestión de Pagos
     # ============================================================================
-    path('payments/', payments_list, name='payments_list'),
-    path('payments/create/', create_payment, name='create_payment'),
-    path('payments/<int:payment_id>/', payment_detail_view, name='payment_detail_view'),
-    path('payments/<int:payment_id>/update/', update_payment, name='update_payment'),
-    path('payments/<int:payment_id>/delete/', delete_payment, name='delete_payment'),
-    path('payments/<int:payment_id>/deactivate/', deactivate_payment, name='deactivate_payment'),
-    
+    path("payments/", payments_list, name="payments_list"),
+    path("payments/create/", create_payment, name="create_payment"),
+    path("payments/<int:payment_id>/", payment_detail_view, name="payment_detail_view"),
+    path("payments/<int:payment_id>/update/", update_payment, name="update_payment"),
+    path("payments/<int:payment_id>/delete/", delete_payment, name="delete_payment"),
+    path(
+        "payments/<int:payment_id>/deactivate/",
+        deactivate_payment,
+        name="deactivate_payment",
+    ),
     # ============================================================================
     # API ENDPOINTS - AJAX Helper Functions
     # ============================================================================
-    path('api/search/students/', search_students, name='search_students'),
-    path('api/search/parents/', search_parents, name='search_parents'),
-    path('api/validate/student-parent/', validate_student_parent, name='validate_student_parent'),
-    path('api/search/payments/', search_payments, name='search_payments'),
-    path('api/payments/<int:payment_id>/details/', get_payment_details, name='get_payment_details'),
-    path('api/payments/statistics/', payment_statistics, name='payment_statistics'),
-    path('payments/export/', export_payments, name='export_payments'),
+    path("api/search/students/", search_students, name="search_students"),
+    path("api/search/parents/", search_parents, name="search_parents"),
+    path(
+        "api/validate/student-parent/",
+        validate_student_parent,
+        name="validate_student_parent",
+    ),
+    path("api/search/payments/", search_payments, name="search_payments"),
+    path(
+        "api/payments/<int:payment_id>/details/",
+        get_payment_details,
+        name="get_payment_details",
+    ),
+    path("api/payments/statistics/", payment_statistics, name="payment_statistics"),
+    path("payments/export/", export_payments, name="export_payments"),
+    path("database/export/", export_database_excel, name="export_database_excel"),
+    # ============================================================================
+    # GESTIÓN - Configuración del Sitio, Profesores y Grupos
+    # ============================================================================
+    path("management/", gestion_view, name="management"),
+    path("api/config/update/", update_site_config, name="update_site_config"),
+    path("api/teachers/", api_get_teachers, name="api_get_teachers"),
+    path("api/teachers/create/", create_teacher, name="create_teacher"),
+    path("api/groups/create/", create_group, name="create_group"),
+    # ============================================================================
+    # APLICACIONES - Herramientas de comunicación
+    # ============================================================================
+    path("apps/", apps_view, name="apps"),
+    path("apps/fun-friday/", fun_friday_form, name="fun_friday_form"),
+    path("apps/payment-reminder/", payment_reminder_form, name="payment_reminder_form"),
+    path("apps/vacation-closure/", vacation_closure_form, name="vacation_closure_form"),
+    path("apps/tax-certificate/", tax_certificate_form, name="tax_certificate_form"),
+    path("apps/monthly-report/", monthly_report_form, name="monthly_report_form"),
+    path("apps/welcome/", welcome_form, name="welcome_form"),
+    path("apps/birthday/", birthday_form, name="birthday_form"),
+    path("apps/receipts/", receipts_form, name="receipts_form"),
+    path("apps/enrollment/", enrollment_form, name="enrollment_form"),
+    # ============================================================================
+    # SCHEDULE - Horario semanal
+    # ============================================================================
+    path("schedule/", schedule_view, name="schedule_view"),
+    path("api/schedule/slot/save/", save_schedule_slot, name="save_schedule_slot"),
+    path("fun-friday/", fun_friday_view, name="fun_friday_view"),
+    # ============================================================================
+    # TODO LIST - Lista de tareas
+    # ============================================================================
+    path("api/todos/create/", create_todo, name="create_todo"),
+    path("api/todos/<int:todo_id>/complete/", complete_todo, name="complete_todo"),
+    # ============================================================================
+    # SOPORTE - Sistema de tickets
+    # ============================================================================
+    path("api/support/submit/", submit_support_ticket, name="submit_support_ticket"),
+    # ============================================================================
+    # ERROR PAGE PREVIEWS (test only)
+    # ============================================================================
+    path("400/", test_error_400, name="test_error_400"),
+    path("403/", test_error_403, name="test_error_403"),
+    path("404/", test_error_404, name="test_error_404"),
+    path("405/", test_error_405, name="test_error_405"),
+    path("500/", test_error_500, name="test_error_500"),
 ]

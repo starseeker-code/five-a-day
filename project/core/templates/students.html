@@ -6,23 +6,39 @@
 {% block page_subtitle %}Administra todos los estudiantes de la academia{% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'parent_create' %}" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-    <span class="material-symbols-outlined">person_add</span> Nuevo Estudiante
+<a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
+    <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
 </a>
 {% endblock %}
 
 {% block content %}
+<div class="mb-8">
+    <div class="flex items-center gap-3 mb-2">
+        <span class="material-symbols-outlined text-primary-600 text-5xl">people</span>
+        <h1 class="text-3xl font-bold tracking-tight text-neutral-800">Estudiantes</h1>
+    </div>
+    <p class="text-neutral-600">Administra todos los estudiantes de la academia.</p>
+</div>
 <div class="mb-6">
     <div class="flex justify-between items-center">
         <div>
-            <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Lista de Estudiantes</h3>
             <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos</p>
         </div>
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
-                <span class="material-symbols-outlined text-sm">filter_list</span>
+        <div class="flex gap-2 items-center">
+            <input
+                id="studentSearchInput"
+                type="text"
+                placeholder="Buscar por nombre..."
+                class="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-48"
+                style="display: none;"
+            >
+<button id="studentFFFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Filtrar por Fun Friday">
+                <span class="material-symbols-outlined text-sm" id="studentFFFilterIcon">celebration</span>
             </button>
-            <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md hover:bg-neutral-200 transition-all duration-200">
+            <button id="studentSortBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Ordenar: ID ↑">
+                <span class="material-symbols-outlined text-sm" id="studentSortIcon">sort</span>
+            </button>
+            <button id="studentSearchBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Buscar">
                 <span class="material-symbols-outlined text-sm">search</span>
             </button>
         </div>
@@ -39,19 +55,19 @@
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padres</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
-                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Acciones</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Fun Friday</th>
+                    <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-100">
+            <tbody id="studentsTableBody" class="divide-y divide-neutral-100">
                 {% for student in students %}
-                <tr class="hover:bg-neutral-50 transition-all duration-200">
+                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ student.full_name }}" data-date="{{ student.id }}" data-ff-this="{% if student.id in this_week_ids %}1{% else %}0{% endif %}" data-ff-last="{% if student.id in last_week_ids %}1{% else %}0{% endif %}">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                <span class="text-primary-600 font-semibold">{{ student.first_name.0 }}{{ student.last_name.0 }}</span>
+                                <span class="material-symbols-outlined text-primary-600" style="font-size:22px">person</span>
                             </div>
                             <div>
                                 <div class="font-medium text-neutral-800">{{ student.full_name }}</div>
@@ -65,9 +81,10 @@
                         {{ student.age }} años
                     </td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                            {{ student.group.group_name }}
-                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ student.group.color }};"></span>
+                            <span class="text-sm text-neutral-800">{{ student.group.group_name }}</span>
+                        </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-neutral-600">
                         {% for parent in student.parents.all %}
@@ -76,12 +93,17 @@
                             <span class="text-red-500">Sin padres asignados</span>
                         {% endfor %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-neutral-600">
-                        {% if student.email %}
-                            {{ student.email }}
+                    <td class="px-6 py-4 text-sm">
+                        {% with enr=student.enrollments.all|first %}
+                        {% if enr %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if enr.status == 'active' %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ enr.enrollment_type.display_name }}
+                            </span>
+                            <div class="text-xs text-neutral-400 mt-0.5">{{ enr.academic_year }}</div>
                         {% else %}
-                            <span class="text-neutral-400">Sin email</span>
+                            <span class="text-neutral-400 text-xs">Sin matrícula</span>
                         {% endif %}
+                        {% endwith %}
                     </td>
                     <td class="px-6 py-4">
                         {% if student.gdpr_signed %}
@@ -90,32 +112,33 @@
                                 Firmado
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
                                 <span class="material-symbols-outlined text-sm mr-1">cancel</span>
                                 Pendiente
                             </span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4">
-                        {% if student.active %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Activo
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                                Inactivo
-                            </span>
-                        {% endif %}
-                    </td>
                     <td class="px-6 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="editStudent({{ student.id }})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">edit</span>
-                            </button>
-                            <button onclick="viewStudent({{ student.id }})" class="p-2 text-neutral-600 hover:bg-neutral-50 rounded-md transition-all duration-200">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
-                            </button>
-                        </div>
+                        <button class="ff-toggle-btn inline-flex items-center justify-center w-7 h-7 rounded-full cursor-pointer" style="background:none;border:none;padding:0;" data-student-id="{{ student.id }}">
+                            {% if student.id in this_week_ids %}
+                                {% if student.id in last_week_ids %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#f59e0b;">check_circle</span>
+                                {% else %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#22c55e;">check_circle</span>
+                                {% endif %}
+                            {% else %}
+                                {% if student.id in last_week_ids %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#f59e0b;">cancel</span>
+                                {% else %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#d1d5db;">cancel</span>
+                                {% endif %}
+                            {% endif %}
+                        </button>
+                    </td>
+                    <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
+                        <a href="{% url 'student_detail' student.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver estudiante">
+                            <span class="material-symbols-outlined text-base">visibility</span>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
@@ -152,7 +175,7 @@
             
             <!-- Personal Information -->
             <div class="mb-6">
-                <h4 class="text-lg font-medium text-neutral-700 mb-4">Información Personal</h4>
+                <h4 class="text-lg font-medium text-neutral-700 mb-4">Información del Estudiante</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="first_name" class="block text-sm font-medium text-neutral-700 mb-2">Nombre *</label>
@@ -319,16 +342,141 @@
             });
     }
 
-    // View student function (placeholder)
-    function viewStudent(studentId) {
-        // This would typically open a read-only modal or navigate to a detail page
-        console.log('View student:', studentId);
-        alert('Funcionalidad de visualización en desarrollo');
+    // ==================== SEARCH & SORT ====================
+    const studentSearchBtn = document.getElementById('studentSearchBtn');
+    const studentSearchInput = document.getElementById('studentSearchInput');
+    const studentSortBtn = document.getElementById('studentSortBtn');
+    const studentSortIcon = document.getElementById('studentSortIcon');
+    const studentsTableBody = document.getElementById('studentsTableBody');
+
+    // Each row has two independent visibility flags: searchHidden and ffHidden
+    // A row is shown only if neither flag is set.
+    function applyVisibility() {
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            row.style.display = (row._searchHidden || row._ffHidden) ? 'none' : '';
+        });
     }
+
+    // Search toggle
+    studentSearchBtn.addEventListener('click', () => {
+        const visible = studentSearchInput.style.display !== 'none';
+        if (visible) {
+            studentSearchInput.style.display = 'none';
+            studentSearchInput.value = '';
+            studentsTableBody.querySelectorAll('tr[data-name]').forEach(r => { r._searchHidden = false; });
+            applyVisibility();
+        } else {
+            studentSearchInput.style.display = 'block';
+            studentSearchInput.focus();
+        }
+    });
+
+    studentSearchInput.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            row._searchHidden = q !== '' && !row.dataset.name.toLowerCase().includes(q);
+        });
+        applyVisibility();
+    });
+
+    // Sort — cycles: date ↑ → date ↓ → name A→Z → name Z→A → repeat
+    let studentSortState = 0;
+    const studentSortCfg = [
+        { field: 'date', dir: 'asc',  icon: 'calendar_month', title: 'Fecha ↑' },
+        { field: 'date', dir: 'desc', icon: 'calendar_month', title: 'Fecha ↓' },
+        { field: 'name', dir: 'asc',  icon: 'sort_by_alpha',  title: 'Nombre A→Z' },
+        { field: 'name', dir: 'desc', icon: 'sort_by_alpha',  title: 'Nombre Z→A' },
+    ];
+
+    studentSortBtn.addEventListener('click', () => {
+        studentSortState = (studentSortState + 1) % 4;
+        const cfg = studentSortCfg[studentSortState];
+        studentSortIcon.textContent = cfg.icon;
+        studentSortBtn.title = cfg.title;
+        const rows = Array.from(studentsTableBody.querySelectorAll('tr[data-name]'));
+        rows.sort((a, b) => {
+            if (cfg.field === 'name') {
+                const na = a.dataset.name.toLowerCase(), nb = b.dataset.name.toLowerCase();
+                return cfg.dir === 'asc' ? na.localeCompare(nb) : nb.localeCompare(na);
+            } else {
+                const da = parseInt(a.dataset.date), db = parseInt(b.dataset.date);
+                return cfg.dir === 'asc' ? da - db : db - da;
+            }
+        });
+        rows.forEach(row => studentsTableBody.appendChild(row));
+    });
+
+    // ==================== FUN FRIDAY ====================
+    function getCsrf() {
+        return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+    }
+
+    // Returns sort priority 1(green)→2(yellow✓)→3(yellow✗)→4(grey)
+    function getFFCategory(row) {
+        const t = row.dataset.ffThis === '1', l = row.dataset.ffLast === '1';
+        if (t && !l) return 1;
+        if (t && l)  return 2;
+        if (!t && l) return 3;
+        return 4;
+    }
+
+    function updateFFIcon(btn, isThis, isLast) {
+        const span = btn.querySelector('.ff-icon');
+        const row = btn.closest('tr');
+        row.dataset.ffThis = isThis ? '1' : '0';
+        if (isThis && !isLast)       { span.textContent = 'check_circle'; span.style.color = '#22c55e'; }
+        else if (isThis && isLast)   { span.textContent = 'check_circle'; span.style.color = '#f59e0b'; }
+        else if (!isThis && isLast)  { span.textContent = 'cancel';       span.style.color = '#f59e0b'; }
+        else                         { span.textContent = 'cancel';       span.style.color = '#d1d5db'; }
+    }
+
+    document.querySelectorAll('.ff-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const studentId = this.dataset.studentId;
+            fetch(`/api/students/${studentId}/fun-friday/toggle/`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+                body: '{}',
+            }).then(r=>r.json()).then(data => {
+                if (data.success) {
+                    updateFFIcon(this, data.is_this_week, data.was_last_week);
+                    applyFFFilter();
+                }
+            });
+        });
+    });
+
+    // FF Filter: 0=all → 1=not-in-this-week → 2=in-this-week → 0
+    const studentFFFilterBtn = document.getElementById('studentFFFilterBtn');
+    const studentFFFilterIcon = document.getElementById('studentFFFilterIcon');
+    let ffFilterState = 0;
+
+    function applyFFFilter() {
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            const isThis = row.dataset.ffThis === '1';
+            row._ffHidden = (ffFilterState === 1 && isThis) || (ffFilterState === 2 && !isThis);
+        });
+        applyVisibility();
+    }
+
+    const ffFilterCfg = [
+        { icon: 'celebration',   title: 'Filtrar por Fun Friday',          bg: '',        color: '' },
+        { icon: 'cancel',        title: 'Mostrando: Sin FF esta semana',   bg: '#6b7280', color: '#ffffff' },
+        { icon: 'check_circle',  title: 'Mostrando: Con FF esta semana',   bg: '#22c55e', color: '#ffffff' },
+    ];
+
+    studentFFFilterBtn.addEventListener('click', () => {
+        ffFilterState = (ffFilterState + 1) % 3;
+        const cfg = ffFilterCfg[ffFilterState];
+        studentFFFilterIcon.textContent = cfg.icon;
+        studentFFFilterBtn.title = cfg.title;
+        studentFFFilterBtn.style.background = cfg.bg;
+        studentFFFilterBtn.style.color = cfg.color;
+        applyFFFilter();
+    });
 
     // Form validation
     form.addEventListener('submit', (e) => {
-        // Check if at least one parent is selected
         const selectedParents = document.querySelectorAll('input[name="parents"]:checked');
         if (selectedParents.length === 0) {
             e.preventDefault();

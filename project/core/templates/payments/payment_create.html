@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Nuevo Pago{% endblock %}
+
+{% block page_title %}Nuevo Pago{% endblock %}
+{% block page_subtitle %}Registra un nuevo pago en el sistema{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <form id="paymentForm" method="post" action="{% url 'create_payment' %}" novalidate>
+            {% csrf_token %}
+
+            <!-- Student and Parent -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información del Pago</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label for="student_search" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Estudiante <span style="color:#dc2626;">*</span>
+                        </label>
+                        <input type="text" id="student_search" name="student_search" required
+                               placeholder="Buscar estudiante por nombre..."
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <input type="hidden" id="student_id" name="student_id" value="">
+                        <div id="student_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto"></div>
+                    </div>
+                    <div class="relative">
+                        <label for="parent_search" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Padre/Tutor <span style="color:#dc2626;">*</span>
+                        </label>
+                        <input type="text" id="parent_search" name="parent_search" required
+                               placeholder="Buscar padre/tutor por nombre..."
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <input type="hidden" id="parent_id" name="parent_id" value="">
+                        <div id="parent_suggestions" class="absolute z-10 w-full bg-white border border-neutral-300 rounded-md mt-1 hidden max-h-48 overflow-y-auto"></div>
+                    </div>
+                </div>
+                <div id="validation_message" class="mt-2 text-sm hidden px-3 py-2 rounded-md bg-white"></div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Detalles del Pago</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="payment_type" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Tipo de Pago <span style="color:#dc2626;">*</span>
+                        </label>
+                        <select id="payment_type" name="payment_type" required
+                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="enrollment">Matrícula</option>
+                            <option value="monthly">Mensualidad</option>
+                            <option value="materials">Materiales</option>
+                            <option value="registration">Inscripción</option>
+                            <option value="exam">Examen</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="payment_method" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Método de Pago <span style="color:#dc2626;">*</span>
+                        </label>
+                        <select id="payment_method" name="payment_method" required
+                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">Seleccionar método...</option>
+                            <option value="cash">Efectivo</option>
+                            <option value="transfer">Transferencia</option>
+                            <option value="credit_card">Tarjeta de Crédito</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="amount" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Cantidad <span style="color:#dc2626;">*</span>
+                        </label>
+                        <input type="number" id="amount" name="amount" required min="0.01" step="0.01"
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="currency" class="block text-sm font-medium text-neutral-700 mb-2">Moneda</label>
+                        <select id="currency" name="currency"
+                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="EUR" selected>EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates and Status -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Fechas y Estado</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="due_date" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Fecha de Vencimiento <span style="color:#dc2626;">*</span>
+                        </label>
+                        <input type="date" id="due_date" name="due_date" required
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="payment_date" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Fecha de Pago
+                        </label>
+                        <input type="date" id="payment_date" name="payment_date"
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="payment_status" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Estado <span style="color:#dc2626;">*</span>
+                        </label>
+                        <select id="payment_status" name="payment_status" required
+                                class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="pending">Pendiente</option>
+                            <option value="completed">Completado</option>
+                            <option value="failed">Fallido</option>
+                            <option value="cancelled">Cancelado</option>
+                            <option value="refunded">Reembolsado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Adicional</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="concept" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Concepto <span style="color:#dc2626;">*</span>
+                        </label>
+                        <input type="text" id="concept" name="concept" required
+                               placeholder="Descripción del pago..."
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label for="reference_number" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Número de Referencia
+                        </label>
+                        <input type="text" id="reference_number" name="reference_number"
+                               placeholder="Referencia bancaria, número de recibo..."
+                               class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="observations" class="block text-sm font-medium text-neutral-700 mb-2">Observaciones</label>
+                    <textarea id="observations" name="observations" rows="3"
+                              placeholder="Notas adicionales sobre el pago..."
+                              class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-between items-center pt-4 border-t border-neutral-200">
+                <a href="{% url 'payments_list' %}" class="px-6 py-2 text-neutral-600 bg-neutral-100 rounded-md hover:bg-neutral-200 transition-all duration-200">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-all duration-200">
+                    Crear Pago
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const studentSearch = document.getElementById('student_search');
+    const parentSearch = document.getElementById('parent_search');
+    const studentSuggestions = document.getElementById('student_suggestions');
+    const parentSuggestions = document.getElementById('parent_suggestions');
+    const validationMessage = document.getElementById('validation_message');
+    const form = document.getElementById('paymentForm');
+
+    let selectedStudent = null;
+    let selectedParent = null;
+
+    // Set today as default due date
+    document.getElementById('due_date').value = new Date().toISOString().split('T')[0];
+
+    // Auto-fill payment date when status changes to completed
+    document.getElementById('payment_status').addEventListener('change', function() {
+        const paymentDate = document.getElementById('payment_date');
+        if (this.value === 'completed' && !paymentDate.value) {
+            paymentDate.value = new Date().toISOString().split('T')[0];
+        }
+    });
+
+    // Auto-generate concept based on payment type
+    document.getElementById('payment_type').addEventListener('change', function() {
+        const concept = document.getElementById('concept');
+        if (!concept.value || concept.value.startsWith('Pago de') || concept.value === 'Otro pago') {
+            const map = {
+                enrollment: 'Pago de matrícula',
+                monthly: 'Pago mensualidad',
+                materials: 'Pago de materiales',
+                registration: 'Pago de inscripción',
+                exam: 'Pago de examen',
+                other: 'Otro pago',
+            };
+            concept.value = map[this.value] || '';
+        }
+    });
+
+    // Student search
+    let studentTimeout;
+    studentSearch.addEventListener('input', function() {
+        clearTimeout(studentTimeout);
+        const query = this.value.trim();
+        if (query.length < 2) { studentSuggestions.classList.add('hidden'); return; }
+        studentTimeout = setTimeout(() => {
+            fetch(`/api/search/students/?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => displayStudentSuggestions(data.results))
+                .catch(e => console.error(e));
+        }, 300);
+    });
+
+    // Parent search
+    let parentTimeout;
+    parentSearch.addEventListener('input', function() {
+        clearTimeout(parentTimeout);
+        const query = this.value.trim();
+        if (query.length < 2) { parentSuggestions.classList.add('hidden'); return; }
+        parentTimeout = setTimeout(() => {
+            fetch(`/api/search/parents/?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => displayParentSuggestions(data.results))
+                .catch(e => console.error(e));
+        }, 300);
+    });
+
+    function displayStudentSuggestions(students) {
+        if (!students.length) { studentSuggestions.classList.add('hidden'); return; }
+        studentSuggestions.innerHTML = students.map(s => `
+            <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100"
+                 onclick="selectStudent(${s.id}, '${s.full_name.replace(/'/g, "\\'")}', '${(s.school||'').replace(/'/g, "\\'")}')">
+                <div class="font-medium text-neutral-800">${s.full_name}</div>
+                ${s.school ? `<div class="text-sm text-neutral-500">${s.school}</div>` : ''}
+            </div>
+        `).join('');
+        studentSuggestions.classList.remove('hidden');
+    }
+
+    function displayParentSuggestions(parents) {
+        if (!parents.length) { parentSuggestions.classList.add('hidden'); return; }
+        parentSuggestions.innerHTML = parents.map(p => `
+            <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100"
+                 onclick="selectParent(${p.id}, '${p.full_name.replace(/'/g, "\\'")}', '${p.email.replace(/'/g, "\\'")}')">
+                <div class="font-medium text-neutral-800">${p.full_name}</div>
+                <div class="text-sm text-neutral-500">${p.email}</div>
+            </div>
+        `).join('');
+        parentSuggestions.classList.remove('hidden');
+    }
+
+    function selectStudent(id, name, school) {
+        selectedStudent = { id, name };
+        studentSearch.value = name;
+        document.getElementById('student_id').value = id;
+        studentSuggestions.classList.add('hidden');
+        validateRelation();
+    }
+
+    function selectParent(id, name, email) {
+        selectedParent = { id, name };
+        parentSearch.value = name;
+        document.getElementById('parent_id').value = id;
+        parentSuggestions.classList.add('hidden');
+        validateRelation();
+    }
+
+    function validateRelation() {
+        if (!selectedStudent || !selectedParent) { validationMessage.classList.add('hidden'); return; }
+        fetch('/api/validate/student-parent/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+            body: JSON.stringify({ student_id: selectedStudent.id, parent_id: selectedParent.id })
+        })
+        .then(r => r.json())
+        .then(data => {
+            validationMessage.classList.remove('hidden');
+            if (data.valid) {
+                validationMessage.style.color = '#16a34a';
+                validationMessage.textContent = '✓ Relación válida entre estudiante y padre/tutor';
+                if (data.enrollment && data.enrollment.remaining_amount > 0) {
+                    document.getElementById('amount').value = data.enrollment.remaining_amount;
+                    document.getElementById('concept').value = `Pago de matrícula - ${data.enrollment.enrollment_type}`;
+                    document.getElementById('payment_type').value = 'enrollment';
+                }
+            } else {
+                validationMessage.style.color = '#dc2626';
+                validationMessage.textContent = '⚠ El padre/tutor seleccionado no está asociado con este estudiante';
+            }
+        })
+        .catch(e => console.error(e));
+    }
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!studentSearch.contains(e.target) && !studentSuggestions.contains(e.target))
+            studentSuggestions.classList.add('hidden');
+        if (!parentSearch.contains(e.target) && !parentSuggestions.contains(e.target))
+            parentSuggestions.classList.add('hidden');
+    });
+
+    // Form validation
+    form.addEventListener('submit', (e) => {
+        if (!selectedStudent || !selectedParent) {
+            e.preventDefault();
+            validationMessage.classList.remove('hidden');
+            validationMessage.style.color = '#dc2626';
+            validationMessage.textContent = '⚠ Debe seleccionar un estudiante y un padre/tutor válidos.';
+            return;
+        }
+        // Auto-set payment date if status is completed and date is empty
+        const paymentStatus = document.getElementById('payment_status').value;
+        const paymentDate = document.getElementById('payment_date');
+        if (paymentStatus === 'completed' && !paymentDate.value) {
+            paymentDate.value = new Date().toISOString().split('T')[0];
+        }
+    });
+</script>
+{% endblock %}
