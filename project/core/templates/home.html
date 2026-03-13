@@ -5,11 +5,17 @@
 {% block sidebar_class %}w-[7.5rem]{% endblock %}
 {% block sidebar_hover %}expandable-sidebar{% endblock %}
 
+{% block header_actions %}
+<a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none" style="text-decoration:none;">
+    <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago
+</a>
+{% endblock %}
+
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@700;800&display=swap" rel="stylesheet">
 <style>
-.stat-number {
-    font-family: 'Playpen Sans', cursive;
+#webcrumbs .stat-number {
+    font-family: 'Playpen Sans', cursive !important;
     font-size: 3.25rem;
     font-weight: 800;
     line-height: 1;

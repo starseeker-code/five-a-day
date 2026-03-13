@@ -1644,7 +1644,7 @@ def gestion_view(request):
         "teachers": teachers,
         "groups": groups,
     }
-    return render(request, "gestion.html", context)
+    return render(request, "management.html", context)
 
 
 @require_http_methods(["POST"])

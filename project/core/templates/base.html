@@ -54,7 +54,7 @@
                             <span class="material-symbols-outlined mx-auto sidebar-icon">apps</span>
                             <span class="hidden sidebar-text">Aplicaciones</span>
                         </a>
-                        <a href="{% url 'gestion' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'gestion' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <a href="{% url 'management' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'management' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
                             <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
                             <span class="hidden sidebar-text">Gestión</span>
                         </a>
@@ -179,7 +179,7 @@
                     <span class="material-symbols-outlined">help</span>
                     ¿Necesitas ayuda?
                 </h3>
-                <button type="button" id="support-close-btn" class="hover:bg-white/20 p-1 rounded transition-colors">
+                <button type="button" id="support-close-btn" style="padding:0.4rem;border-radius:9999px;background:rgba(255,255,255,0.2);border:none;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
@@ -187,12 +187,6 @@
             <!-- Step 1: Categoría -->
             <div id="support-step-category" class="p-6" style="display: block;">
                 <p class="text-neutral-600 text-sm mb-4 text-center">Selecciona el tipo de incidencia:</p>
-                {% if support_email %}
-                <p class="text-neutral-400 text-xs mb-4 text-center">
-                    <span class="material-symbols-outlined text-xs align-middle">mail</span>
-                    <a href="mailto:{{ support_email }}" class="hover:underline">{{ support_email }}</a>
-                </p>
-                {% endif %}
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Interfaz -->
                     <button type="button" class="support-category-btn group p-4 rounded-xl bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="interfaz">

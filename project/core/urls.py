@@ -66,7 +66,7 @@ urlpatterns = [
     # ============================================================================
     # GESTIÓN - Configuración del Sitio, Profesores y Grupos
     # ============================================================================
-    path("gestion/", gestion_view, name="gestion"),
+    path("management/", gestion_view, name="management"),
     path("api/config/update/", update_site_config, name="update_site_config"),
     path("api/teachers/", api_get_teachers, name="api_get_teachers"),
     path("api/teachers/create/", create_teacher, name="create_teacher"),
