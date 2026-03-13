@@ -85,6 +85,7 @@ urlpatterns = [
     # SCHEDULE - Horario semanal
     # ============================================================================
     path("schedule/", schedule_view, name="schedule_view"),
+    path("api/schedule/slot/save/", save_schedule_slot, name="save_schedule_slot"),
     path("fun-friday/", fun_friday_view, name="fun_friday_view"),
     # ============================================================================
     # TODO LIST - Lista de tareas

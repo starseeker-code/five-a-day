@@ -392,6 +392,25 @@ class Group(models.Model):
     def __str__(self):
         return self.group_name
 
+
+class ScheduleSlot(models.Model):
+    """Persists which group is assigned to each schedule slot (row, day, col)."""
+    row = models.IntegerField()   # 0, 1, 2
+    day = models.IntegerField()   # 0=Mon … 4=Fri
+    col = models.IntegerField()   # 0 or 1
+    group = models.ForeignKey(
+        Group, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='schedule_slots'
+    )
+
+    class Meta:
+        unique_together = [('row', 'day', 'col')]
+        ordering = ['row', 'day', 'col']
+
+    def __str__(self):
+        return f"Slot row={self.row} day={self.day} col={self.col}"
+
+
 class Parent(models.Model):
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
