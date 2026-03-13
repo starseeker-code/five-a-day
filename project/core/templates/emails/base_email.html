@@ -2,15 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Five a Day{% endblock %}</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/email.css' %}">
+    <style type="text/css">
+        /* Email-safe inline styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Trebuchet MS', Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .email-content {
+            padding: 30px 20px;
+            background-color: #ffffff;
+        }
+        h1, h2, h3 {
+            margin: 0 0 15px 0;
+            font-weight: bold;
+            color: #eb6aff;
+        }
+        p {
+            margin: 0 0 15px 0;
+            color: #333333;
+        }
+        a {
+            color: #db97ff;
+            text-decoration: underline;
+        }
+        ul, ol {
+            margin: 0 0 15px 20px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #eb6aff;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .email-footer {
+            background-color: #292929;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-content {
+                padding: 20px 15px !important;
+            }
+        }
+    </style>
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <div class="email-container">
-        <div class="email-content">
+<body style="margin: 0; padding: 0; font-family: 'Trebuchet MS', Arial, sans-serif; background-color: #f4f4f4;">
+    <div class="email-container" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <div class="email-content" style="padding: 30px 20px; background-color: #ffffff;">
             {% block content %}{% endblock %}
         </div>
         <div class="email-footer">
