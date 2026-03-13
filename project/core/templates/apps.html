@@ -13,18 +13,40 @@
 
 {% block extra_css %}
 <style>
-    .apps-grid {
-        font-family: 'Nunito', 'Open Sans', sans-serif;
-    }
-
-    .apps-grid a,
-    .apps-grid a * {
-        text-decoration: none !important;
-    }
-
-    .apps-grid .material-symbols-outlined {
-        font-family: 'Material Symbols Outlined' !important;
-    }
+.apps-grid .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+}
+.app-card {
+    display: block;
+    text-decoration: none;
+    background: #fff;
+    border-radius: 1.75rem;
+    padding: 2rem 1.5rem 1.75rem;
+    border: 2px solid #f472b6;
+    box-shadow: 0 2px 8px rgba(244,114,182,0.10);
+    text-align: center;
+    transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+}
+.app-card:hover {
+    box-shadow: 0 8px 32px rgba(99,102,241,0.16);
+    transform: translateY(-4px);
+    border-color: #ec4899;
+    text-decoration: none;
+}
+.app-card-icon {
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    flex-shrink: 0;
+    transition: background 0.25s, transform 0.25s;
+}
+.app-card:hover .app-card-icon {
+    transform: scale(1.1);
+}
 </style>
 {% endblock %}
 
@@ -39,104 +61,97 @@
     </div>
 
     <div class="apps-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <a href="{% url 'fun_friday_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">celebration</span>
+
+        <a href="{% url 'fun_friday_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">celebration</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Fun Friday</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Fun Friday</h3>
                 <p class="text-sm text-neutral-600">Invitación semanal</p>
             </div>
         </a>
 
-          <a href="{% url 'payment_reminder_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">payments</span>
+        <a href="{% url 'payment_reminder_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">payments</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Pago Mensual</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Pago Mensual</h3>
                 <p class="text-sm text-neutral-600">Recordatorio automático</p>
             </div>
         </a>
 
-          <a href="{% url 'vacation_closure_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">beach_access</span>
+        <a href="{% url 'vacation_closure_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">beach_access</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Vacaciones</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Vacaciones</h3>
                 <p class="text-sm text-neutral-600">Aviso de cierre</p>
             </div>
         </a>
 
-          <a href="{% url 'tax_certificate_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">description</span>
+        <a href="{% url 'tax_certificate_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">description</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Certificado Renta</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Certificado Renta</h3>
                 <p class="text-sm text-neutral-600">Generación anual</p>
             </div>
         </a>
 
-          <a href="{% url 'monthly_report_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">bar_chart</span>
+        <a href="{% url 'monthly_report_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">bar_chart</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Informe Mensual</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Informe Mensual</h3>
                 <p class="text-sm text-neutral-600">Resumen operativo</p>
             </div>
         </a>
 
-          <a href="{% url 'welcome_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">mail</span>
+        <a href="{% url 'welcome_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">mail</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Bienvenida</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Bienvenida</h3>
                 <p class="text-sm text-neutral-600">Alta de estudiantes</p>
             </div>
         </a>
 
-          <a href="{% url 'birthday_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">cake</span>
+        <a href="{% url 'birthday_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">cake</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Cumpleaños</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Cumpleaños</h3>
                 <p class="text-sm text-neutral-600">Saludos automáticos</p>
             </div>
         </a>
 
-          <a href="{% url 'receipts_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">receipt</span>
+        <a href="{% url 'receipts_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">receipt</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Recibos</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Recibos</h3>
                 <p class="text-sm text-neutral-600">Generación y envío</p>
             </div>
         </a>
 
-          <a href="{% url 'enrollment_form' %}"
-              class="no-underline group bg-white rounded-[2.2rem] p-6 border-4 border-primary-500 ring-2 ring-primary-100 shadow-md hover:shadow-xl hover:ring-primary-300 hover:-translate-y-2 transition-all duration-300 text-center">
-            <div class="w-24 h-24 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
-                <span class="material-symbols-outlined text-primary-600 text-6xl">school</span>
+        <a href="{% url 'enrollment_form' %}" class="app-card group">
+            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
+                <span class="material-symbols-outlined text-primary-600 text-5xl">school</span>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Matrículas</h3>
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Matrículas</h3>
                 <p class="text-sm text-neutral-600">Documentación y alta</p>
             </div>
         </a>
+
     </div>
 </div>
 {% endblock %}

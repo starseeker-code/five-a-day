@@ -123,6 +123,52 @@
         </div>
     </div>
 
+    <!-- Fun Friday Attendance -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined" style="color:#ec4899;">celebration</span>
+            Fun Friday
+        </h3>
+        <div class="flex flex-wrap gap-6">
+            <!-- Date list -->
+            <div class="flex-1 min-w-0">
+                {% if fun_friday_dates %}
+                <div class="space-y-1" id="ff-date-list">
+                    {% for entry in fun_friday_dates %}
+                    <div class="flex items-center justify-between py-1.5 px-3 rounded-md hover:bg-neutral-50" data-date="{{ entry.date|date:'Y-m-d' }}">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm" style="color:#ec4899;">event</span>
+                            <span class="text-sm text-neutral-700 font-medium">{{ entry.date|date:"d/m/Y" }}</span>
+                            {% with today=entry.date %}
+                            {% endwith %}
+                        </div>
+                        <button onclick="removeFunFriday('{{ entry.date|date:'Y-m-d' }}')"
+                            class="text-neutral-400 hover:text-red-500 transition-colors p-1 rounded">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-neutral-400" id="ff-empty-msg">Sin fechas registradas.</p>
+                {% endif %}
+            </div>
+            <!-- Add date form -->
+            <div class="shrink-0">
+                <p class="text-xs font-medium text-neutral-500 mb-2">Añadir fecha</p>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="ff-new-date"
+                        class="px-3 py-1.5 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-pink-300 focus:border-pink-400">
+                    <button onclick="addFunFriday()"
+                        class="px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
+                        style="background:#fbcfe8;color:#500724;">
+                        Añadir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-lg shadow-lg p-6">
         <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined">payments</span>Pagos del Estudiante
@@ -165,4 +211,37 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const STUDENT_ID = {{ student.id }};
+function getCsrf() {
+    return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+}
+function addFunFriday() {
+    const inp = document.getElementById('ff-new-date');
+    const d = inp.value;
+    if (!d) return;
+    fetch(`/api/students/${STUDENT_ID}/fun-friday/add/`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+        body: JSON.stringify({date: d}),
+    }).then(r=>r.json()).then(data => {
+        if (data.success) { inp.value=''; location.reload(); }
+        else alert(data.error);
+    });
+}
+function removeFunFriday(d) {
+    if (!confirm('¿Eliminar esta fecha?')) return;
+    fetch(`/api/students/${STUDENT_ID}/fun-friday/remove/`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+        body: JSON.stringify({date: d}),
+    }).then(r=>r.json()).then(data => {
+        if (data.success) location.reload();
+        else alert(data.error);
+    });
+}
+</script>
 {% endblock %}

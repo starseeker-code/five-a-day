@@ -29,6 +29,9 @@ urlpatterns = [
         StudentUpdateView.as_view(),
         name="student_update",
     ),
+    path("api/students/<int:student_id>/fun-friday/toggle/", toggle_fun_friday_this_week, name="toggle_fun_friday_this_week"),
+    path("api/students/<int:student_id>/fun-friday/add/", add_fun_friday_attendance, name="add_fun_friday_attendance"),
+    path("api/students/<int:student_id>/fun-friday/remove/", remove_fun_friday_attendance, name="remove_fun_friday_attendance"),
     # ============================================================================
     # PAYMENT MANAGEMENT - Gestión de Pagos
     # ============================================================================

@@ -5,6 +5,20 @@
 {% block sidebar_class %}w-[7.5rem]{% endblock %}
 {% block sidebar_hover %}expandable-sidebar{% endblock %}
 
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+.stat-number {
+    font-family: 'Playpen Sans', cursive;
+    font-size: 3.25rem;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    display: block;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <!-- CARD 1: Pagos pendientes este mes -->
@@ -14,7 +28,7 @@
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
                     Pagos pendientes este mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">{{ pending_payments_count }}</p>
+                <p class="stat-number text-neutral-800">{{ pending_payments_count }}</p>
             </div>
             <span class="material-symbols-outlined text-primary-500 text-3xl">attach_money</span>
         </div>
@@ -37,7 +51,7 @@
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
                     Cumpleaños este mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">{{ birthday_count }}</p>
+                <p class="stat-number text-neutral-800">{{ birthday_count }}</p>
             </div>
             <span class="material-symbols-outlined text-primary-400 text-3xl">cake</span>
         </div>
@@ -60,7 +74,7 @@
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
                     Próximas apps este mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">{{ upcoming_events_count }}</p>
+                <p class="stat-number text-neutral-800">{{ upcoming_events_count }}</p>
             </div>
             <span class="material-symbols-outlined text-primary-600 text-3xl">email</span>
         </div>

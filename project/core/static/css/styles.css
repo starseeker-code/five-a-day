@@ -126,7 +126,7 @@
 html {
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
-  font-family: Nunito, ui-sans-serif, system-ui, sans-serif,
+  font-family: 'Montserrat Alternates', ui-sans-serif, system-ui, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   font-feature-settings: normal;
   font-variation-settings: normal;
@@ -684,8 +684,15 @@ body {
 
 /* Custom Styles */
 #webcrumbs {
-  font-family: Open Sans !important;
+  font-family: 'Montserrat Alternates', sans-serif !important;
   font-size: 16px !important;
+}
+#webcrumbs button,
+#webcrumbs input,
+#webcrumbs select,
+#webcrumbs textarea,
+#webcrumbs a {
+  font-family: 'Montserrat Alternates', sans-serif;
 }
 
 #webcrumbs :is(.bg-neutral-50) {

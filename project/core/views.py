@@ -536,26 +536,27 @@ class StudentListView(ListView):
         queryset = (
             Student.objects.filter(active=True)
             .select_related("group")
-            .prefetch_related("parents")
+            .prefetch_related("parents", "enrollments__enrollment_type")
         )
 
-        # Búsqueda opcional
         search_query = self.request.GET.get("search", "").strip()
         if search_query:
             queryset = queryset.filter(
                 Q(first_name__icontains=search_query)
                 | Q(last_name__icontains=search_query)
-                | Q(email__icontains=search_query)
             )
 
         return queryset.order_by("-created_at")
 
     def get_context_data(self, **kwargs):
+        from datetime import date, timedelta
         context = super().get_context_data(**kwargs)
         context["search_query"] = self.request.GET.get("search", "")
         context["groups"] = Group.objects.filter(active=True)
         context["parents"] = Parent.objects.all()
-        context["fun_friday_ids"] = set()
+
+        context["this_week_ids"] = get_ff_student_ids(get_next_friday())
+        context["last_week_ids"] = get_ff_student_ids(get_last_friday())
         return context
 
 
@@ -652,7 +653,85 @@ class StudentDetailView(DetailView):
         context["payments"] = Payment.objects.filter(student=self.object).order_by(
             "-payment_date"
         )
+        context["fun_friday_dates"] = self.object.fun_friday_dates.all()
         return context
+
+
+# ============================================================================
+# FUN FRIDAY DATE HELPERS  (reusable across views)
+# ============================================================================
+
+def get_next_friday(from_date=None):
+    """Return this week's Friday (today if today is Friday, else next Friday)."""
+    from datetime import date as _date, timedelta
+    if from_date is None:
+        from_date = _date.today()
+    days_ahead = (4 - from_date.weekday()) % 7
+    return from_date if days_ahead == 0 else from_date + timedelta(days=days_ahead)
+
+
+def get_last_friday(from_date=None):
+    """Return last week's Friday (7 days before get_next_friday)."""
+    from datetime import timedelta
+    return get_next_friday(from_date) - timedelta(days=7)
+
+
+def get_ff_student_ids(friday_date):
+    """Return a set of student IDs registered for the given Friday."""
+    return set(
+        FunFridayAttendance.objects.filter(date=friday_date).values_list('student_id', flat=True)
+    )
+
+
+# ============================================================================
+# FUN FRIDAY ATTENDANCE API
+# ============================================================================
+
+@require_http_methods(["POST"])
+def toggle_fun_friday_this_week(request, student_id):
+    """Toggle a student's attendance for this week's Fun Friday."""
+    student = get_object_or_404(Student, id=student_id)
+    friday = get_next_friday()
+    obj = FunFridayAttendance.objects.filter(student=student, date=friday).first()
+    if obj:
+        obj.delete()
+        is_this_week = False
+    else:
+        FunFridayAttendance.objects.create(student=student, date=friday)
+        is_this_week = True
+    was_last_week = FunFridayAttendance.objects.filter(
+        student=student, date=get_last_friday()
+    ).exists()
+    return JsonResponse({'success': True, 'is_this_week': is_this_week, 'was_last_week': was_last_week})
+
+
+@require_http_methods(["POST"])
+def add_fun_friday_attendance(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    try:
+        data = json.loads(request.body)
+        date_str = data.get('date')
+        from datetime import date as date_type
+        from datetime import datetime
+        parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        obj, created = FunFridayAttendance.objects.get_or_create(student=student, date=parsed_date)
+        return JsonResponse({'success': True, 'created': created, 'date': str(parsed_date)})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["POST"])
+def remove_fun_friday_attendance(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    try:
+        data = json.loads(request.body)
+        date_str = data.get('date')
+        from datetime import datetime
+        parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        deleted, _ = FunFridayAttendance.objects.filter(student=student, date=parsed_date).delete()
+        return JsonResponse({'success': True, 'deleted': deleted > 0})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 # ============================================================================
@@ -2703,5 +2782,19 @@ def save_schedule_slot(request):
 
 def fun_friday_view(request):
     """Vista de Fun Friday con lista de estudiantes."""
-    students = Student.objects.filter(active=True).select_related('group__teacher').order_by('group__group_name', 'first_name')
-    return render(request, "fun_friday.html", {"students": students})
+    students = Student.objects.filter(active=True).select_related('group').order_by('group__group_name', 'first_name')
+    this_friday = get_next_friday()
+    last_friday = get_last_friday()
+    this_week_ids = get_ff_student_ids(this_friday)
+    last_week_ids = get_ff_student_ids(last_friday)
+    this_week_students = Student.objects.filter(id__in=this_week_ids).order_by('first_name', 'last_name')
+    last_week_students = Student.objects.filter(id__in=last_week_ids).order_by('first_name', 'last_name')
+    return render(request, "fun_friday.html", {
+        "students": students,
+        "this_week_ids": this_week_ids,
+        "last_week_ids": last_week_ids,
+        "this_friday": this_friday,
+        "last_friday": last_friday,
+        "this_week_students": this_week_students,
+        "last_week_students": last_week_students,
+    })

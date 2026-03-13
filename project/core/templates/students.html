@@ -32,6 +32,9 @@
                 class="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-48"
                 style="display: none;"
             >
+<button id="studentFFFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Filtrar por Fun Friday">
+                <span class="material-symbols-outlined text-sm" id="studentFFFilterIcon">filter_list</span>
+            </button>
             <button id="studentSortBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Ordenar: ID ↑">
                 <span class="material-symbols-outlined text-sm" id="studentSortIcon">sort</span>
             </button>
@@ -52,7 +55,7 @@
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padres</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
                     <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Fun Friday</th>
                     <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
@@ -60,7 +63,7 @@
             </thead>
             <tbody id="studentsTableBody" class="divide-y divide-neutral-100">
                 {% for student in students %}
-                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ student.full_name }}" data-date="{{ student.id }}">
+                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ student.full_name }}" data-date="{{ student.id }}" data-ff-this="{% if student.id in this_week_ids %}1{% else %}0{% endif %}" data-ff-last="{% if student.id in last_week_ids %}1{% else %}0{% endif %}">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -90,12 +93,17 @@
                             <span class="text-red-500">Sin padres asignados</span>
                         {% endfor %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-neutral-600">
-                        {% if student.email %}
-                            {{ student.email }}
+                    <td class="px-6 py-4 text-sm">
+                        {% with enr=student.enrollments.all|first %}
+                        {% if enr %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if enr.status == 'active' %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ enr.enrollment_type.display_name }}
+                            </span>
+                            <div class="text-xs text-neutral-400 mt-0.5">{{ enr.academic_year }}</div>
                         {% else %}
-                            <span class="text-neutral-400">Sin email</span>
+                            <span class="text-neutral-400 text-xs">Sin matrícula</span>
                         {% endif %}
+                        {% endwith %}
                     </td>
                     <td class="px-6 py-4">
                         {% if student.gdpr_signed %}
@@ -111,11 +119,21 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-center">
-                        {% if student.id in fun_friday_ids %}
-                            <span class="material-symbols-outlined text-green-600 text-base">check_circle</span>
-                        {% else %}
-                            <span class="material-symbols-outlined text-neutral-300 text-base">cancel</span>
-                        {% endif %}
+                        <button class="ff-toggle-btn inline-flex items-center justify-center w-7 h-7 rounded-full cursor-pointer" style="background:none;border:none;padding:0;" data-student-id="{{ student.id }}">
+                            {% if student.id in this_week_ids %}
+                                {% if student.id in last_week_ids %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#f59e0b;">check_circle</span>
+                                {% else %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#22c55e;">check_circle</span>
+                                {% endif %}
+                            {% else %}
+                                {% if student.id in last_week_ids %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#f59e0b;">cancel</span>
+                                {% else %}
+                                    <span class="material-symbols-outlined text-base ff-icon" style="color:#d1d5db;">cancel</span>
+                                {% endif %}
+                            {% endif %}
+                        </button>
                     </td>
                     <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
                         <a href="{% url 'student_detail' student.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver estudiante">
@@ -331,27 +349,35 @@
     const studentSortIcon = document.getElementById('studentSortIcon');
     const studentsTableBody = document.getElementById('studentsTableBody');
 
+    // Each row has two independent visibility flags: searchHidden and ffHidden
+    // A row is shown only if neither flag is set.
+    function applyVisibility() {
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            row.style.display = (row._searchHidden || row._ffHidden) ? 'none' : '';
+        });
+    }
+
     // Search toggle
     studentSearchBtn.addEventListener('click', () => {
         const visible = studentSearchInput.style.display !== 'none';
         if (visible) {
             studentSearchInput.style.display = 'none';
             studentSearchInput.value = '';
-            filterStudents('');
+            studentsTableBody.querySelectorAll('tr[data-name]').forEach(r => { r._searchHidden = false; });
+            applyVisibility();
         } else {
             studentSearchInput.style.display = 'block';
             studentSearchInput.focus();
         }
     });
 
-    studentSearchInput.addEventListener('input', () => filterStudents(studentSearchInput.value));
-
-    function filterStudents(query) {
-        const q = query.toLowerCase().trim();
+    studentSearchInput.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
         studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
-            row.style.display = (q === '' || row.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+            row._searchHidden = q !== '' && !row.dataset.name.toLowerCase().includes(q);
         });
-    }
+        applyVisibility();
+    });
 
     // Sort — cycles: date ↑ → date ↓ → name A→Z → name Z→A → repeat
     let studentSortState = 0;
@@ -380,9 +406,77 @@
         rows.forEach(row => studentsTableBody.appendChild(row));
     });
 
+    // ==================== FUN FRIDAY ====================
+    function getCsrf() {
+        return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+    }
+
+    // Returns sort priority 1(green)→2(yellow✓)→3(yellow✗)→4(grey)
+    function getFFCategory(row) {
+        const t = row.dataset.ffThis === '1', l = row.dataset.ffLast === '1';
+        if (t && !l) return 1;
+        if (t && l)  return 2;
+        if (!t && l) return 3;
+        return 4;
+    }
+
+    function updateFFIcon(btn, isThis, isLast) {
+        const span = btn.querySelector('.ff-icon');
+        const row = btn.closest('tr');
+        row.dataset.ffThis = isThis ? '1' : '0';
+        if (isThis && !isLast)       { span.textContent = 'check_circle'; span.style.color = '#22c55e'; }
+        else if (isThis && isLast)   { span.textContent = 'check_circle'; span.style.color = '#f59e0b'; }
+        else if (!isThis && isLast)  { span.textContent = 'cancel';       span.style.color = '#f59e0b'; }
+        else                         { span.textContent = 'cancel';       span.style.color = '#d1d5db'; }
+    }
+
+    document.querySelectorAll('.ff-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const studentId = this.dataset.studentId;
+            fetch(`/api/students/${studentId}/fun-friday/toggle/`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+                body: '{}',
+            }).then(r=>r.json()).then(data => {
+                if (data.success) {
+                    updateFFIcon(this, data.is_this_week, data.was_last_week);
+                    applyFFFilter();
+                }
+            });
+        });
+    });
+
+    // FF Filter: 0=all → 1=not-in-this-week → 2=in-this-week → 0
+    const studentFFFilterBtn = document.getElementById('studentFFFilterBtn');
+    const studentFFFilterIcon = document.getElementById('studentFFFilterIcon');
+    let ffFilterState = 0;
+
+    function applyFFFilter() {
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            const isThis = row.dataset.ffThis === '1';
+            row._ffHidden = (ffFilterState === 1 && isThis) || (ffFilterState === 2 && !isThis);
+        });
+        applyVisibility();
+    }
+
+    const ffFilterCfg = [
+        { icon: 'filter_list', title: 'Filtrar por Fun Friday',          bg: '',        color: '' },
+        { icon: 'celebration', title: 'Mostrando: Sin FF esta semana',   bg: '#fee2e2', color: '#991b1b' },
+        { icon: 'star',        title: 'Mostrando: Con FF esta semana',   bg: '#dcfce7', color: '#166534' },
+    ];
+
+    studentFFFilterBtn.addEventListener('click', () => {
+        ffFilterState = (ffFilterState + 1) % 3;
+        const cfg = ffFilterCfg[ffFilterState];
+        studentFFFilterIcon.textContent = cfg.icon;
+        studentFFFilterBtn.title = cfg.title;
+        studentFFFilterBtn.style.background = cfg.bg;
+        studentFFFilterBtn.style.color = cfg.color;
+        applyFFFilter();
+    });
+
     // Form validation
     form.addEventListener('submit', (e) => {
-        // Check if at least one parent is selected
         const selectedParents = document.querySelectorAll('input[name="parents"]:checked');
         if (selectedParents.length === 0) {
             e.preventDefault();

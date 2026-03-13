@@ -161,30 +161,22 @@
 
 <!-- Pagination -->
 {% if payments.has_other_pages %}
-<div class="mt-6 flex justify-center">
-    <nav class="flex items-center space-x-2">
+<div style="margin-top:3rem;display:flex;justify-content:center;">
+    <nav style="display:flex;align-items:center;gap:0.5rem;">
         {% if payments.has_previous %}
-            <a href="?page={{ payments.previous_page_number }}" class="px-3 py-2 text-sm text-neutral-600 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50">
-                Anterior
-            </a>
+            <a href="?page={{ payments.previous_page_number }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">‹</a>
         {% endif %}
-        
+
         {% for num in payments.paginator.page_range %}
             {% if payments.number == num %}
-                <span class="px-3 py-2 text-sm text-white bg-primary-600 border border-primary-600 rounded-md">
-                    {{ num }}
-                </span>
+                <span style="width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#f93a76;color:#fff;font-size:0.875rem;font-weight:700;">{{ num }}</span>
             {% else %}
-                <a href="?page={{ num }}" class="px-3 py-2 text-sm text-neutral-600 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50">
-                    {{ num }}
-                </a>
+                <a href="?page={{ num }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.875rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">{{ num }}</a>
             {% endif %}
         {% endfor %}
-        
+
         {% if payments.has_next %}
-            <a href="?page={{ payments.next_page_number }}" class="px-3 py-2 text-sm text-neutral-600 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50">
-                Siguiente
-            </a>
+            <a href="?page={{ payments.next_page_number }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">›</a>
         {% endif %}
     </nav>
 </div>

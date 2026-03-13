@@ -487,10 +487,26 @@ class StudentParent(models.Model):
 
     class Meta:
         db_table = 'student_parents'
-        unique_together = ('student', 'parent')  # Prevent duplicate relationships
+        unique_together = ('student', 'parent')
 
     def __str__(self):
         return f"{self.parent} -> {self.student}"
+
+
+class FunFridayAttendance(models.Model):
+    """Tracks which Fridays a student attended (or is registered for) Fun Friday."""
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name='fun_friday_dates'
+    )
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('student', 'date')]
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.student.full_name} - {self.date}"
 
 
 class TodoItem(models.Model):
