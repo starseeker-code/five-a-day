@@ -198,7 +198,7 @@
                         <td class="px-4 py-3">{{ payment.due_date|date:"d/m/Y" }}</td>
                         <td class="px-4 py-3">{% if payment.payment_date %}{{ payment.payment_date|date:"d/m/Y" }}{% else %}—{% endif %}</td>
                         <td class="px-4 py-3">
-                            <a href="{% url 'payment_detail_view' payment.id %}" class="text-primary-600 hover:text-primary-700">Ver</a>
+                            <a href="{% url 'payment_detail_view' payment.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver pago"><span class="material-symbols-outlined text-base">visibility</span></a>
                         </td>
                     </tr>
                     {% empty %}

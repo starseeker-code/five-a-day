@@ -7,6 +7,8 @@ urlpatterns = [
     # ============================================================================
     path("login/", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
+    path("auth/google/", google_oauth_redirect, name="google_oauth_redirect"),
+    path("auth/google/callback/", google_oauth_callback, name="google_oauth_callback"),
     # ============================================================================
     # HOME AND DASHBOARD
     # ============================================================================

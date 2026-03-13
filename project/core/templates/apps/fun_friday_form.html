@@ -6,19 +6,11 @@
 <div class="max-w-4xl mx-auto">
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
-        <div class="flex items-center">
-            <div class="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mr-4">
-                <span class="material-symbols-outlined text-white text-3xl">celebration</span>
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold text-neutral-800">Fun Friday</h1>
-                <p class="text-neutral-500">Enviar invitación a todos los padres</p>
-            </div>
+        <div>
+            <h1 class="text-2xl font-bold text-neutral-800">Fun Friday</h1>
+            <p class="text-neutral-700">Enviar invitación a todos los padres</p>
         </div>
-        <a href="{% url 'apps' %}" class="text-neutral-500 hover:text-neutral-700 flex items-center">
-            <span class="material-symbols-outlined mr-1">arrow_back</span>
-            Volver
-        </a>
+        <a href="{% url 'apps' %}" class="text-primary-600 hover:text-primary-700" style="text-decoration: none;" title="Volver"><span class="material-symbols-outlined" style="font-size: 2rem; display: block;">arrow_back</span></a>
     </div>
 
     {% if messages %}
@@ -156,19 +148,6 @@
                 </p>
             </div>
 
-            <!-- Vista previa -->
-            <div class="mt-4">
-                <button type="button" 
-                        id="previewBtn"
-                        class="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center">
-                    <span class="material-symbols-outlined text-sm mr-1">visibility</span>
-                    Ver vista previa
-                </button>
-                <div id="previewContainer" class="hidden mt-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200">
-                    <h4 class="text-sm font-medium text-neutral-600 mb-2">Vista previa del HTML:</h4>
-                    <div id="previewContent" class="prose prose-sm max-w-none"></div>
-                </div>
-            </div>
         </div>
 
         <!-- Email Preview -->
@@ -189,15 +168,15 @@
         </div>
 
         <!-- Botones -->
-        <div class="flex justify-end space-x-4">
+        <div class="flex justify-end space-x-4" style="margin-top: 1.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem;">
             <a href="{% url 'apps' %}"
-               class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium">
+               class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium" style="text-decoration: none;">
                 Cancelar
             </a>
-            <button type="submit" 
+            <button type="submit"
                     id="submitBtn"
-                    class="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all font-medium flex items-center">
-                <span class="material-symbols-outlined mr-2">send</span>
+                    class="px-6 py-3 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+                <span class="material-symbols-outlined">send</span>
                 Enviar Fun Friday
             </button>
         </div>
@@ -206,29 +185,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const previewBtn = document.getElementById('previewBtn');
-    const previewContainer = document.getElementById('previewContainer');
-    const previewContent = document.getElementById('previewContent');
     const activityDescription = document.getElementById('activity_description');
     const form = document.getElementById('funFridayForm');
     const submitBtn = document.getElementById('submitBtn');
-
-    // Toggle vista previa
-    previewBtn.addEventListener('click', function() {
-        previewContainer.classList.toggle('hidden');
-        if (!previewContainer.classList.contains('hidden')) {
-            // Sanitizar HTML básico antes de mostrar (para preview segura)
-            const htmlContent = activityDescription.value;
-            previewContent.innerHTML = htmlContent;
-        }
-    });
-
-    // Actualizar preview en tiempo real cuando se escribe
-    activityDescription.addEventListener('input', function() {
-        if (!previewContainer.classList.contains('hidden')) {
-            previewContent.innerHTML = activityDescription.value;
-        }
-    });
 
     // Validación antes de enviar
     form.addEventListener('submit', function(e) {

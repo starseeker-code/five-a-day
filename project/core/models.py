@@ -66,7 +66,65 @@ class SiteConfiguration(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
         verbose_name='Mensualidad grupo adultos'
     )
-    
+
+    # Descuentos (Discounts)
+    language_cheque_discount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Cheque idioma (€ fijo)'
+    )
+    quarterly_enrollment_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('5.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Matrícula trimestral (%)'
+    )
+    old_student_discount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('10.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Alumno antiguo (€ fijo)'
+    )
+    full_year_bonus = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Año completo (€ fijo, no adultos)'
+    )
+    sibling_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('5.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Hermanos (% mensual)'
+    )
+    half_month_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('50.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Medio mes — septiembre (%)'
+    )
+    one_week_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('75.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Solo 1 semana — primer mes (%)'
+    )
+    three_week_discount = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('25.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Solo 3 semanas (%)'
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -102,6 +160,14 @@ class SiteConfiguration(models.Model):
                 full_time_monthly_fee=constants.FULL_TIME_MONTHLY_FEE,
                 part_time_monthly_fee=constants.PART_TIME_MONTHLY_FEE,
                 adult_group_monthly_fee=constants.ADULT_GROUP_MONTHLY_FEE,
+                language_cheque_discount=constants.LANGUAGE_CHEQUE_DISCOUNT[0],
+                quarterly_enrollment_discount=constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
+                old_student_discount=constants.OLD_STUDENT_DISCOUNT[0],
+                full_year_bonus=constants.FULL_YEAR_BONUS[0],
+                sibling_discount=constants.SIBLING_DISCOUNT[0],
+                half_month_discount=constants.HALF_MONTH_DISCOUNT[0],
+                one_week_discount=constants.ONE_WEEK_DISCOUNT[0],
+                three_week_discount=constants.THREE_WEEK_DISCOUNT[0],
             )
         return config
 

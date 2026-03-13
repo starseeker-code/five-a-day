@@ -19,9 +19,10 @@ class SimpleAuthMiddleware:
         # URLs públicas que no requieren autenticación
         public_urls = [
             reverse('login'),
-            '/health/',  # Health check para Render
-            '/static/',  # Archivos estáticos
-            '/media/',   # Archivos media
+            '/health/',         # Health check para Render
+            '/static/',         # Archivos estáticos
+            '/media/',          # Archivos media
+            '/auth/google/',    # Google OAuth flow
         ]
         
         # Verificar si la URL actual es pública

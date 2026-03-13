@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from decimal import Decimal, InvalidOperation
 import json
 from datetime import date, datetime
@@ -125,7 +125,6 @@ def health_check(request):
 
 def login_view(request):
     """Vista de login con credenciales desde .env"""
-    # Si ya está autenticado, redirigir al home
     if request.session.get("is_authenticated"):
         return redirect("home")
 
@@ -133,21 +132,162 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        # Validar contra credenciales en .env
         valid_username = os.getenv("LOGIN_USERNAME", "fiveaday")
         valid_password = os.getenv("LOGIN_PASSWORD", "Fiveaday123!")
 
         if username == valid_username and password == valid_password:
-            # Autenticación exitosa
             request.session["is_authenticated"] = True
             request.session["username"] = username
             messages.success(request, f"¡Bienvenido {username}!")
             return redirect("home")
         else:
-            # Credenciales incorrectas
             messages.error(request, "❌ Usuario o contraseña incorrectos")
 
-    return render(request, "login.html")
+    google_oauth_available = bool(
+        os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET")
+    )
+    return render(request, "login.html", {"google_oauth_available": google_oauth_available})
+
+
+_GOOGLE_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
+
+import logging as _logging
+_oauth_log = _logging.getLogger(__name__)
+
+
+def _google_callback_uri(request):
+    """Return the OAuth callback URI — prefer explicit env var over build_absolute_uri."""
+    explicit = os.getenv("GOOGLE_REDIRECT_URI")
+    if explicit:
+        return explicit
+    return request.build_absolute_uri(reverse("google_oauth_callback"))
+
+
+def _build_flow(client_id, client_secret, callback_uri, state=None):
+    from google_auth_oauthlib.flow import Flow
+    cfg = {
+        "web": {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [callback_uri],
+        }
+    }
+    kwargs = {"scopes": _GOOGLE_SCOPES}
+    if state:
+        kwargs["state"] = state
+    flow = Flow.from_client_config(cfg, **kwargs)
+    flow.redirect_uri = callback_uri
+    return flow
+
+
+def google_oauth_redirect(request):
+    """Redirect the browser to Google's OAuth2 consent screen."""
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        messages.error(request, "Google OAuth no está configurado.")
+        return redirect("login")
+
+    if settings.DEBUG:
+        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+    callback_uri = _google_callback_uri(request)
+    _oauth_log.info("OAuth redirect → callback_uri=%s", callback_uri)
+    flow = _build_flow(client_id, client_secret, callback_uri)
+    authorization_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="select_account",
+    )
+    request.session["google_oauth_state"] = state
+    return redirect(authorization_url)
+
+
+def google_oauth_callback(request):
+    """Handle the OAuth2 redirect from Google and establish a session."""
+    import urllib.parse
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+    # Checked backend-only — never sent to the frontend
+    allowed_email = (
+        os.getenv("GOOGLE_ALLOWED_EMAIL")
+        or os.getenv("EMAIL_HOST_USER")
+        or os.getenv("DJANGO_SUPERUSER_EMAIL", "")
+    )
+
+    if settings.DEBUG:
+        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+    state = request.session.get("google_oauth_state")
+    if not state or state != request.GET.get("state"):
+        _oauth_log.warning("OAuth state mismatch: session=%s, param=%s", state, request.GET.get("state"))
+        messages.error(request, "Estado OAuth inválido. Inténtalo de nuevo.")
+        return redirect("login")
+
+    callback_uri = _google_callback_uri(request)
+    _oauth_log.info("OAuth callback → callback_uri=%s", callback_uri)
+    flow = _build_flow(client_id, client_secret, callback_uri, state=state)
+
+    # Reconstruct authorization_response using the configured base URI so it
+    # matches exactly the redirect_uri registered in Google Console.
+    parsed = urllib.parse.urlparse(callback_uri)
+    query = request.META.get("QUERY_STRING", "")
+    authorization_response = urllib.parse.urlunparse(parsed._replace(query=query))
+    _oauth_log.info("OAuth callback → authorization_response=%s", authorization_response)
+
+    try:
+        flow.fetch_token(authorization_response=authorization_response)
+    except Exception:
+        _oauth_log.exception("OAuth fetch_token failed")
+        messages.error(request, "Error al obtener el token de Google. Inténtalo de nuevo.")
+        return redirect("login")
+
+    credentials = flow.credentials
+
+    try:
+        id_info = id_token.verify_oauth2_token(
+            credentials.id_token,
+            google_requests.Request(),
+            client_id,
+        )
+        user_email = id_info.get("email", "")
+        user_name = id_info.get("given_name", user_email.split("@")[0])
+    except Exception:
+        _oauth_log.exception("OAuth id_token verification failed")
+        messages.error(request, "Error al verificar la identidad de Google.")
+        return redirect("login")
+
+    # Backend-only check — email never exposed to frontend
+    if user_email.lower() != allowed_email.lower():
+        _oauth_log.warning("OAuth email mismatch: got=%s expected=%s", user_email, allowed_email)
+        messages.error(request, "❌ Esta cuenta de Google no tiene acceso.")
+        return redirect("login")
+
+    request.session["is_authenticated"] = True
+    request.session["username"] = user_name
+    request.session["google_authenticated"] = True
+    # Store credentials so other views can reuse them for Gmail / Sheets
+    request.session["google_credentials"] = {
+        "token": credentials.token,
+        "refresh_token": credentials.refresh_token,
+        "token_uri": credentials.token_uri,
+        "client_id": credentials.client_id,
+        "client_secret": credentials.client_secret,
+        "scopes": list(credentials.scopes) if credentials.scopes else [],
+    }
+    messages.success(request, f"¡Bienvenido, {user_name}!")
+    return redirect("home")
 
 
 def logout_view(request):
@@ -1730,6 +1870,20 @@ def update_site_config(request):
                 str(data["adult_group_monthly_fee"])
             )
 
+        # Actualizar descuentos
+        for field in [
+            "language_cheque_discount",
+            "quarterly_enrollment_discount",
+            "old_student_discount",
+            "full_year_bonus",
+            "sibling_discount",
+            "half_month_discount",
+            "one_week_discount",
+            "three_week_discount",
+        ]:
+            if field in data:
+                setattr(config, field, Decimal(str(data[field])))
+
         config.save()
 
         return JsonResponse(
@@ -1900,6 +2054,49 @@ Esta semana haremos manualidades creativas con materiales reciclados.
 ¡Os esperamos! 🎨"""
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            _event_date_str = request.POST.get('event_date', next_friday.isoformat())
+            _start_time = request.POST.get('start_time', '17:00')
+            _end_time = request.POST.get('end_time', '18:30')
+            _meeting_point = request.POST.get('meeting_point', '')
+            _activity = request.POST.get('activity_description', default_html)
+            try:
+                _ed = date.fromisoformat(_event_date_str)
+            except (ValueError, TypeError):
+                _ed = next_friday
+            try:
+                _min_age = int(request.POST.get('min_age', 5))
+                _max_age = int(request.POST.get('max_age', 12))
+            except (ValueError, TypeError):
+                _min_age, _max_age = 5, 12
+            _ctx = {
+                'day_name': DIAS_ES[_ed.weekday()],
+                'day_number': _ed.day,
+                'month': MESES_ES[_ed.month - 1],
+                'start_time': _start_time,
+                'end_time': _end_time,
+                'activity_description': _activity,
+                'meeting_point': _meeting_point,
+                'minimum_age': _min_age,
+                'maximum_age': _max_age,
+            }
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string('emails/fun_friday.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name='fun_friday',
+                recipients=_recipients,
+                subject=f'[TEST] 🎉 Fun Friday - {_ctx["day_name"].capitalize()} {_ctx["day_number"]} de {_ctx["month"]}',
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         # Obtener datos del formulario
         event_date_str = request.POST.get("event_date")
         start_time = request.POST.get("start_time")
@@ -2077,6 +2274,45 @@ def payment_reminder_form(request):
     current_month = MESES_ES[today.month - 1]
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            _start_str = request.POST.get('payment_start_date', default_start.isoformat())
+            _end_str = request.POST.get('payment_end_date', default_end.isoformat())
+            _month = request.POST.get('month', current_month)
+            _iban = request.POST.get('iban_number', 'ES00 0000 0000 0000 0000 0000')
+            _bizum = request.POST.get('telephone_number_bizum', '600 000 000')
+            _cheque = request.POST.get('reduced_price_cheque_idioma', '34€')
+            try:
+                _sd = date.fromisoformat(_start_str)
+                _ed = date.fromisoformat(_end_str)
+            except (ValueError, TypeError):
+                _sd, _ed = default_start, default_end
+            _ctx = {
+                'payment_start_day_name': DIAS_ES[_sd.weekday()],
+                'payment_start_day_number': _sd.day,
+                'payment_end_day_name': DIAS_ES[_ed.weekday()],
+                'payment_end_day_number': _ed.day,
+                'month': _month,
+                'iban_number': _iban,
+                'reduced_price_cheque_idioma': _cheque,
+                'telephone_number_bizum': _bizum,
+            }
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string('emails/recordatorio_pago_mensual_trimestral.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name='recordatorio_pago_mensual_trimestral',
+                recipients=_recipients,
+                subject=f'[TEST] 💰 Recordatorio de Pago - {_month.title()}',
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         payment_start_date_str = request.POST.get("payment_start_date")
         payment_end_date_str = request.POST.get("payment_end_date")
         month = request.POST.get("month", current_month)
@@ -2169,6 +2405,48 @@ def vacation_closure_form(request):
     parent_count = Parent.objects.filter(children__active=True).distinct().count()
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            from datetime import timedelta
+            _cs_str = request.POST.get('closure_start_date', '')
+            _ce_str = request.POST.get('closure_end_date', '')
+            _r_str = request.POST.get('reopening_date', '')
+            _reason = request.POST.get('closure_reason', 'Vacaciones')
+            try:
+                _cs = date.fromisoformat(_cs_str)
+                _ce = date.fromisoformat(_ce_str)
+                _ro = date.fromisoformat(_r_str)
+            except (ValueError, TypeError):
+                _cs = date.today()
+                _ce = _cs + timedelta(days=7)
+                _ro = _ce + timedelta(days=3)
+            _ctx = {
+                'start_closure_day_name': DIAS_ES[_cs.weekday()],
+                'start_closure_day_number': _cs.day,
+                'end_closure_day_name': DIAS_ES[_ce.weekday()],
+                'end_closure_day_number': _ce.day,
+                'month_closure': MESES_ES[_cs.month - 1],
+                'closure_reason': _reason,
+                'reopening_day_name': DIAS_ES[_ro.weekday()],
+                'reopening_day_number': _ro.day,
+                'month_reopening': MESES_ES[_ro.month - 1],
+            }
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string('emails/recordatorio_cierre_vacaciones.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name='recordatorio_cierre_vacaciones',
+                recipients=_recipients,
+                subject=f'[TEST] 🏖️ Cierre por {_reason} - Five a Day',
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         closure_start_str = request.POST.get("closure_start_date")
         closure_end_str = request.POST.get("closure_end_date")
         closure_reason = request.POST.get("closure_reason", "")
@@ -2261,6 +2539,26 @@ def tax_certificate_form(request):
     ).distinct().count()
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            _year = int(request.POST.get('year', default_year))
+            _ctx = {'year': _year, 'parent_name': 'Nombre del padre'}
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string('emails/certificado_renta.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name='certificado_renta',
+                recipients=_recipients,
+                subject=f'[TEST] 📋 Certificado de Renta {_year} - Five a Day',
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         year = int(request.POST.get("year", default_year))
         results = send_all_tax_certificates(year)
 
@@ -2304,6 +2602,36 @@ def monthly_report_form(request):
     total_groups = Group.objects.filter(active=True).count()
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            _month = request.POST.get('month', current_month)
+            try:
+                _year = int(request.POST.get('year', today.year))
+            except (ValueError, TypeError):
+                _year = today.year
+            _ctx = {
+                'month': _month,
+                'year': _year,
+                'parent_name': 'Nombre del padre',
+                'students': [{'name': 'Alumno Ejemplo', 'group': 'Grupo A'}],
+                'total_students': 1,
+            }
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string('emails/monthly_report.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name='monthly_report',
+                recipients=_recipients,
+                subject=f'[TEST] 📊 Informe Mensual - {_month.title()} {_year}',
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         month = request.POST.get("month", current_month)
         year = int(request.POST.get("year", today.year))
 
@@ -2368,53 +2696,8 @@ def monthly_report_form(request):
 
 
 def welcome_form(request):
-    """
-    Vista para reenviar emails de bienvenida manualmente.
-    GET: Muestra selector de estudiante y preview
-    POST: Envía email de bienvenida al padre del estudiante seleccionado
-    """
-    from .models import Student, Parent
-    from .email import send_welcome_email
-
-    students = Student.objects.filter(active=True).select_related('group').order_by('last_name', 'first_name')
-
-    if request.method == "POST":
-        student_id = request.POST.get("student_id")
-        if not student_id:
-            messages.error(request, "❌ Selecciona un estudiante")
-        else:
-            try:
-                student = Student.objects.select_related('group').prefetch_related('parents').get(id=student_id)
-                parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
-                if not parent:
-                    messages.error(request, f"❌ {student.full_name} no tiene padre con email registrado")
-                else:
-                    result = send_welcome_email(
-                        parent_email=parent.email,
-                        parent_name=parent.full_name,
-                        student_name=student.full_name,
-                        group_name=student.group.group_name if student.group else None,
-                    )
-                    if result:
-                        messages.success(request, f"✅ Email de bienvenida enviado a {parent.email}")
-                    else:
-                        messages.error(request, "❌ Error al enviar el email")
-            except Student.DoesNotExist:
-                messages.error(request, "❌ Estudiante no encontrado")
-        return redirect("welcome_form")
-
-    email_html = render_to_string('emails/welcome_student.html', {
-        'parent_name': 'Nombre del padre',
-        'student_name': 'Nombre del alumno',
-        'group_name': 'Grupo A',
-        'enrollment_type': 'Mensual',
-        'schedule_type': 'Jornada completa',
-        'start_date': '01/09/2025',
-    })
-    return render(request, "apps/welcome_form.html", {
-        "students": students,
-        "email_html": email_html,
-    })
+    """Merged into enrollment_form — redirect all traffic there."""
+    return redirect("enrollment_form")
 
 
 # ============================================================================
@@ -2444,6 +2727,26 @@ def birthday_form(request):
     ).select_related('group').order_by('birth_date__day')
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            _name = birthday_students.first().first_name if birthday_students.exists() else 'Alumno Ejemplo'
+            _ctx = {'name': _name}
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string('emails/happy_birthday.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name='happy_birthday',
+                recipients=_recipients,
+                subject=f'[TEST] 🎉 ¡Feliz Cumpleaños {_name}!',
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         if not birthday_students.exists():
             messages.info(request, "ℹ️ No hay cumpleaños hoy")
             return redirect("birthday_form")
@@ -2509,6 +2812,37 @@ def receipts_form(request):
     quarter_months = [MESES_ES[quarter_start], MESES_ES[quarter_start + 1], MESES_ES[quarter_start + 2]]
 
     if request.method == "POST":
+        action = request.POST.get('action', '')
+        if action in ('preview', 'test_send'):
+            _rtype = request.POST.get('receipt_type', 'quarterly_child')
+            if _rtype == 'quarterly_child':
+                _m1 = request.POST.get('month_1', quarter_months[0])
+                _m2 = request.POST.get('month_2', quarter_months[1])
+                _m3 = request.POST.get('month_3', quarter_months[2])
+                _template = 'recibo_trimestre_niño'
+                _ctx = {'student_name': 'Alumno Ejemplo', 'month_1': _m1, 'month_2': _m2, 'month_3': _m3}
+                _subject = f'[TEST] 🧾 Recibo Trimestral - {_m1.title()}/{_m2.title()}/{_m3.title()}'
+            else:
+                _adm = request.POST.get('adult_month', current_month)
+                _template = 'recibo_adulto'
+                _ctx = {'month': _adm}
+                _subject = f'[TEST] 🧾 Recibo Mensual - {_adm.title()}'
+            if action == 'preview':
+                return JsonResponse({'html': render_to_string(f'emails/{_template}.html', _ctx)})
+            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+            _ok = email_service.send_email(
+                template_name=_template,
+                recipients=_recipients,
+                subject=_subject,
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
         receipt_type = request.POST.get("receipt_type", "quarterly_child")
 
         if receipt_type == "quarterly_child":
@@ -2612,15 +2946,104 @@ def enrollment_form(request):
         default_academic_year = f"{today.year - 1}-{today.year}"
 
     if request.method == "POST":
-        student_id = request.POST.get("student_id")
-        enrollment_type = request.POST.get("enrollment_type", "child")
-        gender = request.POST.get("gender", "m")
-        academic_year = request.POST.get("academic_year", default_academic_year)
-        month = request.POST.get("month", current_month)
+        action = request.POST.get('action', '')
+        email_type = request.POST.get('email_type', 'enrollment')
 
+        if action in ('preview', 'test_send'):
+            _student_id = request.POST.get('student_id')
+            if email_type == 'welcome':
+                _ctx = {
+                    'parent_name': 'Nombre del padre',
+                    'student_name': 'Nombre del alumno',
+                    'group_name': 'Grupo A',
+                    'enrollment_type': 'Mensual',
+                    'schedule_type': 'Jornada completa',
+                    'start_date': '01/09/2025',
+                }
+                if _student_id:
+                    try:
+                        _s = Student.objects.select_related('group').get(id=_student_id)
+                        _p = _s.parents.exclude(email='').exclude(email__isnull=True).first()
+                        _ctx['student_name'] = _s.full_name
+                        if _p:
+                            _ctx['parent_name'] = _p.full_name
+                        if _s.group:
+                            _ctx['group_name'] = _s.group.group_name
+                    except Exception:
+                        pass
+                if action == 'preview':
+                    return JsonResponse({'html': render_to_string('emails/welcome_student.html', _ctx)})
+                _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+                _recipients = [r for r in [_t1, _t2] if r]
+                if not _recipients:
+                    return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                _ok = email_service.send_email(
+                    template_name='welcome_student',
+                    recipients=_recipients,
+                    subject=f'[TEST] 🎉 Bienvenida a Five a Day - {_ctx["student_name"]}',
+                    context=_ctx,
+                )
+                if _ok:
+                    return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+                return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+            else:
+                _etype = request.POST.get('enrollment_type', 'child')
+                _gender = request.POST.get('gender', 'm')
+                _ay = request.POST.get('academic_year', default_academic_year)
+                _month = request.POST.get('month', current_month)
+                _student_name = 'Alumno Ejemplo'
+                if _student_id:
+                    try:
+                        _s = Student.objects.get(id=_student_id)
+                        _student_name = _s.full_name
+                    except Exception:
+                        pass
+                _template = 'matricula_niño' if _etype == 'child' else 'matricula_adulto'
+                _ctx = {'student': _student_name, 'genero': _gender, 'academic_year': _ay, 'month': _month}
+                if action == 'preview':
+                    return JsonResponse({'html': render_to_string(f'emails/{_template}.html', _ctx)})
+                _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+                _recipients = [r for r in [_t1, _t2] if r]
+                if not _recipients:
+                    return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                _ok = email_service.send_email(
+                    template_name=_template,
+                    recipients=_recipients,
+                    subject=f'[TEST] 🎉 Confirmación de Matrícula - {_student_name}',
+                    context=_ctx,
+                )
+                if _ok:
+                    return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+                return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+
+        student_id = request.POST.get("student_id")
         if not student_id:
             messages.error(request, "❌ Selecciona un estudiante")
+        elif email_type == 'welcome':
+            from .email import send_welcome_email
+            try:
+                student = Student.objects.select_related('group').prefetch_related('parents').get(id=student_id)
+                parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+                if not parent:
+                    messages.error(request, f"❌ {student.full_name} no tiene padre con email registrado")
+                else:
+                    result = send_welcome_email(
+                        parent_email=parent.email,
+                        parent_name=parent.full_name,
+                        student_name=student.full_name,
+                        group_name=student.group.group_name if student.group else None,
+                    )
+                    if result:
+                        messages.success(request, f"✅ Email de bienvenida enviado a {parent.email}")
+                    else:
+                        messages.error(request, "❌ Error al enviar el email")
+            except Student.DoesNotExist:
+                messages.error(request, "❌ Estudiante no encontrado")
         else:
+            enrollment_type = request.POST.get("enrollment_type", "child")
+            gender = request.POST.get("gender", "m")
+            academic_year = request.POST.get("academic_year", default_academic_year)
+            month = request.POST.get("month", current_month)
             try:
                 student = Student.objects.prefetch_related('parents').get(id=student_id)
                 parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
@@ -2647,11 +3070,13 @@ def enrollment_form(request):
                 messages.error(request, "❌ Estudiante no encontrado")
         return redirect("enrollment_form")
 
-    email_html = render_to_string('emails/matricula_niño.html', {
-        'student': 'Alumno Ejemplo',
-        'genero': 'm',
-        'academic_year': default_academic_year,
-        'month': 'septiembre',
+    email_html = render_to_string('emails/welcome_student.html', {
+        'parent_name': 'Nombre del padre',
+        'student_name': 'Nombre del alumno',
+        'group_name': 'Grupo A',
+        'enrollment_type': 'Mensual',
+        'schedule_type': 'Jornada completa',
+        'start_date': '01/09/2025',
     })
     return render(request, "apps/enrollment_form.html", {
         "students": students,

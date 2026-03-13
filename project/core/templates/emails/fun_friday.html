@@ -8,11 +8,11 @@
 <p>El día {{ day_name }} {{ day_number }} de {{ month }} de <span style="color: red;">{{ start_time }} a {{ end_time }}</span> en el centro Five a Day tenemos nuestra actividad Fun Fridays.</p>
 <br>
 {% if activity_description %}
-<p><mark>{{ activity_description }}</mark></p>
+{{ activity_description|safe }}
 <br>
 {% endif %}
 {% if meeting_point %}
-<p><mark><span style="color: red;">{{ meeting_point }}</span></mark></p>
+<p><span style="color: red;">{{ meeting_point }}</span></p>
 <br>
 {% endif %}
 <p>Pueden venir todos aquellos niños y niñas que lo deseen que pertenezcan al centro en edades comprendidas entre los {{ minimum_age }} y los {{ maximum_age }} años.</p>

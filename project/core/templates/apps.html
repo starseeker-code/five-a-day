@@ -47,6 +47,9 @@
 .app-card:hover .app-card-icon {
     transform: scale(1.1);
 }
+.app-card-icon .material-symbols-outlined {
+    font-size: 2.5rem;
+}
 </style>
 {% endblock %}
 
@@ -112,17 +115,7 @@
             </div>
         </a>
 
-        <a href="{% url 'welcome_form' %}" class="app-card group">
-            <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
-                <span class="material-symbols-outlined text-primary-600 text-5xl">mail</span>
-            </div>
-            <div class="space-y-1">
-                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Bienvenida</h3>
-                <p class="text-sm text-neutral-600">Alta de estudiantes</p>
-            </div>
-        </a>
-
-        <a href="{% url 'birthday_form' %}" class="app-card group">
+<a href="{% url 'birthday_form' %}" class="app-card group">
             <div class="app-card-icon bg-primary-100 border-2 border-primary-200 group-hover:bg-primary-200">
                 <span class="material-symbols-outlined text-primary-600 text-5xl">cake</span>
             </div>
@@ -147,8 +140,8 @@
                 <span class="material-symbols-outlined text-primary-600 text-5xl">school</span>
             </div>
             <div class="space-y-1">
-                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Matrículas</h3>
-                <p class="text-sm text-neutral-600">Documentación y alta</p>
+                <h3 class="text-lg font-bold text-neutral-800 group-hover:text-primary-700 transition-colors">Nueva Matrícula</h3>
+                <p class="text-sm text-neutral-600">Bienvenida y matrículas</p>
             </div>
         </a>
 

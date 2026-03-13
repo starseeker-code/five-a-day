@@ -1,24 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Matrículas - Confirmación{% endblock %}
+{% block title %}Nueva Matrícula{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
-        <div class="flex items-center">
-            <div class="w-14 h-14 bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl flex items-center justify-center mr-4">
-                <span class="material-symbols-outlined text-white text-3xl">school</span>
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold text-neutral-800">Confirmación de Matrícula</h1>
-                <p class="text-neutral-500">Enviar confirmación de matrícula (niños o adultos)</p>
-            </div>
+        <div>
+            <h1 class="text-2xl font-bold text-neutral-800">Nueva Matrícula</h1>
+            <p class="text-neutral-700">Bienvenida y confirmación de matrícula</p>
         </div>
-        <a href="{% url 'apps' %}" class="text-neutral-500 hover:text-neutral-700 flex items-center">
-            <span class="material-symbols-outlined mr-1">arrow_back</span>
-            Volver
-        </a>
+        <a href="{% url 'apps' %}" class="text-primary-600 hover:text-primary-700" style="text-decoration: none;" title="Volver"><span class="material-symbols-outlined" style="font-size: 2rem; display: block;">arrow_back</span></a>
     </div>
 
     {% if messages %}
@@ -31,33 +23,78 @@
     </div>
     {% endif %}
 
-    <!-- Info automática -->
-    <div class="bg-sky-50 rounded-xl p-6 border border-sky-200 mb-6">
-        <div class="flex items-start">
-            <span class="material-symbols-outlined text-sky-500 mr-3 mt-0.5">auto_awesome</span>
-            <div>
-                <h3 class="text-sm font-semibold text-sky-800 mb-1">Envío en confirmación de matrícula</h3>
-                <p class="text-sm text-sky-700">Este email se puede enviar automáticamente al confirmar una matrícula. Usa este formulario para enviarlo manualmente si es necesario.</p>
-            </div>
-        </div>
+    <!-- Tabs -->
+    <div class="flex border-b border-neutral-200 mb-6">
+        <button type="button" id="tab-welcome"
+                class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-primary-500 text-primary-600 -mb-px flex items-center gap-2 transition-colors"
+                onclick="switchTab('welcome')">
+            <span class="material-symbols-outlined text-sm">mail</span>
+            Bienvenida
+        </button>
+        <button type="button" id="tab-enrollment"
+                class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-transparent text-neutral-500 hover:text-neutral-700 -mb-px flex items-center gap-2 transition-colors"
+                onclick="switchTab('enrollment')">
+            <span class="material-symbols-outlined text-sm">school</span>
+            Confirmación de Matrícula
+        </button>
     </div>
 
     <form method="post" id="enrollmentForm" class="space-y-6">
         {% csrf_token %}
+        <input type="hidden" name="email_type" id="email_type" value="welcome">
 
-        <!-- Tipo de Matrícula -->
+        <!-- Info banners -->
+        <div id="info-welcome" class="bg-pink-50 rounded-xl p-6 border border-pink-200">
+            <div class="flex items-start">
+                <span class="material-symbols-outlined text-pink-500 mr-3 mt-0.5">auto_awesome</span>
+                <div>
+                    <h3 class="text-sm font-semibold text-pink-800 mb-1">Envío automático</h3>
+                    <p class="text-sm text-pink-700">Este email se envía automáticamente al crear un nuevo estudiante. Usa este formulario para reenviarlo manualmente si es necesario.</p>
+                </div>
+            </div>
+        </div>
+        <div id="info-enrollment" class="hidden bg-sky-50 rounded-xl p-6 border border-sky-200">
+            <div class="flex items-start">
+                <span class="material-symbols-outlined text-sky-500 mr-3 mt-0.5">auto_awesome</span>
+                <div>
+                    <h3 class="text-sm font-semibold text-sky-800 mb-1">Envío en confirmación de matrícula</h3>
+                    <p class="text-sm text-sky-700">Este email se puede enviar automáticamente al confirmar una matrícula. Usa este formulario para enviarlo manualmente si es necesario.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estudiante (shared) -->
         <div class="bg-white rounded-xl p-6 border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <span class="material-symbols-outlined text-primary-500 mr-2">person</span>
+                Seleccionar Estudiante
+            </h2>
+            <div>
+                <label for="student_id" class="block text-sm font-medium text-neutral-700 mb-1">
+                    Estudiante <span class="text-red-500">*</span>
+                </label>
+                <select id="student_id" name="student_id" required
+                        class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <option value="">Selecciona un estudiante...</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}">{{ student.last_name }}, {{ student.first_name }} ({{ student.group.group_name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Campos extra de matrícula (solo tab enrollment) -->
+        <div id="enrollment-fields" class="hidden bg-white rounded-xl p-6 border border-neutral-200">
             <h2 class="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
                 <span class="material-symbols-outlined text-primary-500 mr-2">school</span>
                 Datos de Matrícula
             </h2>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="enrollment_type" class="block text-sm font-medium text-neutral-700 mb-1">
                         Tipo <span class="text-red-500">*</span>
                     </label>
-                    <select id="enrollment_type" name="enrollment_type" required
+                    <select id="enrollment_type" name="enrollment_type"
                             class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option value="child">Niño/a</option>
                         <option value="adult">Adulto/a</option>
@@ -67,29 +104,17 @@
                     <label for="gender" class="block text-sm font-medium text-neutral-700 mb-1">
                         Género <span class="text-red-500">*</span>
                     </label>
-                    <select id="gender" name="gender" required
+                    <select id="gender" name="gender"
                             class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option value="m">Masculino</option>
                         <option value="f">Femenino</option>
                     </select>
                 </div>
                 <div>
-                    <label for="student_id" class="block text-sm font-medium text-neutral-700 mb-1">
-                        Estudiante <span class="text-red-500">*</span>
-                    </label>
-                    <select id="student_id" name="student_id" required
-                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                        <option value="">Selecciona un estudiante...</option>
-                        {% for student in students %}
-                        <option value="{{ student.id }}">{{ student.last_name }}, {{ student.first_name }} ({{ student.group.group_name }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
                     <label for="academic_year" class="block text-sm font-medium text-neutral-700 mb-1">
                         Año académico <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="academic_year" name="academic_year" value="{{ default_academic_year }}" required
+                    <input type="text" id="academic_year" name="academic_year" value="{{ default_academic_year }}"
                            placeholder="2025-2026"
                            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                 </div>
@@ -97,7 +122,7 @@
                     <label for="month" class="block text-sm font-medium text-neutral-700 mb-1">
                         Mes de inicio <span class="text-red-500">*</span>
                     </label>
-                    <select id="month" name="month" required
+                    <select id="month" name="month"
                             class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         {% for m in months %}
                         <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m|title }}</option>
@@ -111,23 +136,58 @@
         {% include 'apps/_email_preview.html' %}
 
         <!-- Botones -->
-        <div class="flex justify-end space-x-4">
-            <a href="{% url 'apps' %}" class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium">
+        <div class="flex justify-end space-x-4" style="margin-top: 1.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem;">
+            <a href="{% url 'apps' %}" class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium" style="text-decoration: none;">
                 Cancelar
             </a>
             <button type="submit" id="submitBtn"
-                    class="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white rounded-lg hover:from-sky-600 hover:to-blue-600 transition-all font-medium flex items-center">
-                <span class="material-symbols-outlined mr-2">send</span>
-                Enviar Confirmación
+                    class="px-6 py-3 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+                <span class="material-symbols-outlined">send</span>
+                <span id="submitLabel">Enviar Bienvenida</span>
             </button>
         </div>
     </form>
 </div>
 
 <script>
+function switchTab(tab) {
+    document.getElementById('email_type').value = tab;
+
+    var tabWelcome    = document.getElementById('tab-welcome');
+    var tabEnrollment = document.getElementById('tab-enrollment');
+    var infoWelcome   = document.getElementById('info-welcome');
+    var infoEnrollment = document.getElementById('info-enrollment');
+    var enrollFields  = document.getElementById('enrollment-fields');
+    var submitLabel   = document.getElementById('submitLabel');
+
+    var activeClass   = ['border-primary-500', 'text-primary-600'];
+    var inactiveClass = ['border-transparent', 'text-neutral-500', 'hover:text-neutral-700'];
+
+    if (tab === 'welcome') {
+        tabWelcome.classList.add(...activeClass);
+        tabWelcome.classList.remove(...inactiveClass);
+        tabEnrollment.classList.remove(...activeClass);
+        tabEnrollment.classList.add(...inactiveClass);
+        infoWelcome.classList.remove('hidden');
+        infoEnrollment.classList.add('hidden');
+        enrollFields.classList.add('hidden');
+        submitLabel.textContent = 'Enviar Bienvenida';
+    } else {
+        tabEnrollment.classList.add(...activeClass);
+        tabEnrollment.classList.remove(...inactiveClass);
+        tabWelcome.classList.remove(...activeClass);
+        tabWelcome.classList.add(...inactiveClass);
+        infoWelcome.classList.add('hidden');
+        infoEnrollment.classList.remove('hidden');
+        enrollFields.classList.remove('hidden');
+        submitLabel.textContent = 'Enviar Confirmación';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('enrollmentForm');
     var submitBtn = document.getElementById('submitBtn');
+
     form.addEventListener('submit', function(e) {
         var studentSelect = document.getElementById('student_id');
         if (!studentSelect.value) {
@@ -135,7 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Selecciona un estudiante');
             return;
         }
-        if (!confirm('¿Enviar confirmación de matrícula al padre del estudiante seleccionado?')) {
+        var emailType = document.getElementById('email_type').value;
+        var msg = emailType === 'welcome'
+            ? '¿Enviar email de bienvenida al padre del estudiante seleccionado?'
+            : '¿Enviar confirmación de matrícula al padre del estudiante seleccionado?';
+        if (!confirm(msg)) {
             e.preventDefault();
             return;
         }

@@ -70,13 +70,13 @@
         {% include 'apps/_email_preview.html' %}
 
         <!-- Botones -->
-        <div class="flex justify-end space-x-4">
-            <a href="{% url 'apps' %}" class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium">
+        <div class="flex justify-end space-x-4" style="margin-top: 1.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem;">
+            <a href="{% url 'apps' %}" class="px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium" style="text-decoration: none;">
                 Cancelar
             </a>
             <button type="submit" id="submitBtn"
-                    class="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg hover:from-pink-600 hover:to-rose-600 transition-all font-medium flex items-center">
-                <span class="material-symbols-outlined mr-2">send</span>
+                    class="px-6 py-3 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2">
+                <span class="material-symbols-outlined">send</span>
                 Enviar Bienvenida
             </button>
         </div>
