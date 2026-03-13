@@ -63,6 +63,7 @@ urlpatterns = [
     ),
     path("api/payments/statistics/", payment_statistics, name="payment_statistics"),
     path("payments/export/", export_payments, name="export_payments"),
+    path("database/export/", export_database_excel, name="export_database_excel"),
     # ============================================================================
     # GESTIÓN - Configuración del Sitio, Profesores y Grupos
     # ============================================================================
@@ -99,4 +100,12 @@ urlpatterns = [
     # SOPORTE - Sistema de tickets
     # ============================================================================
     path("api/support/submit/", submit_support_ticket, name="submit_support_ticket"),
+    # ============================================================================
+    # ERROR PAGE PREVIEWS (test only)
+    # ============================================================================
+    path("400/", test_error_400, name="test_error_400"),
+    path("403/", test_error_403, name="test_error_403"),
+    path("404/", test_error_404, name="test_error_404"),
+    path("405/", test_error_405, name="test_error_405"),
+    path("500/", test_error_500, name="test_error_500"),
 ]

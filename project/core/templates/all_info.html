@@ -34,6 +34,9 @@
           <option value="first_name_asc">Nombre</option>
           <option value="last_name_asc">Apellido</option>
         </select>
+        <a href="{% url 'export_database_excel' %}" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" style="text-decoration:none;">
+            <span class="material-symbols-outlined text-sm">download</span>
+        </a>
       </div>
     </div>
 

@@ -68,6 +68,44 @@ def parse_date_value(date_value):
     )
 
 
+# ============================================================================
+# ERROR HANDLERS
+# ============================================================================
+
+def handler400(request, exception=None):
+    return render(request, "400.html", status=400)
+
+def handler403(request, exception=None):
+    return render(request, "403.html", status=403)
+
+def handler404(request, exception=None):
+    return render(request, "404.html", status=404)
+
+def handler405(request, exception=None):
+    return render(request, "405.html", status=405)
+
+def handler500(request):
+    return render(request, "500.html", status=500)
+
+
+# ── Test endpoints (render error pages directly for inspection) ──────────────
+
+def test_error_400(request):
+    return render(request, "400.html", status=400)
+
+def test_error_403(request):
+    return render(request, "403.html", status=403)
+
+def test_error_404(request):
+    return render(request, "404.html", status=404)
+
+def test_error_405(request):
+    return render(request, "405.html", status=405)
+
+def test_error_500(request):
+    return render(request, "500.html", status=500)
+
+
 @csrf_exempt
 def health_check(request):
     """
@@ -1617,6 +1655,22 @@ def export_payments(request):
             ]
         )
 
+    return response
+
+
+def export_database_excel(request):
+    """Export Estudiantes, Matrículas and Pagos as a single .xlsx file."""
+    from datetime import datetime
+    from django.http import HttpResponse
+    from .exports import build_database_workbook
+
+    wb = build_database_workbook()
+    today = datetime.now().strftime("%Y%m%d")
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="five_a_day_{today}.xlsx"'
+    wb.save(response)
     return response
 
 

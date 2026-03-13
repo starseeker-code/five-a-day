@@ -33,7 +33,7 @@
                 style="display: none;"
             >
 <button id="studentFFFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Filtrar por Fun Friday">
-                <span class="material-symbols-outlined text-sm" id="studentFFFilterIcon">filter_list</span>
+                <span class="material-symbols-outlined text-sm" id="studentFFFilterIcon">celebration</span>
             </button>
             <button id="studentSortBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Ordenar: ID ↑">
                 <span class="material-symbols-outlined text-sm" id="studentSortIcon">sort</span>
@@ -460,9 +460,9 @@
     }
 
     const ffFilterCfg = [
-        { icon: 'filter_list', title: 'Filtrar por Fun Friday',          bg: '',        color: '' },
-        { icon: 'celebration', title: 'Mostrando: Sin FF esta semana',   bg: '#fee2e2', color: '#991b1b' },
-        { icon: 'star',        title: 'Mostrando: Con FF esta semana',   bg: '#dcfce7', color: '#166534' },
+        { icon: 'celebration',   title: 'Filtrar por Fun Friday',          bg: '',        color: '' },
+        { icon: 'cancel',        title: 'Mostrando: Sin FF esta semana',   bg: '#6b7280', color: '#ffffff' },
+        { icon: 'check_circle',  title: 'Mostrando: Con FF esta semana',   bg: '#22c55e', color: '#ffffff' },
     ];
 
     studentFFFilterBtn.addEventListener('click', () => {
