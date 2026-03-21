@@ -5,6 +5,14 @@
 {% block page_title %}Gestión de Pagos{% endblock %}
 {% block page_subtitle %}Administra todos los pagos de la academia{% endblock %}
 
+{% block extra_css %}
+<style>
+#webcrumbs #paymentsTableBody td,
+#webcrumbs #paymentsTableBody td .text-sm { font-size: 1.1375rem !important; }
+#webcrumbs #paymentsTableBody td .text-xs { font-size: 0.975rem !important; }
+</style>
+{% endblock %}
+
 {% block header_actions %}
 <a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none" style="text-decoration:none;">
     <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago

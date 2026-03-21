@@ -12,16 +12,22 @@
 {% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@700;800&display=swap" rel="stylesheet">
 <style>
 #webcrumbs .stat-number {
-    font-family: 'Playpen Sans', cursive !important;
     font-size: 3.25rem;
     font-weight: 800;
     line-height: 1;
     text-align: center;
     display: block;
 }
+/* Cards: +30% text */
+#webcrumbs .grid > div h4 { font-size: 1.1375rem !important; }
+#webcrumbs .grid > div .mt-4.text-sm { font-size: 1.1375rem !important; }
+/* Todo list: +30% text */
+#webcrumbs .todo-item span.flex-1 { font-size: 1.1375rem !important; }
+#webcrumbs .todo-item span.shrink-0 { font-size: 0.975rem !important; }
+/* Pending count trigger */
+#pendingCountTrigger { cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -40,7 +46,7 @@
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if pending_payments_count > 0 %}
-                <span class="text-red-500 font-medium">{{ total_pending_students }}</span> estudiante{{ total_pending_students|pluralize:"s" }} pendiente{{ total_pending_students|pluralize:"s" }}:
+                <span class="text-red-500 font-medium" id="pendingCountTrigger" title="Ver lista completa">{{ total_pending_students }}</span> estudiante{{ total_pending_students|pluralize:"s" }} pendiente{{ total_pending_students|pluralize:"s" }}:
                 <span class="text-neutral-700">
                     {{ pending_students|join:", " }}{% if has_more_pending %}<span class="text-neutral-400"> ...</span>{% endif %}
                 </span>
@@ -194,6 +200,31 @@
             <p id="emptyTodos" class="text-sm text-neutral-400 py-4 text-center">No hay tareas pendientes</p>
             {% endfor %}
         </div>
+    </div>
+</div>
+
+<!-- Pending Students Modal -->
+<div id="pending-modal" style="display:none;position:fixed;inset:0;background-color:rgba(0,0,0,0.5);z-index:50;align-items:center;justify-content:center;padding:1rem;">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden" style="width:fit-content;min-width:240px;max-width:min(380px,90vw);">
+        <div class="px-6 text-white flex justify-between items-center" style="background:linear-gradient(to right,#fca5a5,#f87171);padding-top:16px;padding-bottom:16px;">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                <span class="material-symbols-outlined">schedule</span>
+                Pagos pendientes este mes
+            </h3>
+            <button type="button" id="pending-close-btn" style="padding:0.4rem;border-radius:9999px;background:rgba(255,255,255,0.2);border:none;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <ul style="max-height:336px;overflow-y:auto;" class="divide-y divide-neutral-100 px-4 py-2">
+            {% for student in all_pending_students %}
+            <li class="flex items-center gap-3 py-2.5">
+                <span class="text-red-600 font-bold w-14 text-right shrink-0 tabular-nums">€{{ student.amount|floatformat:0 }}</span>
+                <span class="text-neutral-700">{{ student.display_name }}</span>
+            </li>
+            {% empty %}
+            <li class="text-neutral-400 text-sm text-center py-6">Sin pagos pendientes este mes.</li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 
@@ -402,6 +433,22 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.todo-checkbox').forEach(cb => {
         cb.addEventListener('change', handleCheckbox);
     });
+
+    // ── Pending students modal ───────────────────────────────────
+    const pendingTrigger = document.getElementById('pendingCountTrigger');
+    const pendingModal = document.getElementById('pending-modal');
+    const pendingCloseBtn = document.getElementById('pending-close-btn');
+
+    function openPendingModal() { pendingModal.style.display = 'flex'; }
+    function closePendingModal() { pendingModal.style.display = 'none'; }
+
+    if (pendingTrigger) pendingTrigger.addEventListener('click', openPendingModal);
+    if (pendingCloseBtn) pendingCloseBtn.addEventListener('click', closePendingModal);
+    if (pendingModal) {
+        pendingModal.addEventListener('click', (e) => {
+            if (e.target === pendingModal) closePendingModal();
+        });
+    }
 
     // Store iso dates on server-rendered rows for sorting
     document.querySelectorAll('.todo-item').forEach(row => {

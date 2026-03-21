@@ -5,6 +5,14 @@
 {% block page_title %}Detalle del Estudiante{% endblock %}
 {% block page_subtitle %}Información completa del estudiante{% endblock %}
 
+{% block extra_css %}
+<style>
+#webcrumbs .max-w-6xl .text-sm { font-size: 1.1375rem !important; }
+#webcrumbs .max-w-6xl .text-xs { font-size: 0.975rem !important; }
+#webcrumbs .max-w-6xl table td { font-size: 1.1375rem !important; }
+</style>
+{% endblock %}
+
 {% block header_actions %}
 <a href="{% url 'students_list' %}" class="header-action-btn bg-neutral-500 hover:bg-neutral-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 text-base leading-none">
     <span class="material-symbols-outlined text-[20px]">arrow_back</span> Volver a Estudiantes

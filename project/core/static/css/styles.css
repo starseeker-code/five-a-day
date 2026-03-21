@@ -124,9 +124,10 @@
 
 :host,
 html {
+  font-size: 130%;
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
-  font-family: 'Montserrat Alternates', ui-sans-serif, system-ui, sans-serif,
+  font-family: 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   font-feature-settings: normal;
   font-variation-settings: normal;

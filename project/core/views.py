@@ -316,16 +316,34 @@ def home(request):
 
     pending_count = pending_payments.count()
 
-    # Obtener nombres únicos de estudiantes con pagos pendientes (máximo 5)
-    pending_students = []
-    seen_students = set()
+    # Obtener nombres únicos de estudiantes con pagos pendientes y sus totales
+    pending_by_student = {}
     for payment in pending_payments:
-        if payment.student_id not in seen_students:
-            seen_students.add(payment.student_id)
-            pending_students.append(payment.student.first_name)
+        sid = payment.student_id
+        if sid not in pending_by_student:
+            pending_by_student[sid] = {
+                "first_name": payment.student.first_name,
+                "last_name": payment.student.last_name,
+                "amounts": [],
+            }
+        pending_by_student[sid]["amounts"].append(payment.amount)
 
-    pending_students_display = pending_students[:5]
-    has_more_pending = len(pending_students) > 5
+    pending_students_list = list(pending_by_student.values())
+    pending_students_display = [v["first_name"] for v in pending_students_list[:5]]
+    has_more_pending = len(pending_students_list) > 5
+    all_pending_students = sorted(
+        [
+            {
+                "display_name": "{} {}".format(
+                    v["first_name"],
+                    "".join(w[0].upper() + "." for w in v["last_name"].split() if w),
+                ),
+                "amount": sum(v["amounts"]),
+            }
+            for v in pending_students_list
+        ],
+        key=lambda x: x["display_name"],
+    )
 
     # Cumpleaños este mes (estudiantes activos)
     birthday_students = Student.objects.filter(
@@ -384,7 +402,8 @@ def home(request):
         "pending_payments_count": pending_count,
         "pending_students": pending_students_display,
         "has_more_pending": has_more_pending,
-        "total_pending_students": len(pending_students),
+        "total_pending_students": len(pending_students_list),
+        "all_pending_students": all_pending_students,
         "birthday_count": birthday_count,
         "birthdays": birthdays_display,
         "has_more_birthdays": has_more_birthdays,

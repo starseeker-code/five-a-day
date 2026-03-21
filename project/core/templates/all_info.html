@@ -5,6 +5,17 @@
 {% block page_title %}Base de Datos{% endblock %}
 {% block page_subtitle %}Vista consolidada de estudiantes y pagos{% endblock %}
 
+{% block extra_css %}
+<style>
+#webcrumbs #students-tbody td,
+#webcrumbs #students-tbody td .text-sm,
+#webcrumbs #payments-tbody td,
+#webcrumbs #payments-tbody td .text-sm { font-size: 1.1375rem !important; }
+#webcrumbs #students-tbody td .text-xs,
+#webcrumbs #payments-tbody td .text-xs { font-size: 0.975rem !important; }
+</style>
+{% endblock %}
+
 {% block header_actions %}
 <a href="/admin/" target="_blank" rel="noopener noreferrer" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
   <span class="material-symbols-outlined text-[20px]">database</span> Admin Django

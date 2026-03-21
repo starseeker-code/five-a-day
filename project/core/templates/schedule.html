@@ -174,10 +174,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const g = groupById[cell.groupId];
                 td.style.background = cellBg(g.color);
                 const dot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${esc(g.color)};margin-right:3px;vertical-align:middle;flex-shrink:0;"></span>`;
-                td.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:2px;">${dot}<span style="font-size:0.72rem;font-weight:600;color:${esc(cellText(g.color))};">${esc(g.name)}</span></div>`;
+                td.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:2px;">${dot}<span style="font-size:0.936rem;font-weight:600;color:${esc(cellText(g.color))};">${esc(g.name)}</span></div>`;
             } else {
                 // Empty slot — hint to use edit mode
-                td.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;opacity:0.35;"><span style="font-size:9px;font-weight:600;color:#6b7280;line-height:1.2;">SIN GRUPO</span><span style="font-size:9px;color:#9ca3af;line-height:1.2;">editar ✏</span></div>';
+                td.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;opacity:0.35;"><span style="font-size:11.7px;font-weight:600;color:#6b7280;line-height:1.2;">SIN GRUPO</span><span style="font-size:11.7px;color:#9ca3af;line-height:1.2;">editar ✏</span></div>';
             }
         }
     }
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 th.className = 'bg-neutral-50 border-b border-neutral-200 p-3 text-center';
                 if (i < 4) th.classList.add('border-r');
                 th.style.width = 'calc((100% - 56px) / 5)';
-                th.innerHTML = '<span style="font-size:0.875rem;font-weight:600;color:#404040;">' + name + '</span>';
+                th.innerHTML = '<span style="font-size:1.1375rem;font-weight:600;color:#404040;">' + name + '</span>';
                 headerRow.appendChild(th);
             });
         }
@@ -211,8 +211,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (row < NUM_ROWS - 1) timeTd.style.borderBottom = '1px solid #e5e5e5';
             timeTd.style.borderRight = '1px solid #e5e5e5';
             timeTd.innerHTML =
-                '<span style="display:block;font-size:11px;font-weight:600;color:#737373;line-height:1.2;">' + ROW_TIMES[row].start + '</span>' +
-                '<span style="display:block;font-size:10px;color:#d4d4d4;line-height:1.2;margin-top:2px;">' + ROW_TIMES[row].end + '</span>';
+                '<span style="display:block;font-size:14.3px;font-weight:600;color:#737373;line-height:1.2;">' + ROW_TIMES[row].start + '</span>' +
+                '<span style="display:block;font-size:13px;color:#d4d4d4;line-height:1.2;margin-top:2px;">' + ROW_TIMES[row].end + '</span>';
             tr.appendChild(timeTd);
 
             let c = 0;
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         td.colSpan = COLS;
                         td.style.background = FF_CLR.bg;
                         td.style.padding = '8px 4px 4px 4px';
-                        td.innerHTML = '<span style="font-size:0.75rem;font-weight:600;color:' + FF_CLR.text + ';">Fun Friday</span>';
+                        td.innerHTML = '<span style="font-size:0.975rem;font-weight:600;color:' + FF_CLR.text + ';">Fun Friday</span>';
                         tr.appendChild(td);
                         c += COLS;
                     } else {
@@ -285,10 +285,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div style="width:4px;align-self:stretch;border-radius:9999px;background:' + esc(g.color) + ';flex-shrink:0;"></div>' +
                     '<div style="flex:1;min-width:0;">' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                            '<span style="font-size:0.875rem;font-weight:600;color:' + esc(cellText(g.color)) + ';">' + esc(g.name) + '</span>' +
-                            '<span style="font-size:11px;color:#a3a3a3;font-weight:500;">' + b.start + ' - ' + b.end + '</span>' +
-                            '<span style="font-size:11px;color:#a3a3a3;">·</span>' +
-                            '<span style="font-size:11px;color:#737373;">' + esc(g.teacher) + '</span>' +
+                            '<span style="font-size:1.1375rem;font-weight:600;color:' + esc(cellText(g.color)) + ';">' + esc(g.name) + '</span>' +
+                            '<span style="font-size:14.3px;color:#a3a3a3;font-weight:500;">' + b.start + ' - ' + b.end + '</span>' +
+                            '<span style="font-size:14.3px;color:#a3a3a3;">·</span>' +
+                            '<span style="font-size:14.3px;color:#737373;">' + esc(g.teacher) + '</span>' +
                         '</div>' +
                         '<div style="font-size:11px;color:#a3a3a3;margin-top:4px;line-height:1.6;">' + stuHtml + '</div>' +
                     '</div></div>';
