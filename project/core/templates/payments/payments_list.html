@@ -7,9 +7,8 @@
 
 {% block extra_css %}
 <style>
-#webcrumbs #paymentsTableBody td,
-#webcrumbs #paymentsTableBody td .text-sm { font-size: 1.1375rem !important; }
-#webcrumbs #paymentsTableBody td .text-xs { font-size: 0.975rem !important; }
+#webcrumbs #paymentsTableBody td { font-size: 1rem; }
+#webcrumbs #paymentsTableBody .nowrap { white-space: nowrap; }
 </style>
 {% endblock %}
 
@@ -51,53 +50,47 @@
 </div>
 
 <!-- Payments Table -->
-<div class="bg-white rounded-lg shadow-lg overflow-hidden">
+<div class="bg-white rounded-lg shadow-lg">
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead class="bg-primary-50 border-b border-primary-200">
                 <tr>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padre/Tutor</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Concepto</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Cantidad</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Método</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Vencimiento</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Pago</th>
-                    <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padre/Tutor</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Cantidad</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Método</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Vencimiento</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Pago</th>
+                    <th style="position:sticky;right:0;background:#fff;width:3.5rem;padding:0.75rem;text-align:center;z-index:2;"></th>
                 </tr>
             </thead>
             <tbody id="paymentsTableBody" class="divide-y divide-neutral-100">
                 {% for payment in payments %}
                 <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ payment.student.full_name }}" data-date="{{ payment.due_date|date:'Y-m-d' }}">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                <span class="material-symbols-outlined text-primary-600" style="font-size:22px">person</span>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-primary-600" style="font-size:18px">person</span>
                             </div>
-                            <div>
-                                <div class="font-medium text-neutral-800">{{ payment.student.full_name }}</div>
-                            </div>
+                            <div class="font-medium text-neutral-800">{{ payment.student.full_name }}</div>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-4 py-3">
                         <div class="font-medium text-neutral-800">{{ payment.parent.full_name }}</div>
-                        <div class="text-sm text-neutral-500">{{ payment.parent.email }}</div>
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-neutral-800">{{ payment.concept }}</div>
-                        <div class="text-sm text-neutral-500">{{ payment.get_payment_type_display }}</div>
+                    <td class="px-4 py-3 text-sm text-neutral-600">
+                        {{ payment.parent.email }}
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-lg text-neutral-800">€{{ payment.amount }}</div>
+                    <td class="px-4 py-3">
+                        <div class="font-bold text-neutral-800">€{{ payment.amount }}</div>
                         <div class="text-sm text-neutral-500">{{ payment.currency }}</div>
                     </td>
-                    <td class="px-6 py-4">
-                        <span class="text-sm text-neutral-800">
-                            {{ payment.get_payment_method_display }}
-                        </span>
+                    <td class="px-4 py-3">
+                        <span class="text-sm text-neutral-800">{{ payment.get_payment_method_display }}</span>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-4 py-3">
                         {% if payment.payment_status == 'completed' %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <span class="material-symbols-outlined text-sm mr-1">check_circle</span>
@@ -110,7 +103,7 @@
                                     Vencido
                                 </span>
                             {% else %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-red-700" style="background-color:transparent;color:#dc2626;">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" style="background-color:#fef3c7;color:#92400e;">
                                     <span class="material-symbols-outlined text-sm mr-1">schedule</span>
                                     Pendiente
                                 </span>
@@ -132,23 +125,21 @@
                             </span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-neutral-600">
+                    <td class="px-4 py-3 text-sm text-neutral-600 nowrap">
                         {{ payment.due_date|date:"d/m/Y" }}
                         {% if payment.is_overdue %}
                             <div class="text-red-500 text-xs">{{ payment.days_overdue }} días vencido</div>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-neutral-600">
+                    <td class="px-4 py-3 text-sm text-neutral-600 nowrap">
                         {% if payment.payment_date %}
                             {{ payment.payment_date|date:"d/m/Y" }}
                         {% else %}
-                            <span class="text-neutral-400">Sin fecha</span>
+                            <span class="text-neutral-400">—</span>
                         {% endif %}
                     </td>
-                    <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
-                        <a href="{% url 'payment_detail_view' payment.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver pago">
-                            <span class="material-symbols-outlined text-base">visibility</span>
-                        </a>
+                    <td style="position:sticky;right:0;background:#f9fafb;width:3.5rem;padding:0.75rem;text-align:center;z-index:2;">
+                        <a href="{% url 'payment_detail_view' payment.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver pago"><span class="material-symbols-outlined text-base">visibility</span></a>
                     </td>
                 </tr>
                 {% empty %}
@@ -177,7 +168,7 @@
 
         {% for num in payments.paginator.page_range %}
             {% if payments.number == num %}
-                <span style="width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#f93a76;color:#fff;font-size:0.875rem;font-weight:700;">{{ num }}</span>
+                <span style="width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:0.875rem;font-weight:700;">{{ num }}</span>
             {% else %}
                 <a href="?page={{ num }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.875rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">{{ num }}</a>
             {% endif %}

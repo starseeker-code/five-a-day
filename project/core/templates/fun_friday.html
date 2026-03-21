@@ -42,7 +42,7 @@
             <button id="ffFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Filtrar por Fun Friday">
                 <span class="material-symbols-outlined text-sm" id="ffFilterIcon">filter_list</span>
             </button>
-            <button id="ffListBtn" class="px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2 font-semibold text-sm" style="background-color:#fbcfe8;color:#500724;" title="Ver listas de asistencia">
+            <button id="ffListBtn" class="px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2 font-semibold text-sm" style="background-color:#ddd6fe;color:#2e1065;" title="Ver listas de asistencia">
                 <span class="material-symbols-outlined text-sm">fact_check</span>
                 Listas
             </button>
@@ -108,7 +108,7 @@
     <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden" style="max-height:90vh;">
         <div class="px-6 py-4 flex justify-between items-center" style="border-bottom:1px solid #f3f4f6;">
             <h3 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-                <span class="material-symbols-outlined" style="color:#ec4899;">groups</span>
+                <span class="material-symbols-outlined" style="color:#8b5cf6;">groups</span>
                 Listas de Asistencia
             </h3>
             <button type="button" onclick="document.getElementById('modal-ff-lists').style.display='none';document.body.style.overflow='';" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;">
@@ -250,8 +250,8 @@ ffSortBtn.addEventListener('click', () => {
     const asc = ffNameSortDir === 1;
     ffSortIcon.textContent = 'sort_by_alpha';
     ffSortBtn.title = asc ? 'Nombre Z→A' : 'Nombre A→Z';
-    ffSortBtn.style.background = '#fce7f3';
-    ffSortBtn.style.color = '#500724';
+    ffSortBtn.style.background = '#ede9fe';
+    ffSortBtn.style.color = '#2e1065';
     const rows = Array.from(ffStudentList.querySelectorAll('.ff-student-row'));
     rows.sort((a, b) => {
         const na = a.dataset.name.toLowerCase(), nb = b.dataset.name.toLowerCase();

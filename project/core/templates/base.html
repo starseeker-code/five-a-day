@@ -11,6 +11,32 @@
     #webcrumbs *:not(.material-symbols-outlined) {
         font-family: 'Trebuchet MS', sans-serif !important;
     }
+    .material-symbols-outlined {
+        font-feature-settings: 'liga' !important;
+        -webkit-font-feature-settings: 'liga' !important;
+        font-family: 'Material Symbols Outlined' !important;
+    }
+    /* ── Primary: pink → violet/lavender ──────────────────────── */
+    #webcrumbs .bg-primary-50,  #webcrumbs .hover\:bg-primary-50:hover  { background-color: rgb(245 243 255 / var(--tw-bg-opacity,1)) !important; }
+    #webcrumbs .bg-primary-100, #webcrumbs .hover\:bg-primary-100:hover { background-color: rgb(237 233 254 / var(--tw-bg-opacity,1)) !important; }
+    #webcrumbs .bg-primary-200, #webcrumbs .hover\:bg-primary-200:hover { background-color: rgb(221 214 254 / var(--tw-bg-opacity,1)) !important; }
+    #webcrumbs .hover\:bg-primary-300:hover { background-color: rgb(196 181 253 / var(--tw-bg-opacity,1)) !important; }
+    #webcrumbs .bg-primary-500, #webcrumbs .hover\:bg-primary-500:hover { background-color: rgb(139 92 246 / var(--tw-bg-opacity,1)) !important; }
+    #webcrumbs .bg-primary-600, #webcrumbs .hover\:bg-primary-600:hover { background-color: rgb(124 58 237 / var(--tw-bg-opacity,1)) !important; }
+
+    #webcrumbs .border-primary-200 { border-color: rgb(221 214 254 / var(--tw-border-opacity,1)) !important; }
+    #webcrumbs .border-primary-300 { border-color: rgb(196 181 253 / var(--tw-border-opacity,1)) !important; }
+    #webcrumbs .border-primary-400, #webcrumbs .hover\:border-primary-400:hover { border-color: rgb(167 139 250 / var(--tw-border-opacity,1)) !important; }
+    #webcrumbs .border-primary-500 { border-color: rgb(139 92 246 / var(--tw-border-opacity,1)) !important; }
+    #webcrumbs .border-primary-600 { border-color: rgb(124 58 237 / var(--tw-border-opacity,1)) !important; }
+
+    #webcrumbs .text-primary-300 { color: rgb(196 181 253 / var(--tw-text-opacity,1)) !important; }
+    #webcrumbs .text-primary-400 { color: rgb(167 139 250 / var(--tw-text-opacity,1)) !important; }
+    #webcrumbs .text-primary-500 { color: rgb(139 92 246 / var(--tw-text-opacity,1)) !important; }
+    #webcrumbs .text-primary-600 { color: rgb(124 58 237 / var(--tw-text-opacity,1)) !important; }
+    #webcrumbs .text-primary-700, #webcrumbs .hover\:text-primary-700:hover { color: rgb(109 40 217 / var(--tw-text-opacity,1)) !important; }
+
+    .accent-primary-500 { accent-color: rgb(139 92 246); }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -173,7 +199,7 @@
     <div id="support-modal" class="hidden items-center justify-center p-4" style="display: none; position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 50;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <!-- Header -->
-            <div class="px-6 text-white flex justify-between items-center" style="background: linear-gradient(to right, #fda4af, #fb7185); padding-top: 16px; padding-bottom: 16px;">
+            <div class="px-6 text-white flex justify-between items-center" style="background: linear-gradient(to right, #c4b5fd, #8b5cf6); padding-top: 16px; padding-bottom: 16px;">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
                     <span class="material-symbols-outlined">help</span>
                     ¿Necesitas ayuda?
@@ -457,8 +483,8 @@
         #webcrumbs :is(.group:hover .group-hover\:bg-amber-200) { background-color: #fde68a !important; }
 
         #webcrumbs .hover\:bg-white\/20:hover { background-color: rgba(255,255,255,0.2); }
-        #webcrumbs .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgb(249 58 118); }
-        #webcrumbs .focus\:border-primary-500:focus { border-color: rgb(249 58 118); }
+        #webcrumbs .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgb(139 92 246); }
+        #webcrumbs .focus\:border-primary-500:focus { border-color: rgb(139 92 246); }
     </style>
 </body>
 </html>

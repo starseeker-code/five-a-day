@@ -134,7 +134,7 @@
     <!-- Fun Friday Attendance -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined" style="color:#ec4899;">celebration</span>
+            <span class="material-symbols-outlined" style="color:#8b5cf6;">celebration</span>
             Fun Friday
         </h3>
         <div class="flex flex-wrap gap-6">
@@ -145,7 +145,7 @@
                     {% for entry in fun_friday_dates %}
                     <div class="flex items-center justify-between py-1.5 px-3 rounded-md hover:bg-neutral-50" data-date="{{ entry.date|date:'Y-m-d' }}">
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm" style="color:#ec4899;">event</span>
+                            <span class="material-symbols-outlined text-sm" style="color:#8b5cf6;">event</span>
                             <span class="text-sm text-neutral-700 font-medium">{{ entry.date|date:"d/m/Y" }}</span>
                             {% with today=entry.date %}
                             {% endwith %}
@@ -168,8 +168,8 @@
                     <input type="date" id="ff-new-date"
                         class="px-3 py-1.5 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-pink-300 focus:border-pink-400">
                     <button onclick="addFunFriday()"
-                        class="px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
-                        style="background:#fbcfe8;color:#500724;">
+                        class="px-3 py-1.5 rounded-md font-semibold transition-colors"
+                        style="background:#ddd6fe;color:#2e1065;font-size:0.8125rem;">
                         Añadir
                     </button>
                 </div>

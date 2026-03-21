@@ -124,7 +124,7 @@
 
 :host,
 html {
-  font-size: 130%;
+  font-size: 100%;
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
   font-family: 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif,
@@ -1059,8 +1059,8 @@ body {
 .field-wrapper input:focus,
 .field-wrapper select:focus,
 .field-wrapper textarea:focus {
-  border-color: #f9467a;
-  box-shadow: 0 8px 30px rgba(249,70,122,0.07);
+  border-color: #8b5cf6;
+  box-shadow: 0 8px 30px rgba(139,92,246,0.07);
   transform: translateY(-1px);
 }
 
@@ -1108,15 +1108,15 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #f9467a 0%, #e42a63 100%);
+  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
   color: #fff;
   border: 1px solid rgba(0,0,0,0.04);
-  box-shadow: 0 10px 26px rgba(228,42,99,0.12);
+  box-shadow: 0 10px 26px rgba(124,58,237,0.12);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(228,42,99,0.14);
+  box-shadow: 0 14px 32px rgba(124,58,237,0.14);
 }
 
 .btn-secondary {
@@ -1173,6 +1173,6 @@ body {
 
 /* Pagination links */
 #webcrumbs .no-underline { text-decoration: none !important; }
-#webcrumbs .hover\:bg-primary-50:hover   { background-color: #fdf2f7; }
-#webcrumbs .hover\:border-primary-400:hover { border-color: #e87aac; }
-#webcrumbs .hover\:text-primary-700:hover   { color: #c30d53; }
+#webcrumbs .hover\:bg-primary-50:hover   { background-color: #f5f3ff; }
+#webcrumbs .hover\:border-primary-400:hover { border-color: #a78bfa; }
+#webcrumbs .hover\:text-primary-700:hover   { color: #6d28d9; }

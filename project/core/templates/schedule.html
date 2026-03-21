@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const allStudents = {{ students_json|safe }};
     const slotsRaw = {{ slots_json|safe }};
 
-    const FF_CLR = { bg: '#fce7f3', text: '#be185d', dot: '#f472b6' };
+    const FF_CLR = { bg: '#ede9fe', text: '#6d28d9', dot: '#a78bfa' };
 
     const groupById = {};
     groups.forEach(g => { groupById[g.id] = g; });
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let list = '';
             allStudents.forEach(st => {
                 list += '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;">' +
-                    '<input type="checkbox" class="ff-checkbox" style="width:14px;height:14px;accent-color:#ec4899;cursor:pointer;">' +
+                    '<input type="checkbox" class="ff-checkbox" style="width:14px;height:14px;accent-color:#8b5cf6;cursor:pointer;">' +
                     '<span style="font-size:0.875rem;color:#404040;">' + esc(st.first_name) + ' ' + esc(st.last_name) + '</span>' +
                 '</div>';
             });
