@@ -135,19 +135,16 @@
                             <div class="absolute w-2 h-2 bg-neutral-300 rounded-full" style="top:4px; right:4px; pointer-events:none;"></div>
                             {% endif %}
                             <!-- Dropdown -->
-                            <div id="notif-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden">
-                                <div class="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
-                                    <h3 class="font-semibold text-neutral-700 text-sm">Notificaciones de hoy</h3>
-                                </div>
+                            <div id="notif-dropdown" class="hidden absolute top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden" style="right:0;width:22rem;max-width:calc(100vw - 1.5rem);">
                                 {% if notifications_today_todos or notifications_today_apps %}
                                     {% if notifications_today_todos %}
                                     <div class="px-4 py-2 bg-primary-50">
                                         <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Tareas de hoy</p>
                                     </div>
                                     {% for todo in notifications_today_todos %}
-                                    <div class="px-4 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
-                                        <span class="material-symbols-outlined text-primary-400 text-[18px] mt-0.5 shrink-0">task_alt</span>
-                                        <span class="text-sm text-neutral-700">{{ todo.text }}</span>
+                                    <div class="px-6 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
+                                        <span class="material-symbols-outlined text-primary-400 shrink-0" style="font-size:20px;margin-top:2px;">task_alt</span>
+                                        <span class="text-neutral-700" style="font-size:0.9375rem;">{{ todo.text }}</span>
                                     </div>
                                     {% endfor %}
                                     {% endif %}
@@ -156,9 +153,9 @@
                                         <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Envios de hoy</p>
                                     </div>
                                     {% for app in notifications_today_apps %}
-                                    <div class="px-4 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
-                                        <span class="material-symbols-outlined text-primary-600 text-[18px] mt-0.5 shrink-0">send</span>
-                                        <a href="{% url app.url_name %}" class="text-sm text-primary-700 hover:underline font-medium">{{ app.name }}</a>
+                                    <div class="px-6 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
+                                        <span class="material-symbols-outlined text-primary-600 shrink-0" style="font-size:20px;margin-top:2px;">send</span>
+                                        <a href="{% url app.url_name %}" class="text-primary-700 hover:underline font-medium" style="font-size:0.9375rem;text-decoration:none;">{{ app.name }}</a>
                                     </div>
                                     {% endfor %}
                                     {% endif %}
