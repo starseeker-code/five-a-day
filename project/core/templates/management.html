@@ -108,6 +108,13 @@
                                    disabled>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Descuento junio — completar año (€ fijo)</label>
+                            <input type="number" step="0.01" name="june_discount"
+                                   value="{{ config.june_discount|unlocalize }}"
+                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
+                                   disabled>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-neutral-600 mb-1">Año completo (€ fijo, no adultos)</label>
                             <input type="number" step="0.01" name="full_year_bonus"
                                    value="{{ config.full_year_bonus|unlocalize }}"

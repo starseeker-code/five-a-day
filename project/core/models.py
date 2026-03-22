@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, EmailValidator
 from decimal import Decimal
-from datetime import date
+from datetime import date, timedelta
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
@@ -16,6 +16,27 @@ def current_academic_year(reference_date=None):
     else:
         start_year = reference_date.year - 1
     return f"{start_year}-{start_year + 1}"
+
+
+def academic_year_start_date(year):
+    """
+    Return the first Monday on or after September 14th of the given year.
+    This is the start of the academic year (3rd week of September).
+    """
+    sept_14 = date(year, 9, 14)
+    # Monday = 0, so we need to find the next Monday on or after Sept 14
+    days_until_monday = (7 - sept_14.weekday()) % 7
+    return sept_14 + timedelta(days=days_until_monday)
+
+
+def academic_year_end_date(year):
+    """
+    Return the last Friday of June of the given year.
+    """
+    # Start from June 30 and go backwards to find Friday (weekday=4)
+    june_30 = date(year, 6, 30)
+    days_since_friday = (june_30.weekday() - 4) % 7
+    return june_30 - timedelta(days=days_since_friday)
 
 
 # ============================================================================
@@ -85,9 +106,16 @@ class SiteConfiguration(models.Model):
     old_student_discount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('10.00'),
+        default=Decimal('20.00'),
         validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Alumno antiguo (€ fijo)'
+    )
+    june_discount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Descuento junio — completar año (€ fijo)'
     )
     full_year_bonus = models.DecimalField(
         max_digits=8,
@@ -163,6 +191,7 @@ class SiteConfiguration(models.Model):
                 language_cheque_discount=constants.LANGUAGE_CHEQUE_DISCOUNT[0],
                 quarterly_enrollment_discount=constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
                 old_student_discount=constants.OLD_STUDENT_DISCOUNT[0],
+                june_discount=constants.JUNE_DISCOUNT[0],
                 full_year_bonus=constants.FULL_YEAR_BONUS[0],
                 sibling_discount=constants.SIBLING_DISCOUNT[0],
                 half_month_discount=constants.HALF_MONTH_DISCOUNT[0],
@@ -220,7 +249,21 @@ class Enrollment(models.Model):
         choices=constants.SCHEDULE_TYPE_CHOICES,
         default='full_time'
     )
-    
+    payment_modality = models.CharField(
+        max_length=10,
+        choices=constants.PAYMENT_MODALITY_CHOICES,
+        default='monthly',
+        verbose_name='Modalidad de pago'
+    )
+    has_language_cheque = models.BooleanField(
+        default=False,
+        verbose_name='Cheque idioma'
+    )
+    is_sibling_discount = models.BooleanField(
+        default=False,
+        verbose_name='Descuento hermano'
+    )
+
     enrollment_amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
@@ -328,7 +371,9 @@ class Payment(models.Model):
     parent = models.ForeignKey(
         'Parent',
         on_delete=models.PROTECT,
-        related_name='payments'
+        related_name='payments',
+        null=True,
+        blank=True
     )
 
     payment_type = models.CharField(
@@ -391,8 +436,8 @@ class Payment(models.Model):
         if self.payment_status == 'completed' and self.payment_date and self.payment_date > date.today():
             raise ValidationError("Payment date cannot be in the future for completed payments.")
         
-        # Validate student-parent relationship
-        if self.student and self.parent:
+        # Validate student-parent relationship (skip for adult students)
+        if self.student and self.parent and not self.student.is_adult:
             if not self.student.parents.filter(id=self.parent.id).exists():
                 raise ValidationError("The selected parent is not associated with this student.")
 
@@ -505,6 +550,9 @@ class Student(models.Model):
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
     birth_date = models.DateField()
+    is_adult = models.BooleanField(default=False, verbose_name='Estudiante adulto (18+)')
+    email = models.EmailField(blank=True, verbose_name='Email (solo adultos)')
+    phone = models.CharField(max_length=20, blank=True, verbose_name='Teléfono (solo adultos)')
     school = models.CharField(max_length=200, blank=True)
     allergies = models.TextField(blank=True)
     gdpr_signed = models.BooleanField(default=False)

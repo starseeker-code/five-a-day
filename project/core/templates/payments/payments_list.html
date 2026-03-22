@@ -27,9 +27,15 @@
     <p class="text-neutral-600">Administra todos los pagos de la academia.</p>
 </div>
 <div class="mb-6">
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-center flex-wrap gap-3">
         <div>
-            <p class="text-neutral-600">Esperado: <span class="font-semibold">€{{ expected_payments_total|floatformat:0 }}</span> &middot; Cobrado: <span class="font-semibold text-green-600">€{{ completed_payments_total|floatformat:0 }}</span> &middot; Total: {{ payments.paginator.count }} pagos</p>
+            <p class="text-neutral-600">
+                Esperado: <span class="font-semibold">€{{ expected_payments_total|floatformat:0 }}</span> <span class="text-neutral-400">({{ expected_payments_count }})</span>
+                &middot; Cobrado: <span class="font-semibold text-green-600">€{{ completed_payments_total|floatformat:0 }}</span> <span class="text-neutral-400">({{ completed_payments_count }})</span>
+                &middot; Pendiente: <span class="font-semibold" style="color:#d97706;">€{{ pending_payments_total|floatformat:0 }}</span> <span class="text-neutral-400">({{ pending_payments_count }})</span>
+                &middot; Vencido: <span class="font-semibold text-red-600">€{{ overdue_payments_total|floatformat:0 }}</span> <span class="text-neutral-400">({{ overdue_payments_count }})</span>
+                &middot; Total: <span id="visibleCount">{{ total_count }}</span> pagos
+            </p>
         </div>
         <div class="flex gap-2 items-center">
             <input
@@ -39,6 +45,12 @@
                 class="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-48"
                 style="display: none;"
             >
+            <button id="paymentTypeFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Tipo: Todos">
+                <span class="material-symbols-outlined text-sm" id="paymentTypeFilterIcon">tune</span>
+            </button>
+            <button id="paymentStatusFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Estado: Todos">
+                <span class="material-symbols-outlined text-sm" id="paymentStatusFilterIcon">filter_list</span>
+            </button>
             <button id="paymentSortBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Ordenar: Fecha ↑">
                 <span class="material-symbols-outlined text-sm" id="paymentSortIcon">sort</span>
             </button>
@@ -58,39 +70,58 @@
                     <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
                     <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padre/Tutor</th>
                     <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Email</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Cantidad</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Método</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Vencimiento</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Pago</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Cantidad</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Método</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Estado</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Vencimiento</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Fecha Pago</th>
                     <th style="position:sticky;right:0;background:#fff;width:3.5rem;padding:0.75rem;text-align:center;z-index:2;"></th>
                 </tr>
             </thead>
             <tbody id="paymentsTableBody" class="divide-y divide-neutral-100">
-                {% for payment in payments %}
-                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ payment.student.full_name }}" data-date="{{ payment.due_date|date:'Y-m-d' }}">
+                {% for payment in payments_list %}
+                <tr class="hover:bg-neutral-50 transition-all duration-200"
+                    data-name="{{ payment.student.full_name }}"
+                    data-date="{{ payment.due_date|date:'Y-m-d' }}"
+                    data-payment-type="{{ payment.payment_type }}"
+                    data-schedule-type="{% if payment.enrollment %}{{ payment.enrollment.schedule_type }}{% else %}full_time{% endif %}"
+                    data-payment-status="{{ payment.payment_status }}"
+                    data-payment-id="{{ payment.id }}">
                     <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-primary-600" style="font-size:18px">person</span>
+                        <div class="flex items-center gap-3">
+                            {% if payment.payment_status != 'completed' %}
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 cursor-pointer payment-complete-trigger relative" style="background-color:#ede9fe;" data-payment-id="{{ payment.id }}">
+                                <span class="material-symbols-outlined" style="font-size:22px;color:#8b5cf6;">payment</span>
+                                <!-- Dropdown -->
+                                <div class="payment-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 py-1 w-44">
+                                    {% for method_key, method_label in payment_method_choices %}
+                                    <button type="button" class="payment-method-btn w-full text-left px-4 py-2 text-sm hover:bg-primary-50 transition-colors flex items-center gap-2"
+                                            data-payment-id="{{ payment.id }}" data-method="{{ method_key }}">
+                                        <span class="material-symbols-outlined text-sm">
+                                            {% if method_key == 'cash' %}payments{% elif method_key == 'transfer' %}account_balance{% else %}credit_card{% endif %}
+                                        </span>
+                                        {{ method_label }}
+                                    </button>
+                                    {% endfor %}
+                                </div>
                             </div>
+                            {% endif %}
                             <div class="font-medium text-neutral-800">{{ payment.student.full_name }}</div>
                         </div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="font-medium text-neutral-800">{{ payment.parent.full_name }}</div>
+                        <div class="font-medium text-neutral-800">{% if payment.parent %}{{ payment.parent.full_name }}{% elif payment.student.is_adult %}{{ payment.student.full_name }}{% else %}—{% endif %}</div>
                     </td>
                     <td class="px-4 py-3 text-sm text-neutral-600">
-                        {{ payment.parent.email }}
+                        {% if payment.parent %}{{ payment.parent.email }}{% elif payment.student.is_adult %}{{ payment.student.email }}{% else %}—{% endif %}
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 text-center">
                         <div class="font-bold text-neutral-800">€{{ payment.amount }}</div>
-                        <div class="text-sm text-neutral-500">{{ payment.currency }}</div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 text-center">
                         <span class="text-sm text-neutral-800">{{ payment.get_payment_method_display }}</span>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 text-center">
                         {% if payment.payment_status == 'completed' %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <span class="material-symbols-outlined text-sm mr-1">check_circle</span>
@@ -125,13 +156,13 @@
                             </span>
                         {% endif %}
                     </td>
-                    <td class="px-4 py-3 text-sm text-neutral-600 nowrap">
+                    <td class="px-4 py-3 text-center text-sm text-neutral-600 nowrap">
                         {{ payment.due_date|date:"d/m/Y" }}
                         {% if payment.is_overdue %}
                             <div class="text-red-500 text-xs">{{ payment.days_overdue }} días vencido</div>
                         {% endif %}
                     </td>
-                    <td class="px-4 py-3 text-sm text-neutral-600 nowrap">
+                    <td class="px-4 py-3 text-center text-sm text-neutral-600 nowrap">
                         {% if payment.payment_date %}
                             {{ payment.payment_date|date:"d/m/Y" }}
                         {% else %}
@@ -158,61 +189,198 @@
     </div>
 </div>
 
-<!-- Pagination -->
-{% if payments.has_other_pages %}
-<div style="margin-top:3rem;display:flex;justify-content:center;">
-    <nav style="display:flex;align-items:center;gap:0.5rem;">
-        {% if payments.has_previous %}
-            <a href="?page={{ payments.previous_page_number }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">‹</a>
-        {% endif %}
-
-        {% for num in payments.paginator.page_range %}
-            {% if payments.number == num %}
-                <span style="width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:0.875rem;font-weight:700;">{{ num }}</span>
-            {% else %}
-                <a href="?page={{ num }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.875rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">{{ num }}</a>
-            {% endif %}
-        {% endfor %}
-
-        {% if payments.has_next %}
-            <a href="?page={{ payments.next_page_number }}" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">›</a>
-        {% endif %}
-    </nav>
+<!-- Frontend Pagination -->
+<div id="paginationContainer" style="margin-top:3rem;display:flex;justify-content:center;">
+    <nav id="paginationNav" style="display:flex;align-items:center;gap:0.5rem;"></nav>
 </div>
-{% endif %}
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // ==================== SEARCH & SORT ====================
+    // ==================== COMMON ====================
+    const paymentsTableBody = document.getElementById('paymentsTableBody');
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+
+    function getCsrf() {
+        return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+    }
+
+    // Get all data rows (cached once)
+    const allRows = Array.from(paymentsTableBody.querySelectorAll('tr[data-name]'));
+
+    // ==================== VISIBILITY + PAGINATION ====================
+    function getVisibleRows() {
+        return allRows.filter(row => !row._searchHidden && !row._typeHidden && !row._statusHidden);
+    }
+
+    function renderPage() {
+        const visible = getVisibleRows();
+        const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const end = start + PAGE_SIZE;
+
+        // Hide all rows first
+        allRows.forEach(row => row.style.display = 'none');
+        // Show only current page of visible rows
+        visible.forEach((row, i) => {
+            row.style.display = (i >= start && i < end) ? '' : 'none';
+        });
+
+        // Update count
+        document.getElementById('visibleCount').textContent = visible.length;
+
+        // Render pagination controls
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const nav = document.getElementById('paginationNav');
+        if (totalPages <= 1) { nav.innerHTML = ''; return; }
+
+        const btnStyle = 'text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.875rem;cursor:pointer;transition:background 0.2s;';
+        const activeStyle = 'width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:0.875rem;font-weight:700;';
+
+        let html = '';
+        if (currentPage > 1) {
+            html += `<button type="button" class="pg-btn" data-page="${currentPage - 1}" style="${btnStyle}font-size:1rem;">‹</button>`;
+        }
+
+        // Show limited page range for many pages
+        let pages = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages = [1];
+            let start = Math.max(2, currentPage - 1);
+            let end = Math.min(totalPages - 1, currentPage + 1);
+            if (start > 2) pages.push('...');
+            for (let i = start; i <= end; i++) pages.push(i);
+            if (end < totalPages - 1) pages.push('...');
+            pages.push(totalPages);
+        }
+
+        for (const p of pages) {
+            if (p === '...') {
+                html += `<span style="width:2rem;text-align:center;color:#9ca3af;">…</span>`;
+            } else if (p === currentPage) {
+                html += `<span style="${activeStyle}">${p}</span>`;
+            } else {
+                html += `<button type="button" class="pg-btn" data-page="${p}" style="${btnStyle}">${p}</button>`;
+            }
+        }
+
+        if (currentPage < totalPages) {
+            html += `<button type="button" class="pg-btn" data-page="${currentPage + 1}" style="${btnStyle}font-size:1rem;">›</button>`;
+        }
+        nav.innerHTML = html;
+
+        // Attach click handlers
+        nav.querySelectorAll('.pg-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentPage = parseInt(btn.dataset.page);
+                renderPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    }
+
+    function applyFiltersAndPaginate() {
+        currentPage = 1;
+        renderPage();
+    }
+
+    // ==================== SEARCH ====================
     const paymentSearchBtn = document.getElementById('paymentSearchBtn');
     const paymentSearchInput = document.getElementById('paymentSearchInput');
-    const paymentSortBtn = document.getElementById('paymentSortBtn');
-    const paymentSortIcon = document.getElementById('paymentSortIcon');
-    const paymentsTableBody = document.getElementById('paymentsTableBody');
 
     paymentSearchBtn.addEventListener('click', () => {
         const visible = paymentSearchInput.style.display !== 'none';
         if (visible) {
             paymentSearchInput.style.display = 'none';
             paymentSearchInput.value = '';
-            filterPayments('');
+            allRows.forEach(r => { r._searchHidden = false; });
+            applyFiltersAndPaginate();
         } else {
             paymentSearchInput.style.display = 'block';
             paymentSearchInput.focus();
         }
     });
 
-    paymentSearchInput.addEventListener('input', () => filterPayments(paymentSearchInput.value));
-
-    function filterPayments(query) {
-        const q = query.toLowerCase().trim();
-        paymentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
-            row.style.display = (q === '' || row.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+    paymentSearchInput.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        allRows.forEach(row => {
+            row._searchHidden = q !== '' && !row.dataset.name.toLowerCase().includes(q);
         });
+        applyFiltersAndPaginate();
+    });
+
+    // ==================== TYPE FILTER (Monthly 2d/w, Monthly 1d/w, Quarterly) ====================
+    const paymentTypeFilterBtn = document.getElementById('paymentTypeFilterBtn');
+    const paymentTypeFilterIcon = document.getElementById('paymentTypeFilterIcon');
+    let typeFilterState = 0;
+
+    const typeFilterCfg = [
+        { icon: 'tune',           title: 'Tipo: Todos',                 bg: '',        color: '', match: null },
+        { icon: 'event_repeat',   title: 'Mensual 2 días/sem',          bg: '#3b82f6', color: '#fff', match: r => r.dataset.paymentType === 'monthly' && r.dataset.scheduleType === 'full_time' },
+        { icon: 'event_note',     title: 'Mensual 1 día/sem',           bg: '#8b5cf6', color: '#fff', match: r => r.dataset.paymentType === 'monthly' && (r.dataset.scheduleType === 'part_time' || r.dataset.scheduleType === 'adult_group') },
+        { icon: 'date_range',     title: 'Trimestral',                  bg: '#059669', color: '#fff', match: r => r.dataset.paymentType === 'quarterly' },
+    ];
+
+    function applyTypeFilter() {
+        const cfg = typeFilterCfg[typeFilterState];
+        allRows.forEach(row => {
+            row._typeHidden = cfg.match ? !cfg.match(row) : false;
+        });
+        applyFiltersAndPaginate();
     }
 
+    paymentTypeFilterBtn.addEventListener('click', () => {
+        typeFilterState = (typeFilterState + 1) % typeFilterCfg.length;
+        const cfg = typeFilterCfg[typeFilterState];
+        paymentTypeFilterIcon.textContent = cfg.icon;
+        paymentTypeFilterBtn.title = cfg.title;
+        paymentTypeFilterBtn.style.background = cfg.bg;
+        paymentTypeFilterBtn.style.color = cfg.color;
+        applyTypeFilter();
+    });
+
+    // ==================== STATUS FILTER (All / Not completed) ====================
+    const paymentStatusFilterBtn = document.getElementById('paymentStatusFilterBtn');
+    const paymentStatusFilterIcon = document.getElementById('paymentStatusFilterIcon');
+    let statusFilterState = 0;
+
+    const statusFilterCfg = [
+        { icon: 'filter_list',     title: 'Estado: Todos',        bg: '',        color: '' },
+        { icon: 'pending_actions', title: 'No completados',       bg: '#dc2626', color: '#fff' },
+    ];
+
+    function applyStatusFilter() {
+        allRows.forEach(row => {
+            if (statusFilterState === 0) {
+                row._statusHidden = false;
+            } else {
+                row._statusHidden = row.dataset.paymentStatus === 'completed';
+            }
+        });
+        applyFiltersAndPaginate();
+    }
+
+    paymentStatusFilterBtn.addEventListener('click', () => {
+        statusFilterState = (statusFilterState + 1) % statusFilterCfg.length;
+        const cfg = statusFilterCfg[statusFilterState];
+        paymentStatusFilterIcon.textContent = cfg.icon;
+        paymentStatusFilterBtn.title = cfg.title;
+        paymentStatusFilterBtn.style.background = cfg.bg;
+        paymentStatusFilterBtn.style.color = cfg.color;
+        applyStatusFilter();
+    });
+
+    // ==================== SORT ====================
+    const paymentSortBtn = document.getElementById('paymentSortBtn');
+    const paymentSortIcon = document.getElementById('paymentSortIcon');
     let paymentSortState = 0;
     const paymentSortCfg = [
         { field: 'date', dir: 'asc',  icon: 'calendar_month', title: 'Fecha ↑' },
@@ -226,8 +394,8 @@
         const cfg = paymentSortCfg[paymentSortState];
         paymentSortIcon.textContent = cfg.icon;
         paymentSortBtn.title = cfg.title;
-        const rows = Array.from(paymentsTableBody.querySelectorAll('tr[data-name]'));
-        rows.sort((a, b) => {
+        // Sort the cached allRows array (this reorders the canonical list)
+        allRows.sort((a, b) => {
             if (cfg.field === 'name') {
                 const na = a.dataset.name.toLowerCase(), nb = b.dataset.name.toLowerCase();
                 return cfg.dir === 'asc' ? na.localeCompare(nb) : nb.localeCompare(na);
@@ -236,7 +404,80 @@
                 ? a.dataset.date.localeCompare(b.dataset.date)
                 : b.dataset.date.localeCompare(a.dataset.date);
         });
-        rows.forEach(row => paymentsTableBody.appendChild(row));
+        // Re-append in new order
+        allRows.forEach(row => paymentsTableBody.appendChild(row));
+        renderPage();
     });
+
+    // ==================== PAYMENT COMPLETION DROPDOWN ====================
+    document.querySelectorAll('.payment-complete-trigger').forEach(trigger => {
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.querySelectorAll('.payment-dropdown').forEach(d => {
+                if (d !== this.querySelector('.payment-dropdown')) d.classList.add('hidden');
+            });
+            this.querySelector('.payment-dropdown').classList.toggle('hidden');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.payment-dropdown').forEach(d => d.classList.add('hidden'));
+    });
+
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const paymentId = this.dataset.paymentId;
+            const method = this.dataset.method;
+
+            fetch(`/api/payments/${paymentId}/quick-complete/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                },
+                body: JSON.stringify({ payment_method: method }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector(`tr[data-payment-id="${paymentId}"]`);
+                    if (row) {
+                        row.dataset.paymentStatus = 'completed';
+                        const trigger = row.querySelector('.payment-complete-trigger');
+                        if (trigger) trigger.remove();
+                        const statusCell = row.querySelectorAll('td')[5];
+                        if (statusCell) {
+                            statusCell.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><span class="material-symbols-outlined text-sm mr-1">check_circle</span>Completado</span>';
+                        }
+                        const payDateCell = row.querySelectorAll('td')[7];
+                        if (payDateCell) {
+                            const today = new Date();
+                            payDateCell.textContent = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+                        }
+                        const methodLabels = { cash: 'Cash', transfer: 'Bank Transfer', credit_card: 'Credit Card' };
+                        const methodCell = row.querySelectorAll('td')[4];
+                        if (methodCell) {
+                            methodCell.innerHTML = `<span class="text-sm text-neutral-800">${methodLabels[method] || method}</span>`;
+                        }
+                        applyStatusFilter();
+                    }
+                } else {
+                    alert(data.error || 'Error al completar el pago');
+                }
+            })
+            .catch(err => {
+                console.error('Error completing payment:', err);
+                alert('Error de conexión');
+            });
+
+            document.querySelectorAll('.payment-dropdown').forEach(d => d.classList.add('hidden'));
+        });
+    });
+
+    // ==================== INIT ====================
+    // Initialize filter flags
+    allRows.forEach(r => { r._searchHidden = false; r._typeHidden = false; r._statusHidden = false; });
+    renderPage();
 </script>
 {% endblock %}

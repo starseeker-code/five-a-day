@@ -44,14 +44,22 @@
                 </span>
             {% endif %}
 
-            {% if student.gdpr_signed %}
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    <span class="material-symbols-outlined text-sm mr-2">verified_user</span>GDPR firmado
+            {% if student.is_adult %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                    <span class="material-symbols-outlined text-sm mr-2">person</span>Adulto (18+)
                 </span>
-            {% else %}
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                    <span class="material-symbols-outlined text-sm mr-2">gpp_bad</span>GDPR pendiente
-                </span>
+            {% endif %}
+
+            {% if not student.is_adult %}
+                {% if student.gdpr_signed %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span class="material-symbols-outlined text-sm mr-2">verified_user</span>GDPR firmado
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        <span class="material-symbols-outlined text-sm mr-2">gpp_bad</span>GDPR pendiente
+                    </span>
+                {% endif %}
             {% endif %}
         </div>
     </div>
@@ -66,14 +74,20 @@
                 <div><span class="font-medium text-neutral-600">Apellidos:</span> {{ student.last_name }}</div>
                 <div><span class="font-medium text-neutral-600">Fecha nacimiento:</span> {{ student.birth_date|date:"d/m/Y" }}</div>
                 <div><span class="font-medium text-neutral-600">Edad:</span> {{ student.age }} años</div>
+                {% if student.is_adult %}
+                <div><span class="font-medium text-neutral-600">Email:</span> {{ student.email|default:"—" }}</div>
+                <div><span class="font-medium text-neutral-600">Teléfono:</span> {{ student.phone|default:"—" }}</div>
+                {% else %}
                 <div><span class="font-medium text-neutral-600">Colegio:</span> {{ student.school|default:"—" }}</div>
-                <div class="flex items-center gap-1"><span class="font-medium text-neutral-600">Grupo:</span> {% if student.group %}<span class="w-2.5 h-2.5 rounded-full inline-block ml-1" style="background-color: {{ student.group.color }};"></span> {{ student.group.group_name }}{% else %}—{% endif %}</div>
                 <div><span class="font-medium text-neutral-600">Alergias:</span> {{ student.allergies|default:"—" }}</div>
+                {% endif %}
+                <div class="flex items-center gap-1"><span class="font-medium text-neutral-600">Grupo:</span> {% if student.group %}<span class="w-2.5 h-2.5 rounded-full inline-block ml-1" style="background-color: {{ student.group.color }};"></span> {{ student.group.group_name }}{% else %}—{% endif %}</div>
                 <div><span class="font-medium text-neutral-600">Creado:</span> {{ student.created_at|date:"d/m/Y H:i" }}</div>
                 <div><span class="font-medium text-neutral-600">Actualizado:</span> {{ student.updated_at|date:"d/m/Y H:i" }}</div>
             </div>
         </div>
 
+        {% if not student.is_adult %}
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <span class="material-symbols-outlined">family_restroom</span>Padres / Tutores
@@ -93,6 +107,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
 
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -105,10 +120,12 @@
                     <tr>
                         <th class="px-4 py-3 text-left">Tipo</th>
                         <th class="px-4 py-3 text-left">Horario</th>
+                        <th class="px-4 py-3 text-left">Modalidad pago</th>
                         <th class="px-4 py-3 text-left">Curso académico</th>
                         <th class="px-4 py-3 text-left">Fecha alta</th>
                         <th class="px-4 py-3 text-left">Importe</th>
                         <th class="px-4 py-3 text-left">Estado</th>
+                        <th class="px-4 py-3 text-left">Extras</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100">
@@ -116,14 +133,42 @@
                     <tr>
                         <td class="px-4 py-3">{{ enrollment.enrollment_type.display_name }}</td>
                         <td class="px-4 py-3">{{ enrollment.get_schedule_type_display }}</td>
+                        <td class="px-4 py-3">
+                            {% if enrollment.status == 'active' %}
+                            <div class="flex items-center gap-2">
+                                <span id="modality-label-{{ enrollment.id }}" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if enrollment.payment_modality == 'monthly' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ enrollment.get_payment_modality_display }}
+                                </span>
+                                <button type="button" class="modality-toggle-btn text-neutral-400 hover:text-primary-600 transition-colors"
+                                        data-enrollment-id="{{ enrollment.id }}"
+                                        data-student-id="{{ student.id }}"
+                                        data-current="{{ enrollment.payment_modality }}"
+                                        title="Cambiar modalidad">
+                                    <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                </button>
+                            </div>
+                            {% else %}
+                                {{ enrollment.get_payment_modality_display }}
+                            {% endif %}
+                        </td>
                         <td class="px-4 py-3">{{ enrollment.academic_year }}</td>
                         <td class="px-4 py-3">{{ enrollment.enrollment_date|date:"d/m/Y" }}</td>
                         <td class="px-4 py-3">€{{ enrollment.final_amount }}</td>
                         <td class="px-4 py-3">{{ enrollment.get_status_display }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex gap-1">
+                                {% if enrollment.has_language_cheque %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" title="Cheque idioma">Cheque</span>
+                                {% endif %}
+                                {% if enrollment.is_sibling_discount %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800" title="Descuento hermano">Hermano</span>
+                                {% endif %}
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-4 py-4 text-neutral-500">Sin matrículas registradas.</td>
+                        <td colspan="8" class="px-4 py-4 text-neutral-500">Sin matrículas registradas.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -251,5 +296,43 @@ function removeFunFriday(d) {
         else alert(data.error);
     });
 }
+
+// ==================== MODALITY TOGGLE ====================
+document.querySelectorAll('.modality-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const studentId = this.dataset.studentId;
+        const current = this.dataset.current;
+        const newModality = current === 'monthly' ? 'quarterly' : 'monthly';
+        const enrollmentId = this.dataset.enrollmentId;
+
+        if (!confirm(`¿Cambiar modalidad de pago a ${newModality === 'monthly' ? 'Mensual' : 'Trimestral'}?`)) return;
+
+        fetch(`/api/students/${studentId}/enrollment/modality/`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+            body: JSON.stringify({payment_modality: newModality}),
+        }).then(r=>r.json()).then(data => {
+            if (data.success) {
+                // Update the label
+                const label = document.getElementById(`modality-label-${enrollmentId}`);
+                if (label) {
+                    label.textContent = data.payment_modality_display;
+                    label.className = label.className.replace(/bg-\w+-100 text-\w+-800/g, '');
+                    if (newModality === 'monthly') {
+                        label.classList.add('bg-blue-100', 'text-blue-800');
+                    } else {
+                        label.classList.add('bg-green-100', 'text-green-800');
+                    }
+                }
+                this.dataset.current = newModality;
+            } else {
+                alert(data.error || 'Error al cambiar modalidad');
+            }
+        }).catch(err => {
+            console.error('Error:', err);
+            alert('Error de conexión');
+        });
+    });
+});
 </script>
 {% endblock %}

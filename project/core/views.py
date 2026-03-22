@@ -20,6 +20,7 @@ from datetime import date, datetime
 from core.transactions import all_students, all_payments
 from core.forms import StudentForm, ParentForm, EnrollmentForm, ParentFormSet
 from core.email import email_service
+from core import constants
 from django.template.loader import render_to_string
 from django.conf import settings
 import os
@@ -465,12 +466,46 @@ def complete_todo(request, todo_id):
 
 
 def all_info(request):
-    from core.transactions import all_payments_unrestricted
+    from core.transactions import all_students, all_payments_unrestricted
+
+    DB_PAGE_SIZE = 20
+
+    # ── Students sorting ──
+    students_sort = request.GET.get("students_sort", "date_desc")
+    students_order = {
+        "id_asc": "id",
+        "first_name_asc": "first_name",
+        "last_name_asc": "last_name",
+        "date_desc": "-created_at",
+    }.get(students_sort, "-created_at")
+    students_qs = all_students.order_by(students_order)
+    students_paginator = Paginator(students_qs, DB_PAGE_SIZE)
+    students_page = students_paginator.get_page(request.GET.get("students_page", 1))
+
+    # ── Payments sorting ──
+    payments_sort = request.GET.get("payments_sort", "date_desc")
+    payments_order = {
+        "date_desc": "-created_at",
+        "student_asc": ("student__first_name", "student__last_name"),
+    }.get(payments_sort, "-created_at")
+    if isinstance(payments_order, tuple):
+        payments_qs = all_payments_unrestricted.order_by(*payments_order)
+    else:
+        payments_qs = all_payments_unrestricted.order_by(payments_order)
+    payments_paginator = Paginator(payments_qs, DB_PAGE_SIZE)
+    payments_page = payments_paginator.get_page(request.GET.get("payments_page", 1))
 
     return render(
         request,
         "all_info.html",
-        {"students": list(all_students), "payments": list(all_payments_unrestricted)},
+        {
+            "students": students_page,
+            "students_sort": students_sort,
+            "students_total": students_paginator.count,
+            "payments": payments_page,
+            "payments_sort": payments_sort,
+            "payments_total": payments_paginator.count,
+        },
     )
 
 
@@ -610,6 +645,11 @@ class StudentCreateView(CreateView):
 
         context = super().get_context_data(**kwargs)
 
+        # Determine creation mode: normal, adult, or existing_parent
+        mode = self.request.GET.get("mode", "normal")
+        context["creation_mode"] = mode
+        context["is_adult_mode"] = mode == "adult"
+
         # Obtener el parent_id de los parámetros GET si existe
         parent_id = self.request.GET.get("parent_id")
 
@@ -620,6 +660,10 @@ class StudentCreateView(CreateView):
                 context["parent_id"] = parent_id
             except Parent.DoesNotExist:
                 messages.error(self.request, "El padre especificado no existe")
+
+        # For existing_parent mode, provide all parents for search
+        if mode == "existing_parent":
+            context["all_parents"] = Parent.objects.all().order_by("last_name", "first_name")
 
         # Agregar el formulario de matrícula
         if "enrollment_form" not in context:
@@ -646,31 +690,42 @@ class StudentCreateView(CreateView):
         if not enrollment_form.is_valid():
             return self.form_invalid(form)
 
+        is_adult_mode = self.request.POST.get("is_adult_mode") == "true"
+
         try:
             with transaction.atomic():
                 # Crear el estudiante
-                student = form.save()
+                student = form.save(commit=False)
+                if is_adult_mode:
+                    student.is_adult = True
+                    student.email = self.request.POST.get("adult_email", "")
+                    student.phone = self.request.POST.get("adult_phone", "")
+                student.save()
 
-                # Obtener el parent_id del POST o GET
-                parent_id = self.request.POST.get("parent_id") or self.request.GET.get(
-                    "parent_id"
-                )
+                parent = None
+                parent_id = None
 
-                if not parent_id:
-                    messages.error(
-                        self.request, "Debe especificar un padre para el estudiante"
+                if not is_adult_mode:
+                    # Obtener el parent_id del POST o GET
+                    parent_id = self.request.POST.get("parent_id") or self.request.GET.get(
+                        "parent_id"
                     )
-                    student.delete()
-                    return self.form_invalid(form)
 
-                # Vincular al padre
-                try:
-                    parent = Parent.objects.get(id=parent_id)
-                    student.parents.add(parent)
-                except Parent.DoesNotExist:
-                    messages.error(self.request, "El padre especificado no existe")
-                    student.delete()
-                    return self.form_invalid(form)
+                    if not parent_id:
+                        messages.error(
+                            self.request, "Debe especificar un padre para el estudiante"
+                        )
+                        student.delete()
+                        return self.form_invalid(form)
+
+                    # Vincular al padre
+                    try:
+                        parent = Parent.objects.get(id=parent_id)
+                        student.parents.add(parent)
+                    except Parent.DoesNotExist:
+                        messages.error(self.request, "El padre especificado no existe")
+                        student.delete()
+                        return self.form_invalid(form)
 
                 # Crear la matrícula
                 enrollment = enrollment_form.save(commit=False)
@@ -680,7 +735,7 @@ class StudentCreateView(CreateView):
                 # Encolar email de bienvenida de forma asíncrona (Celery)
                 try:
                     send_welcome_email_task.delay(
-                        parent_id=parent.id,
+                        parent_id=parent.id if parent else None,
                         student_id=student.id,
                         enrollment_id=enrollment.id,
                     )
@@ -699,7 +754,7 @@ class StudentCreateView(CreateView):
                 )
 
                 # Verificar si el usuario quiere crear otro hermano
-                if "create_sibling" in self.request.POST:
+                if "create_sibling" in self.request.POST and parent_id:
                     # Redirigir a crear otro estudiante con el mismo padre
                     return HttpResponseRedirect(
                         reverse_lazy("student_create") + f"?parent_id={parent_id}"
@@ -730,8 +785,15 @@ class StudentListView(ListView):
     context_object_name = "students"
 
     def get_queryset(self):
+        from .models import current_academic_year
+
+        academic_year = current_academic_year()
         queryset = (
-            Student.objects.filter(active=True)
+            Student.objects.filter(
+                active=True,
+                enrollments__academic_year=academic_year,
+            )
+            .distinct()
             .select_related("group")
             .prefetch_related("parents", "enrollments__enrollment_type")
         )
@@ -747,6 +809,8 @@ class StudentListView(ListView):
 
     def get_context_data(self, **kwargs):
         from datetime import date, timedelta
+        from .models import current_academic_year
+
         context = super().get_context_data(**kwargs)
         context["search_query"] = self.request.GET.get("search", "")
         context["groups"] = Group.objects.filter(active=True)
@@ -754,6 +818,19 @@ class StudentListView(ListView):
 
         context["this_week_ids"] = get_ff_student_ids(get_next_friday())
         context["last_week_ids"] = get_ff_student_ids(get_last_friday())
+
+        # Language cheque info for current academic year
+        academic_year = current_academic_year()
+        lc_student_ids = set(
+            Enrollment.objects.filter(
+                academic_year=academic_year,
+                has_language_cheque=True,
+                student__active=True,
+            ).values_list("student_id", flat=True)
+        )
+        context["language_cheque_ids"] = lc_student_ids
+        context["language_cheque_count"] = len(lc_student_ids)
+
         return context
 
 
@@ -888,6 +965,8 @@ def get_ff_student_ids(friday_date):
 def toggle_fun_friday_this_week(request, student_id):
     """Toggle a student's attendance for this week's Fun Friday."""
     student = get_object_or_404(Student, id=student_id)
+    if student.is_adult:
+        return JsonResponse({'success': False, 'error': 'Adult students cannot participate in Fun Friday'}, status=400)
     friday = get_next_friday()
     obj = FunFridayAttendance.objects.filter(student=student, date=friday).first()
     if obj:
@@ -1156,7 +1235,7 @@ def payments_list(request):
     """
     # Get all active payments ordered by most recent first
     payments_queryset = Payment.objects.select_related(
-        "student", "parent", "enrollment"
+        "student", "parent", "enrollment", "enrollment__enrollment_type"
     ).order_by("-due_date", "-created_at")
 
     # Add search functionality
@@ -1177,28 +1256,53 @@ def payments_list(request):
     current_year = today.year
 
     # Expected: all payments due this month
-    expected_payments_total = Payment.objects.filter(
+    expected_qs = Payment.objects.filter(
         due_date__month=current_month,
         due_date__year=current_year,
-    ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    )
+    expected_payments_total = expected_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    expected_payments_count = expected_qs.count()
 
     # Completed: payments completed this month
-    completed_payments_total = Payment.objects.filter(
+    completed_qs = Payment.objects.filter(
         payment_status="completed",
         payment_date__month=current_month,
         payment_date__year=current_year,
-    ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    )
+    completed_payments_total = completed_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    completed_payments_count = completed_qs.count()
 
-    # Pagination - 10 payments per page, max 100 total
-    paginator = Paginator(payments_queryset[:100], 10)
-    page_number = request.GET.get("page", 1)
-    payments = paginator.get_page(page_number)
+    # Pending: not-yet-completed payments
+    pending_qs = Payment.objects.filter(
+        payment_status="pending",
+    )
+    pending_payments_total = pending_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    pending_payments_count = pending_qs.count()
+
+    # Overdue: pending payments past due date
+    overdue_qs = Payment.objects.filter(
+        payment_status="pending",
+        due_date__lt=today,
+    )
+    overdue_payments_total = overdue_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    overdue_payments_count = overdue_qs.count()
+
+    # Load up to 1000 payments for frontend filtering/pagination
+    all_payments_list = list(payments_queryset[:1000])
 
     context = {
-        "payments": payments,
+        "payments_list": all_payments_list,
+        "total_count": payments_queryset.count(),
         "search_query": search_query,
         "expected_payments_total": expected_payments_total,
+        "expected_payments_count": expected_payments_count,
         "completed_payments_total": completed_payments_total,
+        "completed_payments_count": completed_payments_count,
+        "pending_payments_total": pending_payments_total,
+        "pending_payments_count": pending_payments_count,
+        "overdue_payments_total": overdue_payments_total,
+        "overdue_payments_count": overdue_payments_count,
+        "payment_method_choices": constants.PAYMENT_METHOD_CHOICES,
     }
 
     return render(request, "payments/payments_list.html", context)
@@ -1676,6 +1780,116 @@ def delete_payment(request, payment_id):
         )
 
 
+@require_http_methods(["POST"])
+def quick_complete_payment(request, payment_id):
+    """
+    AJAX endpoint to quickly complete a payment by setting its payment method.
+    Expects JSON body: {"payment_method": "cash"|"transfer"|"credit_card"}
+    """
+    try:
+        payment = get_object_or_404(Payment, id=payment_id)
+        data = json.loads(request.body)
+        payment_method = data.get("payment_method")
+
+        if payment_method not in dict(constants.PAYMENT_METHOD_CHOICES):
+            return JsonResponse(
+                {"success": False, "error": "Método de pago no válido"},
+                status=400,
+            )
+
+        payment.payment_method = payment_method
+        payment.payment_status = "completed"
+        payment.payment_date = date.today()
+        payment.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": f"Pago de {payment.student.full_name} completado ({payment.get_payment_method_display()}).",
+        })
+
+    except Exception as e:
+        return JsonResponse(
+            {"success": False, "error": f"Error al completar el pago: {str(e)}"},
+            status=500,
+        )
+
+
+@require_http_methods(["POST"])
+def update_enrollment_modality(request, student_id):
+    """
+    AJAX endpoint to change a student's payment modality (monthly/quarterly).
+    Expects JSON body: {"payment_modality": "monthly"|"quarterly"}
+    """
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        data = json.loads(request.body)
+        modality = data.get("payment_modality")
+
+        if modality not in dict(constants.PAYMENT_MODALITY_CHOICES):
+            return JsonResponse(
+                {"success": False, "error": "Modalidad de pago no válida"},
+                status=400,
+            )
+
+        enrollment = student.enrollments.filter(status='active').first()
+        if not enrollment:
+            return JsonResponse(
+                {"success": False, "error": "No tiene matrícula activa"},
+                status=404,
+            )
+
+        enrollment.payment_modality = modality
+        enrollment.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": f"Modalidad cambiada a {enrollment.get_payment_modality_display()}.",
+            "payment_modality": modality,
+            "payment_modality_display": enrollment.get_payment_modality_display(),
+        })
+
+    except Exception as e:
+        return JsonResponse(
+            {"success": False, "error": str(e)},
+            status=500,
+        )
+
+
+@require_http_methods(["GET"])
+def language_cheque_students(request):
+    """
+    API endpoint to fetch students with active language cheque (cheque idioma).
+    These students need to be reported to the government monthly.
+    """
+    academic_year = current_academic_year()
+    enrollments = Enrollment.objects.filter(
+        status='active',
+        academic_year=academic_year,
+        has_language_cheque=True,
+    ).select_related('student', 'student__group')
+
+    students_data = []
+    for enrollment in enrollments:
+        s = enrollment.student
+        parent = s.parents.first()
+        students_data.append({
+            'id': s.id,
+            'full_name': s.full_name,
+            'birth_date': s.birth_date.strftime('%Y-%m-%d'),
+            'group': s.group.group_name if s.group else '',
+            'parent_name': parent.full_name if parent else '',
+            'parent_dni': parent.dni if parent else '',
+            'schedule_type': enrollment.get_schedule_type_display(),
+        })
+
+    return JsonResponse({
+        'success': True,
+        'academic_year': academic_year,
+        'count': len(students_data),
+        'students': students_data,
+    })
+
+
 @require_http_methods(["GET"])
 def get_payment_details(request, payment_id):
     """
@@ -1691,8 +1905,8 @@ def get_payment_details(request, payment_id):
                     "id": payment.id,
                     "student_id": payment.student.id,
                     "student_name": payment.student.full_name,
-                    "parent_id": payment.parent.id,
-                    "parent_name": payment.parent.full_name,
+                    "parent_id": payment.parent.id if payment.parent else None,
+                    "parent_name": payment.parent.full_name if payment.parent else "",
                     "enrollment_id": (
                         payment.enrollment.id if payment.enrollment else None
                     ),
@@ -1894,6 +2108,7 @@ def update_site_config(request):
             "language_cheque_discount",
             "quarterly_enrollment_discount",
             "old_student_discount",
+            "june_discount",
             "full_year_bonus",
             "sibling_discount",
             "half_month_discount",
@@ -2056,8 +2271,8 @@ def fun_friday_form(request):
         days_until_friday = 7  # Si hoy es viernes, el próximo viernes
     next_friday = today + timedelta(days=days_until_friday)
 
-    # Contar padres con estudiantes activos
-    parent_count = Parent.objects.filter(children__active=True).distinct().count()
+    # Contar padres con estudiantes activos (excluir adultos)
+    parent_count = Parent.objects.filter(children__active=True, children__is_adult=False).distinct().count()
 
     # HTML por defecto de ejemplo
     default_html = """<strong>🎉 ¡SESIÓN DE MANUALIDADES!</strong>
@@ -3280,7 +3495,7 @@ def save_schedule_slot(request):
 
 def fun_friday_view(request):
     """Vista de Fun Friday con lista de estudiantes."""
-    students = Student.objects.filter(active=True).select_related('group').order_by('group__group_name', 'first_name')
+    students = Student.objects.filter(active=True, is_adult=False).select_related('group').order_by('group__group_name', 'first_name')
     this_friday = get_next_friday()
     last_friday = get_last_friday()
     this_week_ids = get_ff_student_ids(this_friday)

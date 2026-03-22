@@ -5,7 +5,8 @@ from django import forms
 from django.forms import inlineformset_factory
 from decimal import Decimal
 from datetime import date
-from .models import Student, Parent, Enrollment, EnrollmentType, Group, SiteConfiguration
+from .models import Student, Parent, Enrollment, EnrollmentType, Group, SiteConfiguration, academic_year_start_date, academic_year_end_date
+from . import constants
 
 # Clases de Tailwind para inputs consistentes
 TAILWIND_INPUT_CLASSES = 'w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
@@ -109,12 +110,16 @@ class EnrollmentForm(forms.ModelForm):
         model = Enrollment
         fields = [
             'enrollment_type', 'academic_year', 'schedule_type',
+            'payment_modality', 'has_language_cheque', 'is_sibling_discount',
             'discount_percentage', 'enrollment_date',
             'notes'
         ]
         widgets = {
             'enrollment_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_type'}),
             'schedule_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_schedule_type'}),
+            'payment_modality': forms.Select(attrs={'class': 'form-control'}),
+            'has_language_cheque': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_sibling_discount': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '100', 'step': '0.01'}),
             'enrollment_date': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Notas adicionales'}),
@@ -123,6 +128,9 @@ class EnrollmentForm(forms.ModelForm):
             'enrollment_type': 'Tipo de matrícula',
             'academic_year': 'Curso académico',
             'schedule_type': 'Tipo de horario',
+            'payment_modality': 'Modalidad de pago',
+            'has_language_cheque': 'Cheque idioma',
+            'is_sibling_discount': 'Descuento hermano',
             'discount_percentage': 'Descuento (%)',
             'enrollment_date': 'Fecha de alta de matriculación',
             'notes': 'Notas',
@@ -211,12 +219,12 @@ class EnrollmentForm(forms.ModelForm):
 
         start_year = int(academic_year.split('-')[0])
         end_year = int(academic_year.split('-')[1])
-        
+
         enrollment.enrollment_amount = base_amount
         enrollment.final_amount = final_amount
         enrollment.academic_year = academic_year
-        enrollment.enrollment_period_start = date(start_year, 9, 1)
-        enrollment.enrollment_period_end = date(end_year, 6, 30)
+        enrollment.enrollment_period_start = academic_year_start_date(start_year)
+        enrollment.enrollment_period_end = academic_year_end_date(end_year)
         enrollment.status = enrollment.status or 'active'
         
         if commit:

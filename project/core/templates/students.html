@@ -14,9 +14,35 @@
 {% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base leading-none">
-    <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
-</a>
+<div class="relative" id="newStudentDropdown">
+    <button type="button" id="newStudentBtn" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
+        <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
+        <span class="material-symbols-outlined text-[18px]" id="newStudentArrow">expand_more</span>
+    </button>
+    <div id="newStudentMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-neutral-200 z-50 overflow-hidden">
+        <a href="{% url 'parent_create' %}" class="flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-150" style="text-decoration:none;">
+            <span class="material-symbols-outlined text-[20px] text-primary-500">school</span>
+            <div>
+                <div class="font-medium text-sm">Matricular</div>
+                <div class="text-xs text-neutral-400">Nuevo estudiante y padre</div>
+            </div>
+        </a>
+        <a href="{% url 'student_create' %}?mode=existing_parent" class="flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-green-50 hover:text-green-700 transition-colors duration-150 border-t border-neutral-100" style="text-decoration:none;">
+            <span class="material-symbols-outlined text-[20px] text-green-500">family_restroom</span>
+            <div>
+                <div class="font-medium text-sm">Padre existente</div>
+                <div class="text-xs text-neutral-400">Padre/tutor ya registrado</div>
+            </div>
+        </a>
+        <a href="{% url 'student_create' %}?mode=adult" class="flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-amber-50 hover:text-amber-700 transition-colors duration-150 border-t border-neutral-100" style="text-decoration:none;">
+            <span class="material-symbols-outlined text-[20px] text-amber-500">person</span>
+            <div>
+                <div class="font-medium text-sm">Adulto</div>
+                <div class="text-xs text-neutral-400">Estudiante 18+ sin tutor</div>
+            </div>
+        </a>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -30,7 +56,7 @@
 <div class="mb-6">
     <div class="flex justify-between items-center">
         <div>
-            <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos</p>
+            <p class="text-neutral-600">Total: {{ students.count }} estudiantes activos &middot; Cheque idioma: {{ language_cheque_count }}</p>
         </div>
         <div class="flex gap-2 items-center">
             <input
@@ -40,6 +66,9 @@
                 class="px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-48"
                 style="display: none;"
             >
+            <button id="studentTypeFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Todos los estudiantes">
+                <span class="material-symbols-outlined text-sm" id="studentTypeFilterIcon">groups</span>
+            </button>
 <button id="studentFFFilterBtn" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" title="Filtrar por Fun Friday">
                 <span class="material-symbols-outlined text-sm" id="studentFFFilterIcon">celebration</span>
             </button>
@@ -60,22 +89,22 @@
             <thead class="bg-primary-50 border-b border-primary-200">
                 <tr>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Estudiante</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Padres</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Edad</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Grupo</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Padres</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Matrícula</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">GDPR</th>
                     <th class="px-6 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider">Fun Friday</th>
                     <th class="w-20 px-3 py-4 text-center text-sm font-semibold text-primary-700 uppercase tracking-wider border-l border-primary-200 bg-neutral-50"></th>
                 </tr>
             </thead>
             <tbody id="studentsTableBody" class="divide-y divide-neutral-100">
                 {% for student in students %}
-                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ student.full_name }}" data-date="{{ student.id }}" data-ff-this="{% if student.id in this_week_ids %}1{% else %}0{% endif %}" data-ff-last="{% if student.id in last_week_ids %}1{% else %}0{% endif %}">
+                <tr class="hover:bg-neutral-50 transition-all duration-200" data-name="{{ student.full_name }}" data-date="{{ student.id }}" data-is-adult="{% if student.is_adult %}1{% else %}0{% endif %}" data-has-lc="{% if student.id in language_cheque_ids %}1{% else %}0{% endif %}" data-ff-this="{% if student.id in this_week_ids %}1{% else %}0{% endif %}" data-ff-last="{% if student.id in last_week_ids %}1{% else %}0{% endif %}">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                <span class="material-symbols-outlined text-primary-600" style="font-size:22px">person</span>
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background-color:#ede9fe;">
+                                <span class="material-symbols-outlined" style="font-size:24px;color:#8b5cf6;">person</span>
                             </div>
                             <div>
                                 <div class="font-medium text-neutral-800">{{ student.full_name }}</div>
@@ -85,35 +114,38 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-sm text-neutral-600">
+                    <td class="px-6 py-4 text-center text-sm text-neutral-600">
                         {{ student.age }} años
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-1.5">
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center gap-1.5 justify-center">
                             <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ student.group.color }};"></span>
                             <span class="text-sm text-neutral-800">{{ student.group.group_name }}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-sm text-neutral-600">
-                        {% for parent in student.parents.all %}
-                            <div>{{ parent.full_name }}</div>
-                        {% empty %}
-                            <span class="text-red-500">Sin padres asignados</span>
-                        {% endfor %}
+                    <td class="px-6 py-4 text-center text-sm text-neutral-600">
+                        {% if student.is_adult %}
+                            <span class="text-neutral-400">—</span>
+                        {% else %}
+                            {% for parent in student.parents.all %}
+                                <div>{{ parent.full_name }}</div>
+                            {% empty %}
+                                <span class="text-red-500">Sin padres asignados</span>
+                            {% endfor %}
+                        {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-sm">
+                    <td class="px-6 py-4 text-center text-sm">
                         {% with enr=student.enrollments.all|first %}
                         {% if enr %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if enr.status == 'active' %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                            <span class="text-sm text-neutral-700">
                                 {{ enr.enrollment_type.display_name }}
                             </span>
-                            <div class="text-xs text-neutral-400 mt-0.5">{{ enr.academic_year }}</div>
                         {% else %}
                             <span class="text-neutral-400 text-xs">Sin matrícula</span>
                         {% endif %}
                         {% endwith %}
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 text-center">
                         {% if student.gdpr_signed %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <span class="material-symbols-outlined text-sm mr-1">check_circle</span>
@@ -127,6 +159,9 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-center">
+                        {% if student.is_adult %}
+                            <span class="text-neutral-300">—</span>
+                        {% else %}
                         <button class="ff-toggle-btn inline-flex items-center justify-center w-7 h-7 rounded-full cursor-pointer" style="background:none;border:none;padding:0;" data-student-id="{{ student.id }}">
                             {% if student.id in this_week_ids %}
                                 {% if student.id in last_week_ids %}
@@ -142,6 +177,7 @@
                                 {% endif %}
                             {% endif %}
                         </button>
+                        {% endif %}
                     </td>
                     <td class="px-3 py-4 border-l border-neutral-200 bg-neutral-50 text-center">
                         <a href="{% url 'student_detail' student.id %}" class="inline-flex p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-all duration-200" style="text-decoration:none;" title="Ver estudiante">
@@ -357,11 +393,11 @@
     const studentSortIcon = document.getElementById('studentSortIcon');
     const studentsTableBody = document.getElementById('studentsTableBody');
 
-    // Each row has two independent visibility flags: searchHidden and ffHidden
-    // A row is shown only if neither flag is set.
+    // Each row has three independent visibility flags: searchHidden, ffHidden, typeHidden
+    // A row is shown only if no flag is set.
     function applyVisibility() {
         studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
-            row.style.display = (row._searchHidden || row._ffHidden) ? 'none' : '';
+            row.style.display = (row._searchHidden || row._ffHidden || row._typeHidden) ? 'none' : '';
         });
     }
 
@@ -483,6 +519,40 @@
         applyFFFilter();
     });
 
+    // ==================== STUDENT TYPE FILTER (All / Children / Adults) ====================
+    const studentTypeFilterBtn = document.getElementById('studentTypeFilterBtn');
+    const studentTypeFilterIcon = document.getElementById('studentTypeFilterIcon');
+    let typeFilterState = 0; // 0=all, 1=children, 2=adults
+
+    const typeFilterCfg = [
+        { icon: 'groups',       title: 'Todos los estudiantes',   bg: '', color: '' },
+        { icon: 'child_care',   title: 'Solo niños',              bg: '#3b82f6', color: '#ffffff' },
+        { icon: 'person',       title: 'Solo adultos',            bg: '#f59e0b', color: '#ffffff' },
+        { icon: 'translate',    title: 'Cheque idioma',            bg: '#059669', color: '#ffffff' },
+    ];
+
+    function applyTypeFilter() {
+        studentsTableBody.querySelectorAll('tr[data-name]').forEach(row => {
+            const isAdult = row.dataset.isAdult === '1';
+            const hasLC = row.dataset.hasLc === '1';
+            if (typeFilterState === 0) row._typeHidden = false;
+            else if (typeFilterState === 1) row._typeHidden = isAdult;
+            else if (typeFilterState === 2) row._typeHidden = !isAdult;
+            else if (typeFilterState === 3) row._typeHidden = !hasLC;
+        });
+        applyVisibility();
+    }
+
+    studentTypeFilterBtn.addEventListener('click', () => {
+        typeFilterState = (typeFilterState + 1) % 4;
+        const cfg = typeFilterCfg[typeFilterState];
+        studentTypeFilterIcon.textContent = cfg.icon;
+        studentTypeFilterBtn.title = cfg.title;
+        studentTypeFilterBtn.style.background = cfg.bg;
+        studentTypeFilterBtn.style.color = cfg.color;
+        applyTypeFilter();
+    });
+
     // Form validation
     form.addEventListener('submit', (e) => {
         const selectedParents = document.querySelectorAll('input[name="parents"]:checked');
@@ -490,6 +560,24 @@
             e.preventDefault();
             alert('Debe seleccionar al menos un padre/tutor para el estudiante.');
             return;
+        }
+    });
+
+    // ==================== NEW STUDENT DROPDOWN ====================
+    const newStudentBtn = document.getElementById('newStudentBtn');
+    const newStudentMenu = document.getElementById('newStudentMenu');
+    const newStudentArrow = document.getElementById('newStudentArrow');
+
+    newStudentBtn.addEventListener('click', () => {
+        const open = !newStudentMenu.classList.contains('hidden');
+        newStudentMenu.classList.toggle('hidden');
+        newStudentArrow.textContent = open ? 'expand_more' : 'expand_less';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('newStudentDropdown').contains(e.target)) {
+            newStudentMenu.classList.add('hidden');
+            newStudentArrow.textContent = 'expand_more';
         }
     });
 </script>

@@ -47,6 +47,24 @@ urlpatterns = [
         deactivate_payment,
         name="deactivate_payment",
     ),
+    path(
+        "api/payments/<int:payment_id>/quick-complete/",
+        quick_complete_payment,
+        name="quick_complete_payment",
+    ),
+    # ============================================================================
+    # ENROLLMENT API
+    # ============================================================================
+    path(
+        "api/students/<int:student_id>/enrollment/modality/",
+        update_enrollment_modality,
+        name="update_enrollment_modality",
+    ),
+    path(
+        "api/students/language-cheque/",
+        language_cheque_students,
+        name="language_cheque_students",
+    ),
     # ============================================================================
     # API ENDPOINTS - AJAX Helper Functions
     # ============================================================================

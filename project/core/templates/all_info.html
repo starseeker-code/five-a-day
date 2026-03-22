@@ -31,19 +31,19 @@
     <p class="text-neutral-600">Vista completa de todos los estudiantes y pagos registrados en el sistema. Para gestión avanzada, accede al panel de administración de Django.</p>
 </div>
 <div class="space-y-8 max-w-[1600px] mx-auto">
-  <div>
+  <div id="db-students-section">
     <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
       <div>
         <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Estudiantes</h3>
-        <p class="text-neutral-600">Total: {{ students|length }} estudiantes registrados</p>
+        <p class="text-neutral-600">Total: {{ students_total }} estudiantes registrados</p>
       </div>
       <div class="flex items-center gap-2">
         <label for="students-sort" class="text-sm font-medium text-neutral-600">Ordenar por:</label>
         <select id="students-sort" class="px-3 py-2 border border-neutral-300 rounded-md text-sm text-neutral-700 bg-white">
-          <option value="date_desc" selected>Fecha (más reciente)</option>
-          <option value="id_asc">ID</option>
-          <option value="first_name_asc">Nombre</option>
-          <option value="last_name_asc">Apellido</option>
+          <option value="date_desc" {% if students_sort == 'date_desc' %}selected{% endif %}>Fecha (más reciente)</option>
+          <option value="id_asc" {% if students_sort == 'id_asc' %}selected{% endif %}>ID</option>
+          <option value="first_name_asc" {% if students_sort == 'first_name_asc' %}selected{% endif %}>Nombre</option>
+          <option value="last_name_asc" {% if students_sort == 'last_name_asc' %}selected{% endif %}>Apellido</option>
         </select>
         <a href="{% url 'export_database_excel' %}" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2" style="text-decoration:none;">
             <span class="material-symbols-outlined text-sm">download</span>
@@ -74,11 +74,7 @@
           </thead>
           <tbody id="students-tbody" class="divide-y divide-neutral-100">
             {% for student in students %}
-            <tr class="hover:bg-neutral-50 transition-all duration-200"
-                data-id="{{ student.id }}"
-                data-first-name="{{ student.first_name|lower }}"
-                data-last-name="{{ student.last_name|lower }}"
-                data-date="{{ student.created_at|date:'c' }}">
+            <tr class="hover:bg-neutral-50 transition-all duration-200">
               <td class="px-4 py-4 text-sm text-neutral-600">{{ student.id }}</td>
               <td class="px-4 py-4 text-sm text-neutral-700 font-medium">{{ student.first_name }}</td>
               <td class="px-4 py-4 text-sm text-neutral-700 font-medium">{{ student.last_name }}</td>
@@ -154,19 +150,42 @@
         </table>
       </div>
     </div>
+
+    <!-- Students Pagination -->
+    {% if students.has_other_pages %}
+    <div style="margin-top:1.5rem;display:flex;justify-content:center;">
+        <nav style="display:flex;align-items:center;gap:0.5rem;">
+            {% if students.has_previous %}
+                <a href="?students_page={{ students.previous_page_number }}&students_sort={{ students_sort }}&payments_page={{ payments.number }}&payments_sort={{ payments_sort }}#db-students-section" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">‹</a>
+            {% endif %}
+            {% for num in students.paginator.page_range %}
+                {% if students.number == num %}
+                    <span style="width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:0.875rem;font-weight:700;">{{ num }}</span>
+                {% elif num > students.number|add:"-3" and num < students.number|add:"3" or num == 1 or num == students.paginator.num_pages %}
+                    <a href="?students_page={{ num }}&students_sort={{ students_sort }}&payments_page={{ payments.number }}&payments_sort={{ payments_sort }}#db-students-section" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.875rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">{{ num }}</a>
+                {% elif num == students.number|add:"-3" or num == students.number|add:"3" %}
+                    <span style="width:2rem;text-align:center;color:#9ca3af;">…</span>
+                {% endif %}
+            {% endfor %}
+            {% if students.has_next %}
+                <a href="?students_page={{ students.next_page_number }}&students_sort={{ students_sort }}&payments_page={{ payments.number }}&payments_sort={{ payments_sort }}#db-students-section" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">›</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
   </div>
 
-  <div>
+  <div id="db-payments-section">
     <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
       <div>
         <h3 class="text-2xl font-semibold text-neutral-700 mb-2">Pagos</h3>
-        <p class="text-neutral-600">Total: {{ payments|length }} pagos registrados</p>
+        <p class="text-neutral-600">Total: {{ payments_total }} pagos registrados</p>
       </div>
       <div class="flex items-center gap-2">
         <label for="payments-sort" class="text-sm font-medium text-neutral-600">Ordenar por:</label>
         <select id="payments-sort" class="px-3 py-2 border border-neutral-300 rounded-md text-sm text-neutral-700 bg-white">
-          <option value="date_desc" selected>Fecha (más reciente)</option>
-          <option value="student_asc">Estudiante (A-Z)</option>
+          <option value="date_desc" {% if payments_sort == 'date_desc' %}selected{% endif %}>Fecha (más reciente)</option>
+          <option value="student_asc" {% if payments_sort == 'student_asc' %}selected{% endif %}>Estudiante (A-Z)</option>
         </select>
       </div>
     </div>
@@ -194,9 +213,7 @@
           </thead>
           <tbody id="payments-tbody" class="divide-y divide-neutral-100">
             {% for payment in payments %}
-            <tr class="hover:bg-neutral-50 transition-all duration-200"
-                data-student="{% if payment.student %}{{ payment.student.first_name|lower }} {{ payment.student.last_name|lower }}{% endif %}"
-                data-date="{{ payment.created_at|date:'c' }}">
+            <tr class="hover:bg-neutral-50 transition-all duration-200">
               <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.id }}</td>
               <td class="px-4 py-4 text-sm text-neutral-700 font-medium">
                 {% if payment.student %}
@@ -257,53 +274,56 @@
         </table>
       </div>
     </div>
+
+    <!-- Payments Pagination -->
+    {% if payments.has_other_pages %}
+    <div style="margin-top:1.5rem;display:flex;justify-content:center;">
+        <nav style="display:flex;align-items:center;gap:0.5rem;">
+            {% if payments.has_previous %}
+                <a href="?payments_page={{ payments.previous_page_number }}&payments_sort={{ payments_sort }}&students_page={{ students.number }}&students_sort={{ students_sort }}#db-payments-section" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">‹</a>
+            {% endif %}
+            {% for num in payments.paginator.page_range %}
+                {% if payments.number == num %}
+                    <span style="width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:0.875rem;font-weight:700;">{{ num }}</span>
+                {% elif num > payments.number|add:"-3" and num < payments.number|add:"3" or num == 1 or num == payments.paginator.num_pages %}
+                    <a href="?payments_page={{ num }}&payments_sort={{ payments_sort }}&students_page={{ students.number }}&students_sort={{ students_sort }}#db-payments-section" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.875rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">{{ num }}</a>
+                {% elif num == payments.number|add:"-3" or num == payments.number|add:"3" %}
+                    <span style="width:2rem;text-align:center;color:#9ca3af;">…</span>
+                {% endif %}
+            {% endfor %}
+            {% if payments.has_next %}
+                <a href="?payments_page={{ payments.next_page_number }}&payments_sort={{ payments_sort }}&students_page={{ students.number }}&students_sort={{ students_sort }}#db-payments-section" style="text-decoration:none;width:2.5rem;height:2.5rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:1rem;transition:background 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">›</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  function sortRows(tbodyId, comparator) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const sortableRows = rows.filter(row => row.dataset && row.dataset.date);
-    sortableRows.sort(comparator);
-    sortableRows.forEach(row => tbody.appendChild(row));
+  // Build current URL params helper
+  function buildUrl(overrides, hash) {
+    const params = new URLSearchParams(window.location.search);
+    for (const [k, v] of Object.entries(overrides)) params.set(k, v);
+    return '?' + params.toString() + (hash ? '#' + hash : '');
   }
 
-  function parseDate(value) {
-    const parsed = Date.parse(value || '');
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-
-  function applyStudentsSort(mode) {
-    sortRows('students-tbody', (a, b) => {
-      if (mode === 'id_asc') return Number(a.dataset.id || 0) - Number(b.dataset.id || 0);
-      if (mode === 'first_name_asc') return (a.dataset.firstName || '').localeCompare(b.dataset.firstName || '');
-      if (mode === 'last_name_asc') return (a.dataset.lastName || '').localeCompare(b.dataset.lastName || '');
-      return parseDate(b.dataset.date) - parseDate(a.dataset.date);
-    });
-  }
-
-  function applyPaymentsSort(mode) {
-    sortRows('payments-tbody', (a, b) => {
-      if (mode === 'student_asc') return (a.dataset.student || '').localeCompare(b.dataset.student || '');
-      return parseDate(b.dataset.date) - parseDate(a.dataset.date);
-    });
-  }
-
+  // Students sort change → reload with new sort, reset to page 1
   const studentsSort = document.getElementById('students-sort');
-  const paymentsSort = document.getElementById('payments-sort');
-
   if (studentsSort) {
-    studentsSort.addEventListener('change', (event) => applyStudentsSort(event.target.value));
-    applyStudentsSort(studentsSort.value);
+    studentsSort.addEventListener('change', (e) => {
+      window.location.href = buildUrl({ students_sort: e.target.value, students_page: 1 }, 'db-students-section');
+    });
   }
 
+  // Payments sort change → reload with new sort, reset to page 1
+  const paymentsSort = document.getElementById('payments-sort');
   if (paymentsSort) {
-    paymentsSort.addEventListener('change', (event) => applyPaymentsSort(event.target.value));
-    applyPaymentsSort(paymentsSort.value);
+    paymentsSort.addEventListener('change', (e) => {
+      window.location.href = buildUrl({ payments_sort: e.target.value, payments_page: 1 }, 'db-payments-section');
+    });
   }
 </script>
 {% endblock %}

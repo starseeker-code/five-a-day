@@ -27,7 +27,8 @@ ADULT_GROUP_MONTHLY_FEE = Decimal('60.00')  # Grupo adultos (1 clase/semana)
 
 LANGUAGE_CHEQUE_DISCOUNT = (Decimal('20.00'), 'flat')           # Cheque idioma
 QUARTERLY_ENROLLMENT_DISCOUNT = (Decimal('5.00'), 'percentage') # Matrícula trimestral (5%)
-OLD_STUDENT_DISCOUNT = (Decimal('10.00'), 'flat')               # Alumno antiguo
+OLD_STUDENT_DISCOUNT = (Decimal('20.00'), 'flat')               # Alumno antiguo (-20€)
+JUNE_DISCOUNT = (Decimal('20.00'), 'flat')                      # Descuento junio (completar año, NO adultos)
 FULL_YEAR_BONUS = (Decimal('20.00'), 'flat')                    # Año completo (NO adultos)
 SIBLING_DISCOUNT = (Decimal('5.00'), 'percentage')              # Hermanos (5% cada mes)
 HALF_MONTH_DISCOUNT = (Decimal('50.00'), 'percentage')          # Medio mes (septiembre)
@@ -56,9 +57,21 @@ ENROLLMENT_TYPE_CHOICES = [
 ]
 
 SCHEDULE_TYPE_CHOICES = [
-    ('full_time', 'Full-time (2 classes/week)'),
-    ('part_time', 'Part-time (1 class/week)'),
-    ('adult_group', 'Adult group (1 class/week)'),
+    ('full_time', '2 días/semana'),
+    ('part_time', '1 día/semana'),
+    ('adult_group', 'Adultos (1 día/semana)'),
+]
+
+PAYMENT_MODALITY_CHOICES = [
+    ('monthly', 'Mensual'),
+    ('quarterly', 'Trimestral'),
+]
+
+# Quarters for quarterly payments
+QUARTERS = [
+    {'name': 'Q1', 'months': [10, 11, 12], 'includes_sept': True, 'due_month': 10},  # Oct-Dec (+Sept)
+    {'name': 'Q2', 'months': [1, 2, 3], 'includes_sept': False, 'due_month': 1},     # Jan-Mar
+    {'name': 'Q3', 'months': [4, 5, 6], 'includes_sept': False, 'due_month': 4},     # Apr-Jun
 ]
 
 ENROLLMENT_STATUS_CHOICES = [
@@ -70,9 +83,9 @@ ENROLLMENT_STATUS_CHOICES = [
 ]
 
 PAYMENT_METHOD_CHOICES = [
-    ('cash', 'Cash'),
-    ('transfer', 'Bank Transfer'),
-    ('credit_card', 'Credit Card'),
+    ('cash', 'Efectivo'),
+    ('transfer', 'Transferencia'),
+    ('credit_card', 'Tarjeta'),
 ]
 
 PAYMENT_STATUS_CHOICES = [
