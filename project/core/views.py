@@ -720,6 +720,7 @@ class StudentCreateView(CreateView):
                 student = form.save(commit=False)
                 if is_adult_mode:
                     student.is_adult = True
+                    student.gdpr_signed = True
                     student.email = self.request.POST.get("adult_email", "")
                     student.phone = self.request.POST.get("adult_phone", "")
                 student.save()
