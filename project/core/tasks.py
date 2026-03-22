@@ -41,34 +41,46 @@ def send_welcome_email_task(self, parent_id: int, student_id: int, enrollment_id
     from core.email import email_service
     
     try:
-        parent = Parent.objects.get(id=parent_id)
         student = Student.objects.select_related('group').get(id=student_id)
         enrollment = Enrollment.objects.select_related('enrollment_type').get(id=enrollment_id)
-        
+
+        # For adult students, email goes to the student; for children, to the parent
+        if parent_id:
+            parent = Parent.objects.get(id=parent_id)
+            recipient_email = parent.email
+            recipient_name = parent.full_name
+        else:
+            recipient_email = student.email
+            recipient_name = student.full_name
+
+        if not recipient_email:
+            logger.warning(f"⚠️ No email address for welcome email ({student.full_name})")
+            return {'status': 'skipped', 'message': 'No email address'}
+
         context = {
-            'parent_name': parent.full_name,
+            'parent_name': recipient_name,
             'student_name': student.full_name,
             'group_name': student.group.group_name if student.group else None,
             'enrollment_type': enrollment.enrollment_type.display_name if enrollment.enrollment_type else None,
             'schedule_type': enrollment.get_schedule_type_display(),
             'start_date': enrollment.enrollment_date.strftime('%d/%m/%Y') if enrollment.enrollment_date else None,
         }
-        
+
         success = email_service.send_email(
             template_name='welcome_student',
-            recipients=parent.email,
+            recipients=recipient_email,
             subject=f'🎓 ¡Bienvenido/a {student.full_name} a Five a Day!',
             context=context
         )
-        
+
         if success:
-            logger.info(f"✅ Email de bienvenida enviado a {parent.email} para {student.full_name}")
+            logger.info(f"✅ Email de bienvenida enviado a {recipient_email} para {student.full_name}")
         else:
-            logger.error(f"❌ Error al enviar email de bienvenida a {parent.email}")
+            logger.error(f"❌ Error al enviar email de bienvenida a {recipient_email}")
             raise Exception("Fallo en el envío del email")
-        
-        return {'status': 'success', 'recipient': parent.email}
-        
+
+        return {'status': 'success', 'recipient': recipient_email}
+
     except (Parent.DoesNotExist, Student.DoesNotExist, Enrollment.DoesNotExist) as e:
         logger.error(f"❌ No se encontró el registro: {e}")
         return {'status': 'error', 'message': str(e)}

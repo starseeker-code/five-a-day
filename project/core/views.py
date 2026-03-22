@@ -396,6 +396,15 @@ def home(request):
 
     # ToDo items
     todos = TodoItem.objects.filter().order_by("due_date", "created_at")
+    overdue_todos_count = TodoItem.objects.filter(due_date__lt=today).count()
+
+    # Today's birthdays (names)
+    today_birthday_students = Student.objects.filter(
+        active=True,
+        birth_date__month=today.month,
+        birth_date__day=today.day,
+    ).order_by("first_name")[:5]
+    today_birthday_names = [s.first_name for s in today_birthday_students]
 
     context = {
         "pending_payments_count": pending_count,
@@ -417,6 +426,8 @@ def home(request):
         "monthly_income_total": monthly_income_total,
         # ToDo list
         "todos": todos,
+        "overdue_todos_count": overdue_todos_count,
+        "today_birthday_names": today_birthday_names,
         "today": today,
     }
 
@@ -641,6 +652,15 @@ class StudentCreateView(CreateView):
 
         context = super().get_context_data(**kwargs)
 
+        # Success state from redirect
+        if self.request.GET.get("success"):
+            context["show_success"] = True
+            context["success_student_name"] = self.request.GET.get("student_name", "")
+            context["success_fee"] = self.request.GET.get("fee", "")
+            context["success_create_sibling"] = self.request.GET.get("create_sibling", "")
+            context["success_parent_id"] = self.request.GET.get("parent_id", "")
+            return context  # Skip loading form data for success page
+
         mode = self.request.GET.get("mode", "normal")
         context["creation_mode"] = mode
         context["is_adult_mode"] = mode == "adult"
@@ -663,14 +683,23 @@ class StudentCreateView(CreateView):
         context["groups"] = Group.objects.filter(active=True)
 
         config = SiteConfiguration.get_config()
+        # Quarterly = 3 * full_time - 5%
+        quarterly_price = config.full_time_monthly_fee * 3 * (1 - config.quarterly_enrollment_discount / 100)
         context["price_config"] = {
             "monthly_full": str(config.full_time_monthly_fee),
             "monthly_part": str(config.part_time_monthly_fee),
-            "quarterly": str(config.full_time_monthly_fee),
+            "quarterly": str(quarterly_price),
             "adult_group": str(config.adult_group_monthly_fee),
         }
         context["enrollment_fee_children"] = str(config.children_enrollment_fee)
         context["enrollment_fee_adult"] = str(config.adult_enrollment_fee)
+        context["language_cheque_discount"] = str(config.language_cheque_discount)
+        context["sibling_discount"] = str(config.sibling_discount)
+
+        # Students for sibling search (active, current year)
+        context["all_students_for_sibling"] = Student.objects.filter(
+            active=True
+        ).select_related("group").order_by("first_name", "last_name")[:200]
 
         return context
 
@@ -752,9 +781,10 @@ class StudentCreateView(CreateView):
                     pass
 
                 # Redirect to success page with student info
+                from urllib.parse import quote
                 return HttpResponseRedirect(
                     reverse("student_create")
-                    + f"?success=1&student_name={student.full_name}&student_id={student.id}"
+                    + f"?success=1&student_name={quote(student.full_name)}&student_id={student.id}"
                     + f"&fee={enrollment_fee}"
                     + (f"&parent_id={parent_id}&create_sibling=1" if "create_sibling" in self.request.POST and parent_id else "")
                 )

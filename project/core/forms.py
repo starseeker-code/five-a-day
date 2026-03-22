@@ -18,22 +18,11 @@ TAILWIND_CHECKBOX_CLASSES = 'form-checkbox h-5 w-5 text-primary-600'
 DATE_INPUT_FORMATS = ["%Y-%m-%d", "%d/%m/%Y"]
 
 
-# Unified enrollment plan choices (replaces enrollment_type + schedule_type + payment_modality)
+# Unified enrollment plan choices
 ENROLLMENT_PLAN_CHOICES = [
     ('monthly_full', 'Mensual (2 días/semana)'),
     ('monthly_part', 'Mensual (1 día/semana)'),
     ('quarterly', 'Trimestral'),
-]
-
-DISCOUNT_CHOICES = [
-    ('0', 'Sin descuento'),
-    ('5', '5% — Hermano / Trimestral'),
-    ('10', '10%'),
-    ('15', '15%'),
-    ('20', '20%'),
-    ('25', '25% — Solo 3 semanas'),
-    ('50', '50% — Medio mes (septiembre)'),
-    ('75', '75% — Solo 1 semana'),
 ]
 
 
@@ -106,32 +95,30 @@ class ParentForm(forms.ModelForm):
 
 class EnrollmentForm(forms.Form):
     """
-    Simplified enrollment form. For children: choose a plan (monthly 2d, 1d, quarterly).
-    For adults: plan is fixed (handled in view). Discount is a dropdown.
+    Simplified enrollment form.
+    Children: choose plan (monthly 2d, 1d, quarterly) + checkboxes for discounts.
+    Adults: plan is fixed (handled in view). Special checkbox enables manual price.
     """
     enrollment_plan = forms.ChoiceField(
         choices=ENROLLMENT_PLAN_CHOICES,
-        required=True,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_plan'}),
         label='Tipo de matrícula',
     )
-    discount = forms.ChoiceField(
-        choices=DISCOUNT_CHOICES,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_discount'}),
-        label='Descuento',
-    )
     has_language_cheque = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_has_language_cheque'}),
         label='Cheque idioma',
     )
     is_sibling_discount = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_is_sibling_discount'}),
         label='Descuento hermano',
     )
-    # For special/adult manual price
+    sibling_id = forms.IntegerField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'id': 'id_sibling_id'}),
+    )
     is_special = forms.BooleanField(
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_is_special'}),
@@ -169,22 +156,34 @@ class EnrollmentForm(forms.Form):
 
         is_special = self.cleaned_data.get('is_special', False)
         manual_amount = self.cleaned_data.get('manual_amount')
-        discount_pct = Decimal(self.cleaned_data.get('discount', '0'))
+        has_lc = self.cleaned_data.get('has_language_cheque', False)
+        has_sibling = self.cleaned_data.get('is_sibling_discount', False)
 
         if is_adult:
             if is_special and manual_amount:
                 enrollment_type = EnrollmentType.objects.get(name='special')
                 base_amount = manual_amount
-                schedule_type = 'adult_group'
-                payment_modality = 'monthly'
             else:
                 enrollment_type = EnrollmentType.objects.get(name='adults')
                 base_amount = config.adult_group_monthly_fee
-                schedule_type = 'adult_group'
-                payment_modality = 'monthly'
+            schedule_type = 'adult_group'
+            payment_modality = 'monthly'
         else:
             plan = self.cleaned_data.get('enrollment_plan', 'monthly_full')
-            if plan == 'monthly_full':
+
+            if is_special and manual_amount:
+                enrollment_type = EnrollmentType.objects.get(name='special')
+                base_amount = manual_amount
+                if plan == 'monthly_full':
+                    schedule_type = 'full_time'
+                    payment_modality = 'monthly'
+                elif plan == 'monthly_part':
+                    schedule_type = 'part_time'
+                    payment_modality = 'monthly'
+                else:
+                    schedule_type = 'full_time'
+                    payment_modality = 'quarterly'
+            elif plan == 'monthly_full':
                 enrollment_type = EnrollmentType.objects.get(name='monthly')
                 base_amount = config.full_time_monthly_fee
                 schedule_type = 'full_time'
@@ -196,7 +195,10 @@ class EnrollmentForm(forms.Form):
                 payment_modality = 'monthly'
             elif plan == 'quarterly':
                 enrollment_type = EnrollmentType.objects.get(name='quarterly')
-                base_amount = config.full_time_monthly_fee
+                # Quarterly = 3 months * full_time price - 5%
+                quarterly_base = config.full_time_monthly_fee * 3
+                quarterly_discount = config.quarterly_enrollment_discount  # 5%
+                base_amount = quarterly_base * (1 - quarterly_discount / 100)
                 schedule_type = 'full_time'
                 payment_modality = 'quarterly'
             else:
@@ -205,13 +207,24 @@ class EnrollmentForm(forms.Form):
                 schedule_type = 'full_time'
                 payment_modality = 'monthly'
 
-            # Override with special if checked
-            if is_special and manual_amount:
-                enrollment_type = EnrollmentType.objects.get(name='special')
-                base_amount = manual_amount
+        # Apply discounts
+        discount_pct = Decimal('0')
+        final_amount = base_amount
 
-        discount_amount = base_amount * (discount_pct / Decimal('100'))
-        final_amount = base_amount - discount_amount
+        if has_sibling and not is_adult:
+            discount_pct += config.sibling_discount  # 5%
+            final_amount = base_amount * (1 - config.sibling_discount / 100)
+
+        if has_lc and not is_adult:
+            # Language cheque is flat discount per month
+            lc_amount = config.language_cheque_discount
+            if payment_modality == 'quarterly':
+                lc_amount = lc_amount * 3
+            final_amount = final_amount - lc_amount
+
+        # Ensure minimum
+        if final_amount < Decimal('0.01'):
+            final_amount = Decimal('0.01')
 
         enrollment = Enrollment(
             student=student,
@@ -221,8 +234,8 @@ class EnrollmentForm(forms.Form):
             academic_year=academic_year,
             schedule_type=schedule_type,
             payment_modality=payment_modality,
-            has_language_cheque=self.cleaned_data.get('has_language_cheque', False),
-            is_sibling_discount=self.cleaned_data.get('is_sibling_discount', False),
+            has_language_cheque=has_lc,
+            is_sibling_discount=has_sibling,
             enrollment_amount=base_amount,
             discount_percentage=discount_pct,
             final_amount=final_amount,
@@ -238,7 +251,7 @@ ParentFormSet = inlineformset_factory(
     Student,
     Student.parents.through,  # StudentParent
     fields=('parent',),
-    extra=1,  # Forms vacios que se muestran
+    extra=1,
     can_delete=True,
     widgets={
         'parent': forms.Select(attrs={'class': 'form-control'})
