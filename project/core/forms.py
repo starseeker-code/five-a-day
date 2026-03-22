@@ -5,7 +5,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from decimal import Decimal
 from datetime import date
-from .models import Student, Parent, Enrollment, EnrollmentType, Group, SiteConfiguration, academic_year_start_date, academic_year_end_date
+from .models import Student, Parent, Enrollment, EnrollmentType, Group, SiteConfiguration, academic_year_start_date, academic_year_end_date, current_academic_year
 from . import constants
 
 # Clases de Tailwind para inputs consistentes
@@ -18,11 +18,30 @@ TAILWIND_CHECKBOX_CLASSES = 'form-checkbox h-5 w-5 text-primary-600'
 DATE_INPUT_FORMATS = ["%Y-%m-%d", "%d/%m/%Y"]
 
 
+# Unified enrollment plan choices (replaces enrollment_type + schedule_type + payment_modality)
+ENROLLMENT_PLAN_CHOICES = [
+    ('monthly_full', 'Mensual (2 días/semana)'),
+    ('monthly_part', 'Mensual (1 día/semana)'),
+    ('quarterly', 'Trimestral'),
+]
+
+DISCOUNT_CHOICES = [
+    ('0', 'Sin descuento'),
+    ('5', '5% — Hermano / Trimestral'),
+    ('10', '10%'),
+    ('15', '15%'),
+    ('20', '20%'),
+    ('25', '25% — Solo 3 semanas'),
+    ('50', '50% — Medio mes (septiembre)'),
+    ('75', '75% — Solo 1 semana'),
+]
+
+
 class StudentForm(ModelForm):
     class Meta:
         model = Student
         fields = [
-            'first_name', 'last_name', 'birth_date', 'school', 'allergies', 
+            'first_name', 'last_name', 'birth_date', 'school', 'allergies',
             'gdpr_signed', 'group']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
@@ -58,7 +77,7 @@ class ParentForm(forms.ModelForm):
     class Meta:
         model = Parent
         fields = [
-            'first_name', 'last_name', 'dni', 
+            'first_name', 'last_name', 'dni',
             'phone', 'email', 'iban'
         ]
         widgets = {
@@ -78,14 +97,46 @@ class ParentForm(forms.ModelForm):
             'iban': 'IBAN (opcional)',
         }
 
-    def clean_dni(self):  # TODO: Email y otros
+    def clean_dni(self):
         dni = self.cleaned_data.get('dni', '').upper().strip()
         if dni and len(dni) < 8:
             raise forms.ValidationError('El DNI debe tener al menos 8 caracteres')
         return dni
 
-class EnrollmentForm(forms.ModelForm):
-    # Campo opcional para precio manual (solo para matrículas especiales)
+
+class EnrollmentForm(forms.Form):
+    """
+    Simplified enrollment form. For children: choose a plan (monthly 2d, 1d, quarterly).
+    For adults: plan is fixed (handled in view). Discount is a dropdown.
+    """
+    enrollment_plan = forms.ChoiceField(
+        choices=ENROLLMENT_PLAN_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_plan'}),
+        label='Tipo de matrícula',
+    )
+    discount = forms.ChoiceField(
+        choices=DISCOUNT_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_discount'}),
+        label='Descuento',
+    )
+    has_language_cheque = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        label='Cheque idioma',
+    )
+    is_sibling_discount = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        label='Descuento hermano',
+    )
+    # For special/adult manual price
+    is_special = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_is_special'}),
+        label='Precio especial',
+    )
     manual_amount = forms.DecimalField(
         required=False,
         min_value=Decimal('0.01'),
@@ -94,143 +145,93 @@ class EnrollmentForm(forms.ModelForm):
             'class': 'form-control',
             'step': '0.01',
             'min': '0.01',
-            'placeholder': 'Precio manual (solo para especial)'
+            'placeholder': 'Precio personalizado',
+            'id': 'id_manual_amount',
         }),
         label='Precio manual (€)',
-        help_text='Solo rellenar para matrículas de tipo "Especial"'
     )
-    academic_year = forms.ChoiceField(
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_academic_year'}),
-        label='Curso académico',
-        help_text='Ejemplo: 2025-2026'
-    )
-    
-    class Meta:
-        model = Enrollment
-        fields = [
-            'enrollment_type', 'academic_year', 'schedule_type',
-            'payment_modality', 'has_language_cheque', 'is_sibling_discount',
-            'discount_percentage', 'enrollment_date',
-            'notes'
-        ]
-        widgets = {
-            'enrollment_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_enrollment_type'}),
-            'schedule_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_schedule_type'}),
-            'payment_modality': forms.Select(attrs={'class': 'form-control'}),
-            'has_language_cheque': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_sibling_discount': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '100', 'step': '0.01'}),
-            'enrollment_date': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Notas adicionales'}),
-        }
-        labels = {
-            'enrollment_type': 'Tipo de matrícula',
-            'academic_year': 'Curso académico',
-            'schedule_type': 'Tipo de horario',
-            'payment_modality': 'Modalidad de pago',
-            'has_language_cheque': 'Cheque idioma',
-            'is_sibling_discount': 'Descuento hermano',
-            'discount_percentage': 'Descuento (%)',
-            'enrollment_date': 'Fecha de alta de matriculación',
-            'notes': 'Notas',
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['enrollment_date'].input_formats = DATE_INPUT_FORMATS
-        self.fields['academic_year'].initial = self._get_default_academic_year()
-        self.fields['academic_year'].choices = [
-            (year, year) for year in self._build_academic_year_choices()
-        ]
-
-    def _get_default_academic_year(self):
-        today = date.today()
-        start_year = today.year if today.month >= 9 else today.year - 1
-        return f"{start_year}-{start_year + 1}"
-
-    def _build_academic_year_choices(self):
-        today = date.today()
-        current_start = today.year if today.month >= 9 else today.year - 1
-        return [f"{year}-{year + 1}" for year in range(current_start - 2, current_start + 4)]
-
-    def clean_academic_year(self):
-        academic_year = (self.cleaned_data.get('academic_year') or '').strip()
-        if not academic_year:
-            raise forms.ValidationError('El curso académico es obligatorio')
-
-        parts = academic_year.split('-')
-        if len(parts) != 2 or not all(part.isdigit() for part in parts):
-            raise forms.ValidationError('El formato debe ser YYYY-YYYY (ejemplo: 2025-2026)')
-
-        start_year, end_year = int(parts[0]), int(parts[1])
-        if end_year != start_year + 1:
-            raise forms.ValidationError('El curso académico debe tener años consecutivos')
-
-        return academic_year
 
     def clean(self):
         cleaned_data = super().clean()
-        enrollment_type = cleaned_data.get('enrollment_type')
+        is_special = cleaned_data.get('is_special')
         manual_amount = cleaned_data.get('manual_amount')
-        
-        # Si es tipo "special", el precio manual es obligatorio
-        if enrollment_type and enrollment_type.name == 'special':
-            if not manual_amount:
-                raise forms.ValidationError(
-                    'Para matrículas de tipo "Especial" debes especificar el precio manual'
-                )
-        
+        if is_special and not manual_amount:
+            raise forms.ValidationError('Debes especificar un precio manual para matrícula especial')
         return cleaned_data
-    
-    def save(self, commit=True):
-        """
-        Guarda la matrícula calculando automáticamente los precios
-        según el tipo de matrícula y horario, o usando el precio manual para especiales.
-        """
-        enrollment = super().save(commit=False)
-        
-        enrollment_type = self.cleaned_data.get('enrollment_type')
-        schedule_type = self.cleaned_data.get('schedule_type')
-        manual_amount = self.cleaned_data.get('manual_amount')
-        discount = self.cleaned_data.get('discount_percentage') or Decimal('0.00')
-        academic_year = self.cleaned_data.get('academic_year')
-        
-        # Obtener configuración del sitio
-        config = SiteConfiguration.get_config()
-        
-        if enrollment_type and enrollment_type.name == 'special':
-            # Para especiales, usar el precio manual
-            base_amount = manual_amount
-        else:
-            # Para otros tipos, calcular según schedule_type y configuración
-            if schedule_type == 'full_time':
-                base_amount = config.full_time_monthly_fee
-            elif schedule_type == 'part_time':
-                base_amount = config.part_time_monthly_fee
-            elif schedule_type == 'adult_group':
-                base_amount = config.adult_group_monthly_fee
-            else:
-                base_amount = config.full_time_monthly_fee  # Default
-        
-        # Calcular precio final con descuento
-        discount_amount = base_amount * (discount / Decimal('100'))
-        final_amount = base_amount - discount_amount
 
+    def create_enrollment(self, student, is_adult=False):
+        """Create and save an Enrollment from form data."""
+        config = SiteConfiguration.get_config()
+        academic_year = current_academic_year()
         start_year = int(academic_year.split('-')[0])
         end_year = int(academic_year.split('-')[1])
+        today = date.today()
 
-        enrollment.enrollment_amount = base_amount
-        enrollment.final_amount = final_amount
-        enrollment.academic_year = academic_year
-        enrollment.enrollment_period_start = academic_year_start_date(start_year)
-        enrollment.enrollment_period_end = academic_year_end_date(end_year)
-        enrollment.status = enrollment.status or 'active'
-        
-        if commit:
-            enrollment.save()
-        
+        is_special = self.cleaned_data.get('is_special', False)
+        manual_amount = self.cleaned_data.get('manual_amount')
+        discount_pct = Decimal(self.cleaned_data.get('discount', '0'))
+
+        if is_adult:
+            if is_special and manual_amount:
+                enrollment_type = EnrollmentType.objects.get(name='special')
+                base_amount = manual_amount
+                schedule_type = 'adult_group'
+                payment_modality = 'monthly'
+            else:
+                enrollment_type = EnrollmentType.objects.get(name='adults')
+                base_amount = config.adult_group_monthly_fee
+                schedule_type = 'adult_group'
+                payment_modality = 'monthly'
+        else:
+            plan = self.cleaned_data.get('enrollment_plan', 'monthly_full')
+            if plan == 'monthly_full':
+                enrollment_type = EnrollmentType.objects.get(name='monthly')
+                base_amount = config.full_time_monthly_fee
+                schedule_type = 'full_time'
+                payment_modality = 'monthly'
+            elif plan == 'monthly_part':
+                enrollment_type = EnrollmentType.objects.get(name='monthly')
+                base_amount = config.part_time_monthly_fee
+                schedule_type = 'part_time'
+                payment_modality = 'monthly'
+            elif plan == 'quarterly':
+                enrollment_type = EnrollmentType.objects.get(name='quarterly')
+                base_amount = config.full_time_monthly_fee
+                schedule_type = 'full_time'
+                payment_modality = 'quarterly'
+            else:
+                enrollment_type = EnrollmentType.objects.get(name='monthly')
+                base_amount = config.full_time_monthly_fee
+                schedule_type = 'full_time'
+                payment_modality = 'monthly'
+
+            # Override with special if checked
+            if is_special and manual_amount:
+                enrollment_type = EnrollmentType.objects.get(name='special')
+                base_amount = manual_amount
+
+        discount_amount = base_amount * (discount_pct / Decimal('100'))
+        final_amount = base_amount - discount_amount
+
+        enrollment = Enrollment(
+            student=student,
+            enrollment_type=enrollment_type,
+            enrollment_period_start=academic_year_start_date(start_year),
+            enrollment_period_end=academic_year_end_date(end_year),
+            academic_year=academic_year,
+            schedule_type=schedule_type,
+            payment_modality=payment_modality,
+            has_language_cheque=self.cleaned_data.get('has_language_cheque', False),
+            is_sibling_discount=self.cleaned_data.get('is_sibling_discount', False),
+            enrollment_amount=base_amount,
+            discount_percentage=discount_pct,
+            final_amount=final_amount,
+            status='active',
+            enrollment_date=today,
+        )
+        enrollment.save()
         return enrollment
+
 
 # Formset - Herencia de forms
 ParentFormSet = inlineformset_factory(

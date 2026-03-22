@@ -33,16 +33,18 @@
 
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- CARD 1: Pagos pendientes este mes -->
+    <!-- CARD 1: Pagos pendientes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-500 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Pagos pendientes este mes
+                    Pagos pendientes
                 </h4>
-                <p class="stat-number text-neutral-800">{{ pending_payments_count }}</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ pending_payments_count }}</p>
             </div>
-            <span class="material-symbols-outlined text-primary-500 text-3xl">attach_money</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-500 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-500" style="font-size:24px;">attach_money</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if pending_payments_count > 0 %}
@@ -56,16 +58,18 @@
         </div>
     </div>
 
-    <!-- CARD 2: Cumpleaños este mes -->
+    <!-- CARD 2: Cumpleaños -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-400 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Cumpleaños este mes
+                    Cumpleaños
                 </h4>
-                <p class="stat-number text-neutral-800">{{ birthday_count }}</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ birthday_count }}</p>
             </div>
-            <span class="material-symbols-outlined text-primary-400 text-3xl">cake</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-400 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-400" style="font-size:24px;">cake</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if birthday_count > 0 %}
@@ -79,16 +83,18 @@
         </div>
     </div>
 
-    <!-- CARD 3 (ESPACIO 1): Próximas apps este mes -->
+    <!-- CARD 3: Emails -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-600 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Próximas apps este mes
+                    Emails
                 </h4>
-                <p class="stat-number text-neutral-800">{{ upcoming_events_count }}</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ upcoming_events_count }}</p>
             </div>
-            <span class="material-symbols-outlined text-primary-600 text-3xl">email</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-600" style="font-size:24px;">email</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if upcoming_events %}
@@ -99,26 +105,28 @@
                     <span class="text-neutral-400">({{ event.date|date:"d/m" }}){% if not forloop.last %}, {% endif %}</span>
                 {% endfor %}
             {% else %}
-                <span class="text-neutral-400">Sin apps programadas este mes</span>
+                <span class="text-neutral-400">Sin emails programados este mes</span>
             {% endif %}
         </div>
     </div>
 
-    <!-- CARD 4 (ESPACIO 2): Ingresos del mes -->
+    <!-- CARD 4: Ingresos del mes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-300 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
             <div>
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
                     Ingresos del mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">€{{ monthly_income_total|floatformat:0 }} <span class="text-lg font-normal text-neutral-400">/ €{{ expected_revenue|floatformat:0 }}</span></p>
+                <p class="text-3xl font-bold text-neutral-800">{{ monthly_income_total|floatformat:0 }}€ <span class="text-lg font-normal text-neutral-400">/ {{ expected_revenue|floatformat:0 }}€</span></p>
             </div>
-            <span class="material-symbols-outlined text-primary-300 text-3xl">payments</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-300 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-300" style="font-size:24px;">payments</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            <span class="text-green-600 font-medium">€{{ monthly_income_total|floatformat:0 }}</span> cobrado
+            <span class="text-green-600 font-medium">{{ monthly_income_total|floatformat:0 }}€</span> cobrado
             &middot;
-            <span class="text-neutral-500">€{{ expected_revenue|floatformat:0 }}</span> esperado
+            <span class="text-neutral-500">{{ expected_revenue|floatformat:0 }}€</span> esperado
         </div>
     </div>
 

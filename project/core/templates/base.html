@@ -121,10 +121,14 @@
                             </p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <!-- Logs Icon (no logic yet) -->
+                        <button class="p-3 rounded-full text-neutral-700 transition-all duration-200" style="background-color:#ede9fe;" title="Logs">
+                            <span class="material-symbols-outlined">article</span>
+                        </button>
                         <!-- Notifications Bell -->
                         <div class="relative" id="notif-container">
-                            <button id="notif-btn" class="p-3 rounded-full text-neutral-500 hover:bg-neutral-100 transition-all duration-200">
+                            <button id="notif-btn" class="p-3 rounded-full text-neutral-800 transition-all duration-200" style="background-color:#ede9fe;">
                                 <span class="material-symbols-outlined">notifications</span>
                             </button>
                             {% if notifications_count > 0 %}
@@ -182,7 +186,7 @@
                 </div>
 
                 <!-- Floating Action Button -->
-                <a id="scroll-top-btn" href="#" class="group fixed bottom-8 right-8 z-40 inline-flex items-center justify-center w-12 h-12 bg-primary-100/60 hover:bg-primary-600 rounded-full border-2 border-primary-200 transition-all duration-300 hover:transform hover:scale-110 no-underline" style="width: 3rem; height: 3rem; display: inline-flex; position: fixed; right: 2rem; bottom: 2rem; text-decoration: none; border-width: 2px;">
+                <a id="scroll-top-btn" href="#" class="group inline-flex items-center justify-center bg-primary-100 hover:bg-primary-600 rounded-full border-2 border-primary-200 transition-all duration-300 hover:transform hover:scale-110 no-underline" style="width:3rem;height:3rem;position:fixed;right:5rem;bottom:2rem;z-index:9999;text-decoration:none;border-width:2px;">
                     <span class="material-symbols-outlined text-[30px] text-primary-700 transition-colors duration-200" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 30;">arrow_upward</span>
                 </a>
             </main>

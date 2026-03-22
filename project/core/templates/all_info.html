@@ -238,7 +238,7 @@
               </td>
               <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.get_payment_type_display }}</td>
               <td class="px-4 py-4 text-sm text-neutral-600">{{ payment.get_payment_method_display }}</td>
-              <td class="px-4 py-4 text-sm text-neutral-700 font-semibold">€{{ payment.amount }}</td>
+              <td class="px-4 py-4 text-sm text-neutral-700 font-semibold">{{ payment.amount }}€</td>
               <td class="px-4 py-4">
                 {% if payment.payment_status == 'completed' %}
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">Completado</span>

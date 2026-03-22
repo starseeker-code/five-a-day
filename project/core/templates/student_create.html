@@ -5,7 +5,7 @@
 {% block page_title %}Crear Estudiante{% endblock %}
 {% block page_subtitle %}
     {% if is_adult_mode %}
-        Crear estudiante adulto (18+) — sin padre/tutor
+        Crear estudiante adulto (18+)
     {% elif parent %}
         Crear estudiante para {{ parent.full_name }}
     {% elif creation_mode == 'existing_parent' %}
@@ -16,15 +16,51 @@
 {% endblock %}
 
 {% block content %}
+<!-- Success dialog (shown via GET param) -->
+{% if request.GET.success %}
+<div id="successOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center;">
+    <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4 text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background-color:#dcfce7;">
+            <span class="material-symbols-outlined" style="font-size:32px;color:#16a34a;">check_circle</span>
+        </div>
+        <h3 class="text-xl font-bold text-neutral-800 mb-2">Estudiante creado</h3>
+        <p class="text-neutral-600 mb-1"><strong>{{ request.GET.student_name }}</strong> ha sido registrado correctamente.</p>
+        <p class="text-neutral-500 text-sm mb-4">Se ha generado un pago de matrícula pendiente de <strong>{{ request.GET.fee }}€</strong>.</p>
+        <div class="flex gap-3 justify-center">
+            {% if request.GET.create_sibling %}
+            <a href="{% url 'student_create' %}?parent_id={{ request.GET.parent_id }}" class="px-5 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors" style="text-decoration:none;">
+                Añadir hermano
+            </a>
+            {% endif %}
+            <a href="{% url 'students_list' %}" id="successRedirectBtn" class="px-5 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors" style="text-decoration:none;">
+                Ver estudiantes <span id="countdown">(4)</span>
+            </a>
+        </div>
+    </div>
+</div>
+<script>
+    let sec = 4;
+    const countdownEl = document.getElementById('countdown');
+    const timer = setInterval(() => {
+        sec--;
+        if (countdownEl) countdownEl.textContent = `(${sec})`;
+        if (sec <= 0) { clearInterval(timer); window.location.href = '{% url "students_list" %}'; }
+    }, 1000);
+    document.getElementById('successOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('successOverlay')) {
+            clearInterval(timer);
+            window.location.href = '{% url "students_list" %}';
+        }
+    });
+</script>
+{% else %}
+
 <div class="max-w-4xl mx-auto">
     {% if is_adult_mode %}
     <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
         <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-amber-600">person</span>
-            <div>
-                <p class="font-medium text-amber-800">Modo Adulto (18+)</p>
-                <p class="text-sm text-amber-600">Este estudiante no necesita padre/tutor. Tendrá su propio email y teléfono.</p>
-            </div>
+            <p class="font-medium text-amber-800">Estudiante Adulto (18+)</p>
         </div>
     </div>
     {% elif parent %}
@@ -41,10 +77,7 @@
     <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
         <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-green-600">family_restroom</span>
-            <div>
-                <p class="font-medium text-green-800">Padre Existente</p>
-                <p class="text-sm text-green-600">Selecciona un padre/tutor ya registrado para este estudiante.</p>
-            </div>
+            <p class="font-medium text-green-800">Padre Existente — selecciónalo al final del formulario</p>
         </div>
     </div>
     {% endif %}
@@ -54,55 +87,42 @@
             {% csrf_token %}
             <input type="hidden" name="parent_id" value="{{ parent_id }}" id="hidden_parent_id">
             <input type="hidden" name="is_adult_mode" value="{% if is_adult_mode %}true{% else %}false{% endif %}">
-            
+
             <!-- Información del Estudiante -->
             <div class="mb-6">
                 <h3 class="text-lg font-medium text-neutral-700 mb-4">Información del Estudiante</h3>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ form.first_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.first_name }}
-                        {% if form.first_name.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.first_name.errors.0 }}</p>
-                        {% endif %}
+                        {% if form.first_name.errors %}<p class="mt-1 text-sm" style="color:#dc2626;">{{ form.first_name.errors.0 }}</p>{% endif %}
                     </div>
-                    
                     <div>
                         <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ form.last_name.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.last_name }}
-                        {% if form.last_name.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.last_name.errors.0 }}</p>
-                        {% endif %}
+                        {% if form.last_name.errors %}<p class="mt-1 text-sm" style="color:#dc2626;">{{ form.last_name.errors.0 }}</p>{% endif %}
                     </div>
-                    
                     <div>
                         <label for="{{ form.birth_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ form.birth_date.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.birth_date }}
-                        {% if form.birth_date.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.birth_date.errors.0 }}</p>
-                        {% endif %}
+                        {% if form.birth_date.errors %}<p class="mt-1 text-sm" style="color:#dc2626;">{{ form.birth_date.errors.0 }}</p>{% endif %}
                     </div>
-                    
                     <div>
                         <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ form.email.label }}
                         </label>
                         {{ form.email }}
-                        {% if form.email.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.email.errors.0 }}</p>
-                        {% endif %}
                     </div>
                 </div>
             </div>
-            
-            <!-- Adult Contact Info (only in adult mode) -->
+
+            <!-- Adult Contact Info -->
             {% if is_adult_mode %}
             <div class="mb-6">
                 <h3 class="text-lg font-medium text-neutral-700 mb-4">Contacto del Adulto</h3>
@@ -127,189 +147,133 @@
             </div>
             {% endif %}
 
-            <!-- Existing Parent Selector (only in existing_parent mode) -->
-            {% if creation_mode == 'existing_parent' and not parent %}
-            <div class="mb-6">
-                <h3 class="text-lg font-medium text-neutral-700 mb-4">Seleccionar Padre/Tutor Existente</h3>
-                <div>
-                    <input type="text" id="parentSearch" placeholder="Buscar padre por nombre o DNI..."
-                           class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-3">
-                    <div id="parentResults" class="space-y-2 max-h-60 overflow-y-auto">
-                        {% for p in all_parents %}
-                        <label class="flex items-center gap-3 p-3 border border-neutral-200 rounded-md hover:bg-neutral-50 cursor-pointer parent-option"
-                               data-search="{{ p.full_name|lower }} {{ p.dni|lower }}">
-                            <input type="radio" name="parent_id" value="{{ p.id }}" class="form-radio h-5 w-5 text-primary-600" required>
-                            <div class="flex-1">
-                                <div class="font-medium text-neutral-800">{{ p.full_name }}</div>
-                                <div class="text-sm text-neutral-600">DNI: {{ p.dni }} • {{ p.email }} • {{ p.phone }}</div>
-                            </div>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
             <!-- Información Académica -->
             <div class="mb-6">
                 <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Académica</h3>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="{{ form.group.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ form.group.label }} <span style="color:#dc2626;">*</span>
                         </label>
                         {{ form.group }}
-                        {% if form.group.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.group.errors.0 }}</p>
-                        {% endif %}
+                        {% if form.group.errors %}<p class="mt-1 text-sm" style="color:#dc2626;">{{ form.group.errors.0 }}</p>{% endif %}
                     </div>
-                    
                     <div>
                         <label for="{{ form.school.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
                             {{ form.school.label }}
                         </label>
                         {{ form.school }}
-                        {% if form.school.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.school.errors.0 }}</p>
-                        {% endif %}
                     </div>
                 </div>
             </div>
-            
+
             <!-- Información de Matrícula -->
             <div class="mb-6">
-                <h3 class="text-lg font-medium text-neutral-700 mb-4">Información de Matrícula</h3>
-                
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Matrícula</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {% if not is_adult_mode %}
+                    <!-- Children: enrollment plan selector -->
                     <div>
-                        <label for="{{ enrollment_form.enrollment_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_type.label }} <span style="color:#dc2626;">*</span>
+                        <label for="id_enrollment_plan" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Tipo de matrícula <span style="color:#dc2626;">*</span>
                         </label>
-                        {{ enrollment_form.enrollment_type }}
-                        {% if enrollment_form.enrollment_type.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.enrollment_type.errors.0 }}</p>
-                        {% endif %}
+                        {{ enrollment_form.enrollment_plan }}
                     </div>
-                    
-                    <div>
-                        <label for="{{ enrollment_form.academic_year.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.academic_year.label }} <span style="color:#dc2626;">*</span>
-                        </label>
-                        {{ enrollment_form.academic_year }}
-                        {% if enrollment_form.academic_year.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.academic_year.errors.0 }}</p>
-                        {% endif %}
+                    {% endif %}
+
+                    <!-- Calculated price -->
+                    <div id="calculated-price-container">
+                        <label class="block text-sm font-medium text-neutral-700 mb-2">Precio calculado</label>
+                        <div class="w-full px-3 py-2 border border-neutral-200 rounded-md bg-neutral-50 text-neutral-700">
+                            <span id="calculated-price">--</span> €
+                        </div>
                     </div>
 
+                    <!-- Discount dropdown -->
                     <div>
-                        <label for="{{ enrollment_form.schedule_type.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.schedule_type.label }} <span style="color:#dc2626;">*</span>
-                        </label>
-                        {{ enrollment_form.schedule_type }}
-                        {% if enrollment_form.schedule_type.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.schedule_type.errors.0 }}</p>
-                        {% endif %}
+                        <label for="id_discount" class="block text-sm font-medium text-neutral-700 mb-2">Descuento</label>
+                        {{ enrollment_form.discount }}
                     </div>
-                    
-                    <!-- Campo de precio manual (solo visible para tipo "special") -->
+
+                    <!-- Manual price (only visible when special is checked) -->
                     <div id="manual-amount-container" class="hidden">
                         <label for="id_manual_amount" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.manual_amount.label }} <span style="color:#dc2626;">*</span>
+                            Precio manual (€) <span style="color:#dc2626;">*</span>
                         </label>
                         {{ enrollment_form.manual_amount }}
-                        <p class="mt-1 text-xs text-neutral-500">{{ enrollment_form.manual_amount.help_text }}</p>
-                        {% if enrollment_form.manual_amount.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.manual_amount.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Precio calculado (informativo) -->
-                    <div id="calculated-price-container">
-                        <label class="block text-sm font-medium text-neutral-700 mb-2">
-                            Precio mensual calculado
-                        </label>
-                        <div class="w-full px-3 py-2 border border-neutral-200 rounded-md bg-neutral-50 text-neutral-700">
-                            <span id="calculated-price">--</span> €/mes
-                        </div>
-                        <p class="mt-1 text-xs text-neutral-500">Se calcula automáticamente según el tipo de horario</p>
-                    </div>
-                    
-                    <div>
-                        <label for="{{ enrollment_form.payment_modality.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.payment_modality.label }}
-                        </label>
-                        {{ enrollment_form.payment_modality }}
-                    </div>
-
-                    <div>
-                        <label for="{{ enrollment_form.discount_percentage.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.discount_percentage.label }}
-                        </label>
-                        {{ enrollment_form.discount_percentage }}
-                        {% if enrollment_form.discount_percentage.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.discount_percentage.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ enrollment_form.enrollment_date.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ enrollment_form.enrollment_date.label }} <span style="color:#dc2626;">*</span>
-                        </label>
-                        {{ enrollment_form.enrollment_date }}
-                        {% if enrollment_form.enrollment_date.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ enrollment_form.enrollment_date.errors.0 }}</p>
-                        {% endif %}
                     </div>
                 </div>
 
-                {% if not is_adult_mode %}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <!-- Checkboxes row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    {% if not is_adult_mode %}
                     <div class="flex items-center space-x-3">
                         {{ enrollment_form.has_language_cheque }}
                         <label for="{{ enrollment_form.has_language_cheque.id_for_label }}" class="text-sm font-medium text-neutral-700">
                             {{ enrollment_form.has_language_cheque.label }}
-                            <span class="text-xs text-neutral-500">(descuento -20€/mes, notificar al gobierno)</span>
+                            <span class="text-xs text-neutral-500">(-20€/mes)</span>
                         </label>
                     </div>
                     <div class="flex items-center space-x-3">
                         {{ enrollment_form.is_sibling_discount }}
                         <label for="{{ enrollment_form.is_sibling_discount.id_for_label }}" class="text-sm font-medium text-neutral-700">
                             {{ enrollment_form.is_sibling_discount.label }}
-                            <span class="text-xs text-neutral-500">(descuento -5% mensual)</span>
+                            <span class="text-xs text-neutral-500">(-5%)</span>
+                        </label>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center space-x-3">
+                        {{ enrollment_form.is_special }}
+                        <label for="id_is_special" class="text-sm font-medium text-neutral-700">
+                            Precio especial
                         </label>
                     </div>
                 </div>
-                {% endif %}
             </div>
-            
-            <!-- Información Adicional (hidden for adults) -->
+
+            <!-- Información Adicional (children only) -->
             {% if not is_adult_mode %}
             <div class="mb-6">
                 <h3 class="text-lg font-medium text-neutral-700 mb-4">Información Adicional</h3>
-
                 <div class="space-y-4">
                     <div>
-                        <label for="{{ form.allergies.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">
-                            {{ form.allergies.label }}
-                        </label>
+                        <label for="{{ form.allergies.id_for_label }}" class="block text-sm font-medium text-neutral-700 mb-2">{{ form.allergies.label }}</label>
                         {{ form.allergies }}
-                        {% if form.allergies.errors %}
-                            <p class="mt-1 text-sm" style="color:#dc2626;">{{ form.allergies.errors.0 }}</p>
-                        {% endif %}
                     </div>
-
                     <div class="flex items-center space-x-3">
                         {{ form.gdpr_signed }}
-                        <label for="{{ form.gdpr_signed.id_for_label }}" class="text-sm font-medium text-neutral-700">
-                            {{ form.gdpr_signed.label }}
-                        </label>
+                        <label for="{{ form.gdpr_signed.id_for_label }}" class="text-sm font-medium text-neutral-700">{{ form.gdpr_signed.label }}</label>
                     </div>
                 </div>
             </div>
             {% endif %}
-            
-            <!-- Botones de Acción -->
+
+            <!-- Existing Parent Selector (at the end for existing_parent mode) -->
+            {% if creation_mode == 'existing_parent' and not parent %}
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Seleccionar Padre/Tutor</h3>
+                <div>
+                    <input type="text" id="parentSearch" placeholder="Buscar padre por nombre o email..."
+                           class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-3">
+                    <div id="parentResults" class="space-y-2">
+                        {% for p in all_parents %}
+                        <label class="flex items-center gap-3 p-3 border border-neutral-200 rounded-md hover:bg-neutral-50 cursor-pointer parent-option"
+                               data-search="{{ p.full_name|lower }} {{ p.email|lower }}">
+                            <input type="radio" name="parent_id" value="{{ p.id }}" class="form-radio h-5 w-5 text-primary-600" required>
+                            <div class="flex-1">
+                                <div class="font-medium text-neutral-800">{{ p.full_name }}</div>
+                                <div class="text-sm text-neutral-600">{{ p.email }} • {{ p.phone }}</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div id="parentPagination" class="flex justify-center gap-2 mt-3"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
             <div class="flex justify-between items-center pt-4 border-t border-neutral-200">
                 <a href="{% url 'students_list' %}" class="px-6 py-2 text-neutral-600 bg-neutral-100 rounded-md hover:bg-neutral-200 transition-all duration-200">
                     Cancelar
@@ -329,97 +293,119 @@
         </form>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
+{% if not request.GET.success %}
 <script>
-    // Parent search for existing_parent mode
+    // ==================== PRICE CONFIG ====================
+    const priceConfig = {
+        'monthly_full': {{ price_config.monthly_full }},
+        'monthly_part': {{ price_config.monthly_part }},
+        'quarterly': {{ price_config.quarterly }},
+        'adult_group': {{ price_config.adult_group }}
+    };
+    const isAdultMode = {{ is_adult_mode|yesno:"true,false" }};
+
+    const planSelect = document.getElementById('id_enrollment_plan');
+    const discountSelect = document.getElementById('id_discount');
+    const specialCheckbox = document.getElementById('id_is_special');
+    const manualAmountContainer = document.getElementById('manual-amount-container');
+    const manualAmountInput = document.getElementById('id_manual_amount');
+    const calculatedPrice = document.getElementById('calculated-price');
+
+    function getBasePrice() {
+        if (isAdultMode) return priceConfig.adult_group;
+        if (!planSelect) return 0;
+        return priceConfig[planSelect.value] || 0;
+    }
+
+    function updateCalculatedPrice() {
+        if (specialCheckbox && specialCheckbox.checked) {
+            manualAmountContainer.classList.remove('hidden');
+            if (manualAmountInput && manualAmountInput.value) {
+                calculatedPrice.textContent = parseFloat(manualAmountInput.value).toFixed(2);
+            } else {
+                calculatedPrice.textContent = '--';
+            }
+            return;
+        }
+        manualAmountContainer.classList.add('hidden');
+
+        const base = getBasePrice();
+        const discountPct = parseFloat(discountSelect ? discountSelect.value : 0) || 0;
+        const final = base - (base * discountPct / 100);
+
+        if (discountPct > 0) {
+            calculatedPrice.innerHTML = `<span class="line-through text-neutral-400">${base.toFixed(2)}</span> <span class="text-green-600 font-medium">${final.toFixed(2)}</span>`;
+        } else {
+            calculatedPrice.textContent = base.toFixed(2);
+        }
+    }
+
+    if (planSelect) planSelect.addEventListener('change', updateCalculatedPrice);
+    if (discountSelect) discountSelect.addEventListener('change', updateCalculatedPrice);
+    if (specialCheckbox) specialCheckbox.addEventListener('change', updateCalculatedPrice);
+    if (manualAmountInput) manualAmountInput.addEventListener('input', updateCalculatedPrice);
+
+    document.addEventListener('DOMContentLoaded', updateCalculatedPrice);
+
+    // ==================== PARENT SEARCH + PAGINATION ====================
     const parentSearchInput = document.getElementById('parentSearch');
     if (parentSearchInput) {
+        const PAGE_SIZE = 6;
+        const allOptions = Array.from(document.querySelectorAll('.parent-option'));
+        let filteredOptions = allOptions;
+        let parentPage = 1;
+
+        function renderParentPage() {
+            const isFiltered = parentSearchInput.value.trim() !== '';
+            const toShow = isFiltered ? filteredOptions : filteredOptions;
+            const totalPages = isFiltered ? 1 : Math.max(1, Math.ceil(toShow.length / PAGE_SIZE));
+            if (parentPage > totalPages) parentPage = totalPages;
+
+            const start = isFiltered ? 0 : (parentPage - 1) * PAGE_SIZE;
+            const end = isFiltered ? toShow.length : start + PAGE_SIZE;
+
+            allOptions.forEach(o => o.style.display = 'none');
+            toShow.forEach((o, i) => {
+                o.style.display = (i >= start && i < end) ? '' : 'none';
+            });
+
+            // Render pagination
+            const nav = document.getElementById('parentPagination');
+            if (isFiltered || totalPages <= 1) { nav.innerHTML = ''; return; }
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === parentPage) {
+                    html += `<span style="width:2rem;height:2rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:0.75rem;font-weight:700;">${i}</span>`;
+                } else {
+                    html += `<button type="button" class="parent-pg-btn" data-page="${i}" style="width:2rem;height:2rem;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#525252;font-size:0.75rem;cursor:pointer;">${i}</button>`;
+                }
+            }
+            nav.innerHTML = html;
+            nav.querySelectorAll('.parent-pg-btn').forEach(btn => {
+                btn.addEventListener('click', () => { parentPage = parseInt(btn.dataset.page); renderParentPage(); });
+            });
+        }
+
         parentSearchInput.addEventListener('input', function() {
             const q = this.value.toLowerCase().trim();
-            document.querySelectorAll('.parent-option').forEach(opt => {
-                opt.style.display = (q === '' || opt.dataset.search.includes(q)) ? '' : 'none';
-            });
+            parentPage = 1;
+            filteredOptions = q === '' ? allOptions : allOptions.filter(o => o.dataset.search.includes(q));
+            renderParentPage();
         });
 
-        // When a parent radio is selected, update the hidden parent_id
         document.querySelectorAll('input[name="parent_id"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const hiddenInput = document.getElementById('hidden_parent_id');
                 if (hiddenInput) hiddenInput.value = this.value;
             });
         });
-    }
 
-    // Configuración de precios desde el servidor
-    const priceConfig = {
-        'full_time': {{ price_config.full_time }},
-        'part_time': {{ price_config.part_time }},
-        'adult_group': {{ price_config.adult_group }}
-    };
-    
-    const enrollmentTypeSelect = document.getElementById('id_enrollment_type');
-    const scheduleTypeSelect = document.getElementById('id_schedule_type');
-    const manualAmountContainer = document.getElementById('manual-amount-container');
-    const calculatedPriceContainer = document.getElementById('calculated-price-container');
-    const calculatedPrice = document.getElementById('calculated-price');
-    const discountInput = document.querySelector('[name="discount_percentage"]');
-    
-    // Función para actualizar la UI según el tipo de matrícula
-    function updateEnrollmentUI() {
-        const selectedOption = enrollmentTypeSelect.options[enrollmentTypeSelect.selectedIndex];
-        const enrollmentTypeName = selectedOption ? selectedOption.text.toLowerCase() : '';
-        
-        // Detectar si es tipo "special" (puede variar según cómo se muestre)
-        const isSpecial = enrollmentTypeName.includes('special') || enrollmentTypeName.includes('especial');
-        
-        if (isSpecial) {
-            // Mostrar campo de precio manual, ocultar precio calculado
-            manualAmountContainer.classList.remove('hidden');
-            calculatedPriceContainer.classList.add('hidden');
-        } else {
-            // Ocultar campo de precio manual, mostrar precio calculado
-            manualAmountContainer.classList.add('hidden');
-            calculatedPriceContainer.classList.remove('hidden');
-            updateCalculatedPrice();
-        }
+        renderParentPage();
     }
-    
-    // Función para calcular y mostrar el precio
-    function updateCalculatedPrice() {
-        const scheduleType = scheduleTypeSelect.value;
-        const discount = parseFloat(discountInput.value) || 0;
-        
-        let basePrice = 0;
-        if (scheduleType === 'full_time') {
-            basePrice = priceConfig.full_time;
-        } else if (scheduleType === 'part_time') {
-            basePrice = priceConfig.part_time;
-        } else if (scheduleType === 'adult_group') {
-            basePrice = priceConfig.adult_group;
-        }
-        
-        // Aplicar descuento
-        const discountAmount = basePrice * (discount / 100);
-        const finalPrice = basePrice - discountAmount;
-        
-        // Mostrar precio
-        if (discount > 0) {
-            calculatedPrice.innerHTML = `<span class="line-through text-neutral-400">${basePrice.toFixed(2)}</span> <span class="text-green-600 font-medium">${finalPrice.toFixed(2)}</span>`;
-        } else {
-            calculatedPrice.textContent = basePrice.toFixed(2);
-        }
-    }
-    
-    // Event listeners
-    enrollmentTypeSelect.addEventListener('change', updateEnrollmentUI);
-    scheduleTypeSelect.addEventListener('change', updateCalculatedPrice);
-    discountInput.addEventListener('input', updateCalculatedPrice);
-    
-    // Inicializar al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        updateEnrollmentUI();
-    });
 </script>
+{% endif %}
 {% endblock %}

@@ -139,7 +139,6 @@ def login_view(request):
         if username == valid_username and password == valid_password:
             request.session["is_authenticated"] = True
             request.session["username"] = username
-            messages.success(request, f"¡Bienvenido {username}!")
             return redirect("home")
         else:
             messages.error(request, "❌ Usuario o contraseña incorrectos")
@@ -287,7 +286,6 @@ def google_oauth_callback(request):
         "client_secret": credentials.client_secret,
         "scopes": list(credentials.scopes) if credentials.scopes else [],
     }
-    messages.success(request, f"¡Bienvenido, {user_name}!")
     return redirect("home")
 
 
@@ -563,9 +561,7 @@ class StudentsView(CreateView):
                     parent.save()
                 self.object = form.save()
                 self.object.parents.add(parent)
-                enrollment = enrollment_form.save(commit=False)
-                enrollment.student = self.object
-                enrollment.save()
+                enrollment = enrollment_form.create_enrollment(self.object)
                 messages.success(
                     self.request,
                     f"¡Estudiante {self.object.full_name} creado exitosamente!",
@@ -645,14 +641,11 @@ class StudentCreateView(CreateView):
 
         context = super().get_context_data(**kwargs)
 
-        # Determine creation mode: normal, adult, or existing_parent
         mode = self.request.GET.get("mode", "normal")
         context["creation_mode"] = mode
         context["is_adult_mode"] = mode == "adult"
 
-        # Obtener el parent_id de los parámetros GET si existe
         parent_id = self.request.GET.get("parent_id")
-
         if parent_id:
             try:
                 parent = Parent.objects.get(id=parent_id)
@@ -661,29 +654,30 @@ class StudentCreateView(CreateView):
             except Parent.DoesNotExist:
                 messages.error(self.request, "El padre especificado no existe")
 
-        # For existing_parent mode, provide all parents for search
         if mode == "existing_parent":
             context["all_parents"] = Parent.objects.all().order_by("last_name", "first_name")
 
-        # Agregar el formulario de matrícula
         if "enrollment_form" not in context:
             context["enrollment_form"] = EnrollmentForm(self.request.POST or None)
 
-        # Agregar grupos disponibles
         context["groups"] = Group.objects.filter(active=True)
 
-        # Agregar precios de configuración para JavaScript
         config = SiteConfiguration.get_config()
         context["price_config"] = {
-            "full_time": str(config.full_time_monthly_fee),
-            "part_time": str(config.part_time_monthly_fee),
+            "monthly_full": str(config.full_time_monthly_fee),
+            "monthly_part": str(config.part_time_monthly_fee),
+            "quarterly": str(config.full_time_monthly_fee),
             "adult_group": str(config.adult_group_monthly_fee),
         }
+        context["enrollment_fee_children"] = str(config.children_enrollment_fee)
+        context["enrollment_fee_adult"] = str(config.adult_enrollment_fee)
 
         return context
 
     def form_valid(self, form):
         from core.tasks import send_welcome_email_task
+        from .models import SiteConfiguration
+        import calendar
 
         enrollment_form = EnrollmentForm(self.request.POST)
 
@@ -694,7 +688,6 @@ class StudentCreateView(CreateView):
 
         try:
             with transaction.atomic():
-                # Crear el estudiante
                 student = form.save(commit=False)
                 if is_adult_mode:
                     student.is_adult = True
@@ -706,19 +699,13 @@ class StudentCreateView(CreateView):
                 parent_id = None
 
                 if not is_adult_mode:
-                    # Obtener el parent_id del POST o GET
                     parent_id = self.request.POST.get("parent_id") or self.request.GET.get(
                         "parent_id"
                     )
-
                     if not parent_id:
-                        messages.error(
-                            self.request, "Debe especificar un padre para el estudiante"
-                        )
+                        messages.error(self.request, "Debe especificar un padre para el estudiante")
                         student.delete()
                         return self.form_invalid(form)
-
-                    # Vincular al padre
                     try:
                         parent = Parent.objects.get(id=parent_id)
                         student.parents.add(parent)
@@ -727,41 +714,50 @@ class StudentCreateView(CreateView):
                         student.delete()
                         return self.form_invalid(form)
 
-                # Crear la matrícula
-                enrollment = enrollment_form.save(commit=False)
-                enrollment.student = student
-                enrollment.save()
+                # Create enrollment
+                enrollment = enrollment_form.create_enrollment(student, is_adult=is_adult_mode)
 
-                # Encolar email de bienvenida de forma asíncrona (Celery)
+                # Create enrollment fee payment (pending, due end of month)
+                config = SiteConfiguration.get_config()
+                today = date.today()
+                last_day = calendar.monthrange(today.year, today.month)[1]
+                due_date = date(today.year, today.month, last_day)
+
+                enrollment_fee = (
+                    config.adult_enrollment_fee if is_adult_mode
+                    else config.children_enrollment_fee
+                )
+
+                Payment.objects.create(
+                    student=student,
+                    parent=parent,
+                    enrollment=enrollment,
+                    payment_type='enrollment',
+                    payment_method='transfer',
+                    amount=enrollment_fee,
+                    currency='EUR',
+                    payment_status='pending',
+                    due_date=due_date,
+                    concept=f"Matrícula {enrollment.academic_year} — {student.full_name}",
+                )
+
+                # Enqueue welcome email
                 try:
                     send_welcome_email_task.delay(
                         parent_id=parent.id if parent else None,
                         student_id=student.id,
                         enrollment_id=enrollment.id,
                     )
-                except Exception as celery_error:
-                    # Si Celery no está disponible, no fallar
-                    import logging
+                except Exception:
+                    pass
 
-                    logger = logging.getLogger(__name__)
-                    logger.warning(
-                        f"No se pudo encolar email de bienvenida: {celery_error}"
-                    )
-
-                messages.success(
-                    self.request,
-                    f"¡Estudiante {student.full_name} creado exitosamente!",
+                # Redirect to success page with student info
+                return HttpResponseRedirect(
+                    reverse("student_create")
+                    + f"?success=1&student_name={student.full_name}&student_id={student.id}"
+                    + f"&fee={enrollment_fee}"
+                    + (f"&parent_id={parent_id}&create_sibling=1" if "create_sibling" in self.request.POST and parent_id else "")
                 )
-
-                # Verificar si el usuario quiere crear otro hermano
-                if "create_sibling" in self.request.POST and parent_id:
-                    # Redirigir a crear otro estudiante con el mismo padre
-                    return HttpResponseRedirect(
-                        reverse_lazy("student_create") + f"?parent_id={parent_id}"
-                    )
-                else:
-                    # Redirigir a la lista de estudiantes
-                    return HttpResponseRedirect(reverse_lazy("students_list"))
 
         except Exception as e:
             messages.error(self.request, f"Error al crear el estudiante: {str(e)}")
@@ -856,9 +852,22 @@ class StudentUpdateView(UpdateView):
         except Enrollment.DoesNotExist:
             enrollment = None
 
+        # Pre-fill enrollment form from current enrollment
         if "enrollment_form" not in context:
+            initial = {}
+            if enrollment:
+                # Map back to plan choice
+                if enrollment.payment_modality == 'quarterly':
+                    initial['enrollment_plan'] = 'quarterly'
+                elif enrollment.schedule_type == 'part_time':
+                    initial['enrollment_plan'] = 'monthly_part'
+                else:
+                    initial['enrollment_plan'] = 'monthly_full'
+                initial['discount'] = str(int(enrollment.discount_percentage))
+                initial['has_language_cheque'] = enrollment.has_language_cheque
+                initial['is_sibling_discount'] = enrollment.is_sibling_discount
             context["enrollment_form"] = EnrollmentForm(
-                self.request.POST or None, instance=enrollment
+                self.request.POST or None, initial=initial
             )
 
         context["parents"] = self.object.parents.all()
@@ -867,14 +876,7 @@ class StudentUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        try:
-            enrollment = self.object.enrollments.filter(status="active").latest(
-                "created_at"
-            )
-        except Enrollment.DoesNotExist:
-            enrollment = None
-
-        enrollment_form = EnrollmentForm(self.request.POST, instance=enrollment)
+        enrollment_form = EnrollmentForm(self.request.POST)
 
         if not enrollment_form.is_valid():
             return self.form_invalid(form)
@@ -883,9 +885,11 @@ class StudentUpdateView(UpdateView):
             with transaction.atomic():
                 student = form.save()
 
-                enrollment = enrollment_form.save(commit=False)
-                enrollment.student = student
-                enrollment.save()
+                # Deactivate old enrollment if exists
+                student.enrollments.filter(status="active").update(status="finished")
+
+                # Create new enrollment
+                enrollment_form.create_enrollment(student, is_adult=student.is_adult)
 
                 messages.success(
                     self.request,
@@ -900,15 +904,7 @@ class StudentUpdateView(UpdateView):
 
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
-        try:
-            enrollment = self.object.enrollments.filter(status="active").latest(
-                "created_at"
-            )
-        except Enrollment.DoesNotExist:
-            enrollment = None
-        context["enrollment_form"] = EnrollmentForm(
-            self.request.POST, instance=enrollment
-        )
+        context["enrollment_form"] = EnrollmentForm(self.request.POST)
         return self.render_to_response(context)
 
 
