@@ -55,67 +55,22 @@ services:
       dockerfile: Dockerfile
     container_name: fiveaday_django
     restart: unless-stopped
-    
+    env_file:
+      - .env
+
     # Comando para desarrollo (usa runserver en lugar de gunicorn)
     # Para producción, comentar esta línea y usar el CMD del Dockerfile
     command: python project/manage.py runserver 0.0.0.0:8000
-    
-    # Variables de entorno
-    environment:
-      # Django
-      DJANGO_ENV: ${DJANGO_ENV:-development}
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
-      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
-      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-False}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
-      
-      # Database
-      DATABASE: postgres
-      POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
-      POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      
-      # Superuser (desarrollo y producción)
-      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
-      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@fiveaday.com}
-      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
-      
-      # Email Configuration
-      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
-      EMAIL_SECRET: ${EMAIL_SECRET:-}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
-      EMAIL_TEST_1: ${EMAIL_TEST_1:-}
-      EMAIL_TEST_2: ${EMAIL_TEST_2:-}
-      
-      # Authentication (temporal)
-      LOGIN_USERNAME: ${LOGIN_USERNAME:-admin}
-      LOGIN_PASSWORD: ${LOGIN_PASSWORD:-admin123}
 
-      # Google OAuth
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_ALLOWED_EMAIL: ${GOOGLE_ALLOWED_EMAIL:-}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
-    
-    # Volúmenes para desarrollo (hot reload)
-    volumes:
-      - ./project:/app/project
-      - ./docs:/app/docs
-      - ./scripts:/app/scripts
-      - static_volume:/app/staticfiles
-      - media_volume:/app/mediafiles
-    
-    # Puerto expuesto
+    # Puerto expuesto al host
     ports:
       - "8000:8000"
-    
-    # Dependencias
+
+    # Esperar a que PostgreSQL esté listo antes de iniciar
     depends_on:
       db:
         condition: service_healthy
-    
+
     # Red interna
     networks:
       - fiveaday_network

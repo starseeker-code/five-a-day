@@ -167,8 +167,8 @@ migrate:
 	docker compose exec web python project/manage.py migrate
 
 makemigrations:
-	@echo "📝 Creando migraciones..."
-	docker compose exec web python project/manage.py makemigrations
+	@echo "📝 Creando migraciones para la app core..."
+	docker compose exec web python project/manage.py makemigrations core
 
 createsuperuser:
 	@echo "👤 Creando superusuario..."
