@@ -84,7 +84,7 @@ build:
 
 up:
 	@echo "🚀 Iniciando servicios..."
-	docker compose up -d
+	docker compose up -d --remove-orphans
 	@echo "✅ Servicios iniciados!"
 	@echo "📱 Aplicación: http://localhost:8000"
 	@echo "🔧 Admin: http://localhost:8000/admin"
@@ -256,11 +256,11 @@ reset-db:
 # ============================================================================
 dev:
 	@echo "🔧 Iniciando modo desarrollo..."
-	docker compose up
+	docker compose up --remove-orphans
 
 dev-build:
 	@echo "🔧 Construyendo e iniciando modo desarrollo..."
-	docker compose up --build
+	docker compose up --build --remove-orphans
 
 # ============================================================================
 # PRODUCTION

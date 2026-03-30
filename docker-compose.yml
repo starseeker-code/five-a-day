@@ -35,9 +35,11 @@ services:
     ports:
       - "5432:5432"
     
-    # Healthcheck para verificar que PostgreSQL está listo
+    # Healthcheck: tests actual TCP auth, not just connectivity.
+    # This ensures depends_on: service_healthy only passes when the web
+    # container can actually authenticate (catches stale-volume password mismatches).
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fiveaday_user} -d ${POSTGRES_DB:-fiveaday_db}"]
+      test: ["CMD-SHELL", "PGPASSWORD=${POSTGRES_PASSWORD:-change_this_password} psql -h 127.0.0.1 -U ${POSTGRES_USER:-fiveaday_user} -d ${POSTGRES_DB:-fiveaday_db} -c '\\q'"]
       interval: 10s
       timeout: 5s
       retries: 5
