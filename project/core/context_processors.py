@@ -1,6 +1,6 @@
 from datetime import date
 from django.conf import settings
-from .models import TodoItem
+from .models import TodoItem, HistoryLog
 from .views import SCHEDULED_APPS
 
 
@@ -25,9 +25,16 @@ def today_notifications(request):
 
     notifications_count = len(todos) + len(apps_today)
 
+    # History log count
+    try:
+        history_count = HistoryLog.objects.count()
+    except Exception:
+        history_count = 0
+
     return {
         "notifications_today_todos": todos,
         "notifications_today_apps": apps_today,
         "notifications_count": notifications_count,
+        "history_count": history_count,
         "support_email": getattr(settings, "SUPPORT_EMAIL", ""),
     }

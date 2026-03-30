@@ -467,10 +467,12 @@ def create_todo(request):
 
 @require_http_methods(["POST"])
 def complete_todo(request, todo_id):
-    from .models import TodoItem
+    from .models import TodoItem, HistoryLog
 
     todo = get_object_or_404(TodoItem, id=todo_id)
+    preview = todo.text[:50] + ("..." if len(todo.text) > 50 else "")
     todo.delete()
+    HistoryLog.log('todo_completed', f'Tarea completada: "{preview}"', icon='task_alt')
     return JsonResponse({"success": True})
 
 
@@ -705,7 +707,7 @@ class StudentCreateView(CreateView):
 
     def form_valid(self, form):
         from core.tasks import send_welcome_email_task
-        from .models import SiteConfiguration
+        from .models import SiteConfiguration, HistoryLog
         import calendar
 
         enrollment_form = EnrollmentForm(self.request.POST)
@@ -769,6 +771,12 @@ class StudentCreateView(CreateView):
                     payment_status='pending',
                     due_date=due_date,
                     concept=f"Matrícula {enrollment.academic_year} — {student.full_name}",
+                )
+
+                HistoryLog.log(
+                    'student_enrolled',
+                    f'Alumno matriculado: {student.full_name} — {enrollment.get_schedule_type_display()}',
+                    icon='school'
                 )
 
                 # Enqueue welcome email
@@ -1068,6 +1076,8 @@ def handle_student_form(request):
     """
     Handle student creation and updates
     """
+    from .models import HistoryLog
+
     try:
         # Get form data
         first_name = request.POST.get("first_name", "").strip()
@@ -1118,7 +1128,8 @@ def handle_student_form(request):
 
             if student_id:  # Update existing student
                 try:
-                    student = Student.objects.get(id=student_id)
+                    student = Student.objects.select_related('group').get(id=student_id)
+                    old_group = student.group
 
                     # Update student fields
                     student.first_name = first_name
@@ -1133,6 +1144,13 @@ def handle_student_form(request):
 
                     student.full_clean()  # Validate the model
                     student.save()
+
+                    if old_group != group:
+                        HistoryLog.log(
+                            'group_updated',
+                            f'Grupo cambiado: {student.full_name} — {old_group.group_name} → {group.group_name}',
+                            icon='swap_horiz'
+                        )
 
                     # Update parent relationships
                     student.parents.clear()  # Remove all current relationships
@@ -1340,6 +1358,8 @@ def create_payment(request):
     """
     Create new payment
     """
+    from .models import HistoryLog
+
     if request.method == "POST":
         try:
             # Get form data
@@ -1362,7 +1382,6 @@ def create_payment(request):
             enrollment = student.enrollments.first()
 
             # Create payment
-            print("Se crea pago")
             payment = Payment.objects.create(
                 student=student,
                 parent=parent,
@@ -1378,11 +1397,14 @@ def create_payment(request):
                 reference_number=request.POST.get("reference_number", ""),
                 observations=request.POST.get("observations", ""),
             )
-            print("Terminado de crear pago")
+            HistoryLog.log(
+                'payment_created',
+                f'Pago creado: {student.full_name} — €{payment.amount} ({payment.get_payment_type_display()})',
+                icon='add_card'
+            )
             messages.success(
                 request, f"Pago creado exitosamente para {student.full_name}."
             )
-            print("Se redirecciona!")
             return redirect("payments_list")
 
         except Exception as e:
@@ -1446,7 +1468,10 @@ def update_payment(request, payment_id):
     """
     Update existing payment
     """
+    from .models import HistoryLog
+
     payment = get_object_or_404(Payment, id=payment_id)
+    old_status = payment.payment_status
 
     try:
         # Get form data
@@ -1480,6 +1505,13 @@ def update_payment(request, payment_id):
         payment.observations = request.POST.get("observations", "")
 
         payment.save()
+
+        if payment.payment_status == 'completed' and old_status != 'completed':
+            HistoryLog.log(
+                'payment_completed',
+                f'Pago completado: {student.full_name} (€{payment.amount})',
+                icon='paid'
+            )
 
         messages.success(
             request, f"Pago actualizado exitosamente para {student.full_name}."
@@ -1813,6 +1845,8 @@ def quick_complete_payment(request, payment_id):
     AJAX endpoint to quickly complete a payment by setting its payment method.
     Expects JSON body: {"payment_method": "cash"|"transfer"|"credit_card"}
     """
+    from .models import HistoryLog
+
     try:
         payment = get_object_or_404(Payment, id=payment_id)
         data = json.loads(request.body)
@@ -1828,6 +1862,12 @@ def quick_complete_payment(request, payment_id):
         payment.payment_status = "completed"
         payment.payment_date = date.today()
         payment.save()
+
+        HistoryLog.log(
+            'payment_completed',
+            f'Pago completado: {payment.student.full_name} — {payment.get_payment_method_display()} (€{payment.amount})',
+            icon='paid'
+        )
 
         return JsonResponse({
             "success": True,
@@ -2106,7 +2146,7 @@ def update_site_config(request):
     """
     API para actualizar la configuración de precios del sitio.
     """
-    from .models import SiteConfiguration
+    from .models import SiteConfiguration, HistoryLog
 
     try:
         data = json.loads(request.body)
@@ -2147,6 +2187,8 @@ def update_site_config(request):
 
         config.save()
 
+        HistoryLog.log('config_updated', 'Precios o descuentos actualizados', icon='tune')
+
         return JsonResponse(
             {"success": True, "message": "Configuración actualizada correctamente"}
         )
@@ -2159,7 +2201,7 @@ def create_teacher(request):
     """
     API para crear un nuevo profesor.
     """
-    from .models import Teacher
+    from .models import Teacher, HistoryLog
 
     try:
         data = json.loads(request.body)
@@ -2189,6 +2231,8 @@ def create_teacher(request):
             admin=data.get("admin", False),
         )
 
+        HistoryLog.log('teacher_created', f'Profesor creado: {teacher.full_name}', icon='person_add')
+
         return JsonResponse(
             {
                 "success": True,
@@ -2209,7 +2253,7 @@ def create_group(request):
     """
     API para crear un nuevo grupo.
     """
-    from .models import Group, Teacher
+    from .models import Group, Teacher, HistoryLog
 
     try:
         data = json.loads(request.body)
@@ -2248,6 +2292,8 @@ def create_group(request):
             teacher=teacher,
             active=True,
         )
+
+        HistoryLog.log('group_created', f'Grupo creado: {group.group_name} (Prof. {teacher.full_name})', icon='group_add')
 
         return JsonResponse(
             {
@@ -2476,6 +2522,8 @@ Esta semana haremos manualidades creativas con materiales reciclados.
                 error_count += 1
 
         if success_count > 0:
+            from .models import HistoryLog
+            HistoryLog.log('email_sent', f'Fun Friday: {success_count} email(s) enviados', icon='mail')
             messages.success(
                 request, f"✅ Fun Friday enviado a {success_count} padre(s)"
             )
@@ -2621,6 +2669,8 @@ def payment_reminder_form(request):
                     error_count += 1
 
             if success_count > 0:
+                from .models import HistoryLog
+                HistoryLog.log('email_sent', f'Recordatorio de pago: {success_count} email(s) enviados', icon='mail')
                 messages.success(request, f"✅ Recordatorio enviado a {success_count} padre(s)")
             if error_count > 0:
                 messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
@@ -2755,6 +2805,8 @@ def vacation_closure_form(request):
                     error_count += 1
 
             if success_count > 0:
+                from .models import HistoryLog
+                HistoryLog.log('email_sent', f'Cierre por vacaciones: {success_count} email(s) enviados', icon='mail')
                 messages.success(request, f"✅ Aviso de cierre enviado a {success_count} padre(s)")
             if error_count > 0:
                 messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
@@ -2824,6 +2876,8 @@ def tax_certificate_form(request):
         results = send_all_tax_certificates(year)
 
         if results['sent'] > 0:
+            from .models import HistoryLog
+            HistoryLog.log('email_sent', f'Certificado de renta: {results["sent"]} email(s) enviados', icon='mail')
             messages.success(request, f"✅ Certificados enviados a {results['sent']} padre(s)")
         if results.get('skipped', 0) > 0:
             messages.info(request, f"ℹ️ {results['skipped']} padre(s) omitidos (sin email)")
@@ -2928,6 +2982,8 @@ def monthly_report_form(request):
                 error_count += 1
 
         if success_count > 0:
+            from .models import HistoryLog
+            HistoryLog.log('email_sent', f'Informe mensual: {success_count} email(s) enviados', icon='mail')
             messages.success(request, f"✅ Informes enviados a {success_count} padre(s)")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} informe(s) no pudieron enviarse")
@@ -3033,6 +3089,8 @@ def birthday_form(request):
                 error_count += 1
 
         if success_count > 0:
+            from .models import HistoryLog
+            HistoryLog.log('email_sent', f'Cumpleaños: {success_count} email(s) enviados', icon='mail')
             messages.success(request, f"✅ Email de cumpleaños enviado a {success_count} estudiante(s)")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
@@ -3162,6 +3220,8 @@ def receipts_form(request):
                     error_count += 1
 
         if success_count > 0:
+            from .models import HistoryLog
+            HistoryLog.log('email_sent', f'Recibos: {success_count} email(s) enviados', icon='mail')
             messages.success(request, f"✅ Recibos enviados: {success_count}")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} recibo(s) no pudieron enviarse")
@@ -3295,6 +3355,8 @@ def enrollment_form(request):
                         group_name=student.group.group_name if student.group else None,
                     )
                     if result:
+                        from .models import HistoryLog
+                        HistoryLog.log('email_sent', f'Bienvenida: 1 email enviado ({student.full_name})', icon='mail')
                         messages.success(request, f"✅ Email de bienvenida enviado a {parent.email}")
                     else:
                         messages.error(request, "❌ Error al enviar el email")
@@ -3324,6 +3386,8 @@ def enrollment_form(request):
                         },
                     )
                     if result:
+                        from .models import HistoryLog
+                        HistoryLog.log('email_sent', f'Confirmación matrícula: 1 email enviado ({student.full_name})', icon='mail')
                         messages.success(request, f"✅ Confirmación de matrícula enviada a {parent.email}")
                     else:
                         messages.error(request, "❌ Error al enviar el email")
@@ -3495,6 +3559,8 @@ def schedule_view(request):
 @require_http_methods(["POST"])
 def save_schedule_slot(request):
     """Save a single schedule slot assignment to the database."""
+    from .models import HistoryLog
+
     try:
         data = json.loads(request.body)
         row = int(data['row'])
@@ -3510,6 +3576,13 @@ def save_schedule_slot(request):
             )
         else:
             ScheduleSlot.objects.filter(row=row, day=day, col=col).delete()
+
+        HistoryLog.log_debounced(
+            'schedule_updated',
+            'Horario semanal actualizado',
+            icon='calendar_month',
+            minutes=5,
+        )
 
         return JsonResponse({'success': True})
     except Exception as e:
@@ -3537,4 +3610,39 @@ def fun_friday_view(request):
         "last_friday": last_friday,
         "this_week_students": this_week_students,
         "last_week_students": last_week_students,
+    })
+
+
+# ============================================================================
+# HISTORY LOG - API para obtener historial de acciones
+# ============================================================================
+
+
+def history_list(request):
+    """
+    API endpoint that returns paginated history log entries as JSON.
+    Supports ?offset=N for loading more entries.
+    """
+    from .models import HistoryLog
+    from django.utils.timesince import timesince
+
+    offset = int(request.GET.get('offset', 0))
+    limit = 20
+    entries = HistoryLog.objects.all()[offset:offset + limit]
+
+    data = []
+    for entry in entries:
+        data.append({
+            'id': entry.id,
+            'action': entry.action,
+            'action_display': entry.get_action_display(),
+            'message': entry.message,
+            'icon': entry.icon,
+            'created_at': entry.created_at.isoformat(),
+            'time_ago': timesince(entry.created_at) + ' ago',
+        })
+
+    return JsonResponse({
+        'entries': data,
+        'has_more': HistoryLog.objects.count() > offset + limit,
     })

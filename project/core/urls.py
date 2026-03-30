@@ -117,6 +117,10 @@ urlpatterns = [
     path("api/todos/create/", create_todo, name="create_todo"),
     path("api/todos/<int:todo_id>/complete/", complete_todo, name="complete_todo"),
     # ============================================================================
+    # HISTORY LOG - Historial de acciones
+    # ============================================================================
+    path("api/history/", history_list, name="history_list"),
+    # ============================================================================
     # SOPORTE - Sistema de tickets
     # ============================================================================
     path("api/support/submit/", submit_support_ticket, name="submit_support_ticket"),

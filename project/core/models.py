@@ -638,3 +638,58 @@ class TodoItem(models.Model):
     @property
     def is_overdue(self):
         return self.due_date < date.today()
+
+
+class HistoryLog(models.Model):
+    """Stores up to 1000 history log entries for user actions."""
+    ACTION_CHOICES = [
+        ('todo_completed', 'Tarea completada'),
+        ('payment_completed', 'Pago completado'),
+        ('student_enrolled', 'Alumno matriculado'),
+        ('teacher_created', 'Profesor creado'),
+        ('group_created', 'Grupo creado'),
+        ('group_updated', 'Grupo actualizado'),
+        ('config_updated', 'Configuración actualizada'),
+        ('payment_created', 'Pago creado'),
+        ('email_sent', 'Email enviado'),
+        ('schedule_updated', 'Horario actualizado'),
+    ]
+
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    message = models.CharField(max_length=300)
+    icon = models.CharField(max_length=40, default='history')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'history_logs'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"[{self.get_action_display()}] {self.message}"
+
+    MAX_ENTRIES = 1000
+
+    @classmethod
+    def log(cls, action, message, icon='history'):
+        """Create a history entry, enforcing the 1000-record cap."""
+        entry = cls.objects.create(action=action, message=message, icon=icon)
+        # Delete oldest entries beyond the cap
+        count = cls.objects.count()
+        if count > cls.MAX_ENTRIES:
+            oldest_ids = cls.objects.order_by('created_at').values_list(
+                'id', flat=True
+            )[:count - cls.MAX_ENTRIES]
+            cls.objects.filter(id__in=list(oldest_ids)).delete()
+        return entry
+
+    @classmethod
+    def log_debounced(cls, action, message, icon='history', minutes=5):
+        """Create a history entry only if no entry with the same action
+        exists within the last `minutes` minutes."""
+        cutoff = timezone.now() - timedelta(minutes=minutes)
+        if cls.objects.filter(action=action, created_at__gte=cutoff).exists():
+            return None
+        return cls.log(action, message, icon=icon)

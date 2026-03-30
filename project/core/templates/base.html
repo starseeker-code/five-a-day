@@ -122,10 +122,34 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <!-- Logs Icon (no logic yet) -->
-                        <button class="p-3 rounded-full text-neutral-700 transition-all duration-200" style="background-color:#ede9fe;" title="Logs">
-                            <span class="material-symbols-outlined">article</span>
-                        </button>
+                        <!-- History Log -->
+                        <div class="relative" id="history-container">
+                            <button id="history-btn" class="p-3 rounded-full text-neutral-700 transition-all duration-200" style="background-color:#ede9fe;" title="Historial">
+                                <span class="material-symbols-outlined">article</span>
+                            </button>
+                            {% if history_count > 0 %}
+                            <div class="absolute w-2.5 h-2.5 bg-primary-400 rounded-full" style="top:3px; right:3px; pointer-events:none;"></div>
+                            {% else %}
+                            <div class="absolute w-2 h-2 bg-neutral-300 rounded-full" style="top:4px; right:4px; pointer-events:none;"></div>
+                            {% endif %}
+                            <!-- Dropdown -->
+                            <div id="history-dropdown" class="hidden absolute top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden" style="right:0;width:24rem;max-width:calc(100vw - 1.5rem);">
+                                <div class="px-4 py-3 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
+                                    <p class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Historial de acciones</p>
+                                </div>
+                                <div id="history-entries" style="max-height:24rem;overflow-y:auto;">
+                                    <div class="px-4 py-8 text-center" id="history-loading">
+                                        <span class="material-symbols-outlined text-neutral-300 text-3xl animate-spin">progress_activity</span>
+                                        <p class="text-sm text-neutral-400 mt-2">Cargando...</p>
+                                    </div>
+                                </div>
+                                <div id="history-load-more" class="hidden border-t border-neutral-100">
+                                    <button type="button" id="history-more-btn" class="w-full px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 transition-colors font-medium">
+                                        Cargar más
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Notifications Bell -->
                         <div class="relative" id="notif-container">
                             <button id="notif-btn" class="p-3 rounded-full text-neutral-800 transition-all duration-200" style="background-color:#ede9fe;">
@@ -306,7 +330,103 @@
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             dropdown.classList.toggle('hidden');
+            // Close history if open
+            const hd = document.getElementById('history-dropdown');
+            if (hd) hd.classList.add('hidden');
         });
+
+        document.addEventListener('click', function () {
+            dropdown.classList.add('hidden');
+        });
+
+        dropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    })();
+    </script>
+
+    <!-- History dropdown -->
+    <script>
+    (function () {
+        const btn = document.getElementById('history-btn');
+        const dropdown = document.getElementById('history-dropdown');
+        const entriesContainer = document.getElementById('history-entries');
+        const loadMoreContainer = document.getElementById('history-load-more');
+        const loadMoreBtn = document.getElementById('history-more-btn');
+        if (!btn || !dropdown) return;
+
+        let offset = 0;
+        let loaded = false;
+
+        function formatTimeAgo(isoStr) {
+            const now = new Date();
+            const then = new Date(isoStr);
+            const diffMs = now - then;
+            const diffMin = Math.floor(diffMs / 60000);
+            if (diffMin < 1) return 'ahora';
+            if (diffMin < 60) return diffMin + ' min';
+            const diffH = Math.floor(diffMin / 60);
+            if (diffH < 24) return diffH + 'h';
+            const diffD = Math.floor(diffH / 24);
+            if (diffD < 30) return diffD + 'd';
+            return then.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        }
+
+        function renderEntries(entries, append) {
+            if (!append) entriesContainer.innerHTML = '';
+            if (entries.length === 0 && !append) {
+                entriesContainer.innerHTML = '<div class="px-4 py-8 text-center"><span class="material-symbols-outlined text-neutral-300 text-4xl">history</span><p class="text-sm text-neutral-400 mt-2">Sin historial todavía</p></div>';
+                return;
+            }
+            entries.forEach(function (e) {
+                const div = document.createElement('div');
+                div.className = 'px-4 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50';
+                div.innerHTML =
+                    '<span class="material-symbols-outlined text-primary-400 shrink-0" style="font-size:20px;margin-top:2px;">' + e.icon + '</span>' +
+                    '<div class="flex-1 min-w-0">' +
+                        '<p class="text-neutral-700 text-sm leading-snug" style="word-break:break-word;">' + e.message + '</p>' +
+                        '<p class="text-[11px] text-neutral-400 mt-0.5">' + formatTimeAgo(e.created_at) + '</p>' +
+                    '</div>';
+                entriesContainer.appendChild(div);
+            });
+        }
+
+        function fetchHistory(append) {
+            fetch('{% url "history_list" %}?offset=' + offset)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    renderEntries(data.entries, append);
+                    offset += data.entries.length;
+                    if (data.has_more) {
+                        loadMoreContainer.classList.remove('hidden');
+                    } else {
+                        loadMoreContainer.classList.add('hidden');
+                    }
+                })
+                .catch(function () {
+                    if (!append) entriesContainer.innerHTML = '<div class="px-4 py-4 text-center text-sm text-neutral-400">Error al cargar el historial</div>';
+                });
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            // Close notifications if open
+            const nd = document.getElementById('notif-dropdown');
+            if (nd) nd.classList.add('hidden');
+            if (!loaded) {
+                loaded = true;
+                offset = 0;
+                fetchHistory(false);
+            }
+        });
+
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                fetchHistory(true);
+            });
+        }
 
         document.addEventListener('click', function () {
             dropdown.classList.add('hidden');

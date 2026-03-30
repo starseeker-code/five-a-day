@@ -304,3 +304,11 @@ class EnrollmentAdmin(admin.ModelAdmin):
             )
     is_paid_display.short_description = 'Payment Status'
     is_paid_display.boolean = True
+
+
+@admin.register(HistoryLog)
+class HistoryLogAdmin(admin.ModelAdmin):
+    list_display = ('action', 'message', 'icon', 'created_at')
+    list_filter = ('action',)
+    ordering = ('-created_at',)
+    readonly_fields = ('action', 'message', 'icon', 'created_at')
