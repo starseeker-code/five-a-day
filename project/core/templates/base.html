@@ -5,240 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Five a Day{% endblock %}</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+                        400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+                        800: '#5b21b6', 900: '#4c1d95',
+                    }
+                },
+                fontFamily: {
+                    sans: ['Trebuchet MS', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                }
+            }
+        }
+    }
+    </script>
+
+    <!-- Material Symbols icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-    <style>
-    #webcrumbs *:not(.material-symbols-outlined) {
-        font-family: 'Trebuchet MS', sans-serif !important;
-    }
-    .material-symbols-outlined {
-        font-feature-settings: 'liga' !important;
-        -webkit-font-feature-settings: 'liga' !important;
-        font-family: 'Material Symbols Outlined' !important;
-    }
-    /* ── Primary: pink → violet/lavender ──────────────────────── */
-    #webcrumbs .bg-primary-50,  #webcrumbs .hover\:bg-primary-50:hover  { background-color: rgb(245 243 255 / var(--tw-bg-opacity,1)) !important; }
-    #webcrumbs .bg-primary-100, #webcrumbs .hover\:bg-primary-100:hover { background-color: rgb(237 233 254 / var(--tw-bg-opacity,1)) !important; }
-    #webcrumbs .bg-primary-200, #webcrumbs .hover\:bg-primary-200:hover { background-color: rgb(221 214 254 / var(--tw-bg-opacity,1)) !important; }
-    #webcrumbs .hover\:bg-primary-300:hover { background-color: rgb(196 181 253 / var(--tw-bg-opacity,1)) !important; }
-    #webcrumbs .bg-primary-500, #webcrumbs .hover\:bg-primary-500:hover { background-color: rgb(139 92 246 / var(--tw-bg-opacity,1)) !important; }
-    #webcrumbs .bg-primary-600, #webcrumbs .hover\:bg-primary-600:hover { background-color: rgb(124 58 237 / var(--tw-bg-opacity,1)) !important; }
 
-    #webcrumbs .border-primary-200 { border-color: rgb(221 214 254 / var(--tw-border-opacity,1)) !important; }
-    #webcrumbs .border-primary-300 { border-color: rgb(196 181 253 / var(--tw-border-opacity,1)) !important; }
-    #webcrumbs .border-primary-400, #webcrumbs .hover\:border-primary-400:hover { border-color: rgb(167 139 250 / var(--tw-border-opacity,1)) !important; }
-    #webcrumbs .border-primary-500 { border-color: rgb(139 92 246 / var(--tw-border-opacity,1)) !important; }
-    #webcrumbs .border-primary-600 { border-color: rgb(124 58 237 / var(--tw-border-opacity,1)) !important; }
+    <!-- App custom styles (sidebar, icons) -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
 
-    #webcrumbs .text-primary-300 { color: rgb(196 181 253 / var(--tw-text-opacity,1)) !important; }
-    #webcrumbs .text-primary-400 { color: rgb(167 139 250 / var(--tw-text-opacity,1)) !important; }
-    #webcrumbs .text-primary-500 { color: rgb(139 92 246 / var(--tw-text-opacity,1)) !important; }
-    #webcrumbs .text-primary-600 { color: rgb(124 58 237 / var(--tw-text-opacity,1)) !important; }
-    #webcrumbs .text-primary-700, #webcrumbs .hover\:text-primary-700:hover { color: rgb(109 40 217 / var(--tw-text-opacity,1)) !important; }
-
-    .accent-primary-500 { accent-color: rgb(139 92 246); }
-    </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body id="top">
-    <div id="webcrumbs">
-        <div class="flex min-h-screen bg-neutral-50">
-            <!-- Sidebar -->
-            <!-- sidebar_expandable: si es true, la barra se expande con hover -->
-            <aside id="main-sidebar" class="{% block sidebar_class %}w-[7.5rem]{% endblock %} bg-primary-100 p-6 border-r border-primary-200 transition-all duration-300 ease-in-out group flex flex-col relative {% block sidebar_hover %}{% endblock %}">
-                <div class="mb-8 flex flex-col items-center sidebar-expanded:items-start">
-                    <div class="flex items-center gap-3">
-                        <h1 class="text-3xl font-bold text-primary-700 hidden sidebar-expanded:block transition-opacity duration-300 sidebar-title">
-                            Five a Day
-                        </h1>
-                    </div>
-                    <p class="text-sm text-primary-500 mt-2 uppercase tracking-wider hidden sidebar-expanded:block transition-opacity duration-300 sidebar-subtitle">
-                        eVolution
-                    </p>
+<body id="top" data-history-url="{% url 'history_list' %}">
+    <div class="flex min-h-screen bg-neutral-50">
+        <!-- Sidebar -->
+        <aside id="main-sidebar" class="{% block sidebar_class %}w-[7.5rem]{% endblock %} bg-primary-100 p-6 border-r border-primary-200 transition-all duration-300 ease-in-out group flex flex-col relative {% block sidebar_hover %}{% endblock %}">
+            <div class="mb-8 flex flex-col items-center sidebar-expanded:items-start">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl font-bold text-primary-700 hidden sidebar-title transition-opacity duration-300">
+                        Five a Day
+                    </h1>
                 </div>
-                <div class="sidebar-fixed-links">
-                    <nav class="space-y-0">
-                        <a href="{% url 'home' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">dashboard</span>
-                            <span class="hidden sidebar-text">Panel Principal</span>
-                        </a>
-                        
-                        <a href="{% url 'students_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'students_list' or request.resolver_match.url_name == 'student_create' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">people</span>
-                            <span class="hidden sidebar-text">Estudiantes</span>
-                        </a>
-                        <a href="{% url 'payments_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'payments_list' or request.resolver_match.url_name == 'create_payment' or request.resolver_match.url_name == 'payment_detail_view' or request.resolver_match.url_name == 'update_payment' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">payment_arrow_down</span>
-                            <span class="hidden sidebar-text">Pagos</span>
-                        </a>
-                        <a href="{% url 'schedule_view' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'schedule_view' or request.resolver_match.url_name == 'fun_friday_view' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
-                            <span class="hidden sidebar-text">Horario</span>
-                        </a>
-                        <a href="{% url 'apps' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'apps' or request.resolver_match.url_name == 'fun_friday_form' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">apps</span>
-                            <span class="hidden sidebar-text">Aplicaciones</span>
-                        </a>
-                        <a href="{% url 'management' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'management' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
-                            <span class="hidden sidebar-text">Gestión</span>
-                        </a>
-                        <a href="{% url 'all_info' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'all_info' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">analytics</span>
-                            <span class="hidden sidebar-text">Base de Datos</span>
-                        </a>
-                        <a href="{% url 'logout' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
-                            <span class="hidden sidebar-text">Cerrar Sesión</span>
-                        </a>
-                        <a href="#" id="support-open-btn" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200">
-                            <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
-                            <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
-                        </a>
-                    </nav>
-                </div>
-                {% if request.session.username %}
-                <div class="mt-3 px-5 hidden sidebar-session">
-                    <p class="text-xs text-primary-500">Sesión activa:</p>
-                    <p class="text-sm font-semibold text-primary-700">{{ request.session.username }}</p>
-                </div>
-                {% endif %}
-            </aside>
+                <p class="text-sm text-primary-500 mt-2 uppercase tracking-wider hidden sidebar-subtitle transition-opacity duration-300">
+                    eVolution
+                </p>
+            </div>
+            <div class="sidebar-fixed-links">
+                <nav class="space-y-0">
+                    <a href="{% url 'home' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'home' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">dashboard</span>
+                        <span class="hidden sidebar-text">Panel Principal</span>
+                    </a>
+                    <a href="{% url 'students_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'students_list' or request.resolver_match.url_name == 'student_create' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">people</span>
+                        <span class="hidden sidebar-text">Estudiantes</span>
+                    </a>
+                    <a href="{% url 'payments_list' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'payments_list' or request.resolver_match.url_name == 'create_payment' or request.resolver_match.url_name == 'payment_detail_view' or request.resolver_match.url_name == 'update_payment' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">payment</span>
+                        <span class="hidden sidebar-text">Pagos</span>
+                    </a>
+                    <a href="{% url 'schedule_view' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'schedule_view' or request.resolver_match.url_name == 'fun_friday_view' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">calendar_month</span>
+                        <span class="hidden sidebar-text">Horario</span>
+                    </a>
+                    <a href="{% url 'apps' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'apps' or request.resolver_match.url_name == 'fun_friday_form' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">apps</span>
+                        <span class="hidden sidebar-text">Aplicaciones</span>
+                    </a>
+                    <a href="{% url 'management' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'management' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">settings</span>
+                        <span class="hidden sidebar-text">Gestión</span>
+                    </a>
+                    <a href="{% url 'all_info' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'all_info' %}active-sidebar-link bg-primary-200 text-primary-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-primary-100 hover:text-primary-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">analytics</span>
+                        <span class="hidden sidebar-text">Base de Datos</span>
+                    </a>
+                    <a href="{% url 'logout' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-red-100 hover:text-red-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">logout</span>
+                        <span class="hidden sidebar-text">Cerrar Sesión</span>
+                    </a>
+                    <a href="#" id="support-open-btn" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md text-neutral-600 font-medium hover:bg-amber-100 hover:text-amber-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
+                        <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
+                    </a>
+                </nav>
+            </div>
+            {% if request.session.username %}
+            <div class="mt-3 px-5 hidden sidebar-session">
+                <p class="text-xs text-primary-500">Sesión activa:</p>
+                <p class="text-sm font-semibold text-primary-700">{{ request.session.username }}</p>
+            </div>
+            {% endif %}
+        </aside>
 
-            <!-- Main Content -->
-            <main class="flex-1 flex flex-col overflow-auto relative">
-                <!-- Header -->
-                <header class="bg-neutral-50 border-b border-neutral-200 p-6 flex justify-between items-center sticky top-0 z-10">
-                    <div class="flex items-center gap-4">
-                        {% load static %}
-                        <img src="{% static 'images/logo.png' %}" width="100" height="100" alt="Logo">
-                        <div class="flex flex-col">
-                            <h2 class="text-2xl font-bold text-primary-700">
-                                {% block page_title %}¡Bienvenidas business women!{% endblock %}
-                            </h2>
-                            <p class="text-primary-500 text-sm">
-                                {% block page_subtitle %}¡Cada día es una nueva oportunidad para inspirar!{% endblock %}
-                            </p>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-auto relative">
+            <!-- Header -->
+            <header class="bg-neutral-50 border-b border-neutral-200 p-6 flex justify-between items-center sticky top-0 z-10">
+                <div class="flex items-center gap-4">
+                    <img src="{% static 'images/logo.png' %}" width="100" height="100" alt="Logo">
+                    <div class="flex flex-col">
+                        <h2 class="text-2xl font-bold text-primary-700">
+                            {% block page_title %}¡Bienvenidas business women!{% endblock %}
+                        </h2>
+                        <p class="text-primary-500 text-sm">
+                            {% block page_subtitle %}¡Cada día es una nueva oportunidad para inspirar!{% endblock %}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- History Log -->
+                    <div class="relative" id="history-container">
+                        <button id="history-btn" class="p-3 rounded-full text-neutral-700 bg-primary-100 transition-all duration-200" title="Historial">
+                            <span class="material-symbols-outlined">article</span>
+                        </button>
+                        {% if history_count > 0 %}
+                        <div class="absolute w-2.5 h-2.5 bg-primary-400 rounded-full top-[3px] right-[3px] pointer-events-none"></div>
+                        {% else %}
+                        <div class="absolute w-2 h-2 bg-neutral-300 rounded-full top-1 right-1 pointer-events-none"></div>
+                        {% endif %}
+                        <!-- Dropdown -->
+                        <div id="history-dropdown" class="hidden absolute top-full right-0 mt-2 w-96 max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden">
+                            <div class="px-4 py-3 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
+                                <p class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Historial de acciones</p>
+                            </div>
+                            <div id="history-entries" class="max-h-96 overflow-y-auto">
+                                <div class="px-4 py-8 text-center" id="history-loading">
+                                    <span class="material-symbols-outlined text-neutral-300 text-3xl animate-spin">progress_activity</span>
+                                    <p class="text-sm text-neutral-400 mt-2">Cargando...</p>
+                                </div>
+                            </div>
+                            <div id="history-load-more" class="hidden border-t border-neutral-100">
+                                <button type="button" id="history-more-btn" class="w-full px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 transition-colors font-medium">
+                                    Cargar más
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <!-- History Log -->
-                        <div class="relative" id="history-container">
-                            <button id="history-btn" class="p-3 rounded-full text-neutral-700 transition-all duration-200" style="background-color:#ede9fe;" title="Historial">
-                                <span class="material-symbols-outlined">article</span>
-                            </button>
-                            {% if history_count > 0 %}
-                            <div class="absolute w-2.5 h-2.5 bg-primary-400 rounded-full" style="top:3px; right:3px; pointer-events:none;"></div>
-                            {% else %}
-                            <div class="absolute w-2 h-2 bg-neutral-300 rounded-full" style="top:4px; right:4px; pointer-events:none;"></div>
-                            {% endif %}
-                            <!-- Dropdown -->
-                            <div id="history-dropdown" class="hidden absolute top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden" style="right:0;width:24rem;max-width:calc(100vw - 1.5rem);">
-                                <div class="px-4 py-3 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
-                                    <p class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Historial de acciones</p>
-                                </div>
-                                <div id="history-entries" style="max-height:24rem;overflow-y:auto;">
-                                    <div class="px-4 py-8 text-center" id="history-loading">
-                                        <span class="material-symbols-outlined text-neutral-300 text-3xl animate-spin">progress_activity</span>
-                                        <p class="text-sm text-neutral-400 mt-2">Cargando...</p>
-                                    </div>
-                                </div>
-                                <div id="history-load-more" class="hidden border-t border-neutral-100">
-                                    <button type="button" id="history-more-btn" class="w-full px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 transition-colors font-medium">
-                                        Cargar más
-                                    </button>
-                                </div>
-                            </div>
+                    <!-- Notifications Bell -->
+                    <div class="relative" id="notif-container">
+                        <button id="notif-btn" class="p-3 rounded-full text-neutral-800 bg-primary-100 transition-all duration-200">
+                            <span class="material-symbols-outlined">notifications</span>
+                        </button>
+                        {% if notifications_count > 0 %}
+                        <div class="absolute w-5 h-5 bg-primary-500 text-white font-bold flex items-center justify-center rounded-full top-0.5 right-0.5 text-[10px] leading-none pointer-events-none">
+                            {{ notifications_count }}
                         </div>
-                        <!-- Notifications Bell -->
-                        <div class="relative" id="notif-container">
-                            <button id="notif-btn" class="p-3 rounded-full text-neutral-800 transition-all duration-200" style="background-color:#ede9fe;">
-                                <span class="material-symbols-outlined">notifications</span>
-                            </button>
-                            {% if notifications_count > 0 %}
-                            <div class="absolute bg-primary-500 text-white font-bold flex items-center justify-center rounded-full" style="width:1.25rem; height:1.25rem; top:2px; right:2px; font-size:10px; line-height:1; pointer-events:none;">
-                                {{ notifications_count }}
-                            </div>
-                            {% else %}
-                            <div class="absolute w-2 h-2 bg-neutral-300 rounded-full" style="top:4px; right:4px; pointer-events:none;"></div>
-                            {% endif %}
-                            <!-- Dropdown -->
-                            <div id="notif-dropdown" class="hidden absolute top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden" style="right:0;width:22rem;max-width:calc(100vw - 1.5rem);">
-                                {% if notifications_today_todos or notifications_today_apps %}
-                                    {% if notifications_today_todos %}
-                                    <div class="px-4 py-2 bg-primary-50">
-                                        <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Tareas de hoy</p>
-                                    </div>
-                                    {% for todo in notifications_today_todos %}
-                                    <div class="px-6 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
-                                        <span class="material-symbols-outlined text-primary-400 shrink-0" style="font-size:20px;margin-top:2px;">task_alt</span>
-                                        <span class="text-neutral-700" style="font-size:0.9375rem;">{{ todo.text }}</span>
-                                    </div>
-                                    {% endfor %}
-                                    {% endif %}
-                                    {% if notifications_today_apps %}
-                                    <div class="px-4 py-2 bg-primary-50">
-                                        <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Envios de hoy</p>
-                                    </div>
-                                    {% for app in notifications_today_apps %}
-                                    <div class="px-6 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
-                                        <span class="material-symbols-outlined text-primary-600 shrink-0" style="font-size:20px;margin-top:2px;">send</span>
-                                        <a href="{% url app.url_name %}" class="text-primary-700 hover:underline font-medium" style="font-size:0.9375rem;text-decoration:none;">{{ app.name }}</a>
-                                    </div>
-                                    {% endfor %}
-                                    {% endif %}
-                                {% else %}
-                                <div class="px-4 py-8 text-center">
-                                    <span class="material-symbols-outlined text-neutral-300 text-4xl">notifications_none</span>
-                                    <p class="text-sm text-neutral-400 mt-2">Sin notificaciones para hoy</p>
+                        {% else %}
+                        <div class="absolute w-2 h-2 bg-neutral-300 rounded-full top-1 right-1 pointer-events-none"></div>
+                        {% endif %}
+                        <!-- Dropdown -->
+                        <div id="notif-dropdown" class="hidden absolute top-full right-0 mt-2 w-[22rem] max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-xl border border-neutral-200 z-50 overflow-hidden">
+                            {% if notifications_today_todos or notifications_today_apps %}
+                                {% if notifications_today_todos %}
+                                <div class="px-4 py-2 bg-primary-50">
+                                    <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Tareas de hoy</p>
                                 </div>
+                                {% for todo in notifications_today_todos %}
+                                <div class="px-6 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
+                                    <span class="material-symbols-outlined text-primary-400 shrink-0 text-xl mt-0.5">task_alt</span>
+                                    <span class="text-neutral-700 text-[0.9375rem]">{{ todo.text }}</span>
+                                </div>
+                                {% endfor %}
                                 {% endif %}
+                                {% if notifications_today_apps %}
+                                <div class="px-4 py-2 bg-primary-50">
+                                    <p class="text-[10px] text-primary-500 uppercase tracking-widest font-semibold">Envios de hoy</p>
+                                </div>
+                                {% for app in notifications_today_apps %}
+                                <div class="px-6 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50">
+                                    <span class="material-symbols-outlined text-primary-600 shrink-0 text-xl mt-0.5">send</span>
+                                    <a href="{% url app.url_name %}" class="text-primary-700 hover:underline font-medium text-[0.9375rem] no-underline">{{ app.name }}</a>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            {% else %}
+                            <div class="px-4 py-8 text-center">
+                                <span class="material-symbols-outlined text-neutral-300 text-4xl">notifications_none</span>
+                                <p class="text-sm text-neutral-400 mt-2">Sin notificaciones para hoy</p>
                             </div>
+                            {% endif %}
                         </div>
-                        {% block header_actions %}
-                        <a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none">
-                            <span class="material-symbols-outlined text-[20px]">school</span> Nuevo Estudiante
-                        </a>
-                        {% endblock %}
                     </div>
-                </header>
-
-                <!-- Page Content -->
-                <div class="p-8 bg-neutral-100 flex-1 overflow-auto">
-                    {% block content %}
+                    {% block header_actions %}
+                    <a href="{% url 'parent_create' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none no-underline">
+                        <span class="material-symbols-outlined text-xl">school</span> Nuevo Estudiante
+                    </a>
                     {% endblock %}
                 </div>
+            </header>
 
-                <!-- Floating Action Button -->
-                <a id="scroll-top-btn" href="#" class="group inline-flex items-center justify-center bg-primary-100 hover:bg-primary-600 rounded-full border-2 border-primary-200 transition-all duration-300 hover:transform hover:scale-110 no-underline" style="width:3rem;height:3rem;position:fixed;right:5rem;bottom:2rem;z-index:9999;text-decoration:none;border-width:2px;">
-                    <span class="material-symbols-outlined text-[30px] text-primary-700 transition-colors duration-200" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 30;">arrow_upward</span>
-                </a>
-            </main>
-        </div>
+            <!-- Page Content -->
+            <div class="p-8 bg-neutral-100 flex-1 overflow-auto">
+                {% block content %}
+                {% endblock %}
+            </div>
+
+            <!-- Floating scroll-to-top -->
+            <a id="scroll-top-btn" href="#" class="group inline-flex items-center justify-center w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full border-2 border-primary-200 transition-all duration-300 hover:scale-110 no-underline fixed right-20 bottom-8 z-[9999]">
+                <span class="material-symbols-outlined text-3xl text-primary-700 transition-colors duration-200" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 30;">arrow_upward</span>
+            </a>
+        </main>
+    </div>
 
     {% block modals %}{% endblock %}
 
-    {% block extra_js %}{% endblock %}
-
-    <!-- Modal de Soporte -->
-    <div id="support-modal" class="hidden items-center justify-center p-4" style="display: none; position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 50;">
+    <!-- Support Modal -->
+    <div id="support-modal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <!-- Header -->
-            <div class="px-6 text-white flex justify-between items-center" style="background: linear-gradient(to right, #c4b5fd, #8b5cf6); padding-top: 16px; padding-bottom: 16px;">
+            <div class="px-6 py-4 text-white flex justify-between items-center bg-gradient-to-r from-primary-300 to-primary-500">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
                     <span class="material-symbols-outlined">help</span>
                     ¿Necesitas ayuda?
                 </h3>
-                <button type="button" id="support-close-btn" style="padding:0.4rem;border-radius:9999px;background:rgba(255,255,255,0.2);border:none;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <button type="button" id="support-close-btn" class="p-1.5 rounded-full bg-white/20 hover:bg-white/35 transition-colors flex items-center justify-center">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-            
-            <!-- Step 1: Categoría -->
-            <div id="support-step-category" class="p-6" style="display: block;">
+
+            <!-- Step 1: Category -->
+            <div id="support-step-category" class="p-6">
                 <p class="text-neutral-600 text-sm mb-4 text-center">Selecciona el tipo de incidencia:</p>
                 <div class="grid grid-cols-2 gap-3">
-                    <!-- Interfaz -->
                     <button type="button" class="support-category-btn group p-4 rounded-xl bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="interfaz">
                         <div class="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center transition-colors">
                             <span class="material-symbols-outlined text-blue-600 text-2xl">desktop_windows</span>
@@ -246,8 +234,6 @@
                         <span class="font-medium text-blue-700">Interfaz</span>
                         <span class="text-xs text-blue-500">Problemas visuales</span>
                     </button>
-                    
-                    <!-- Sistema -->
                     <button type="button" class="support-category-btn group p-4 rounded-xl bg-purple-50 hover:bg-purple-100 border-2 border-transparent hover:border-purple-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="sistema">
                         <div class="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-full flex items-center justify-center transition-colors">
                             <span class="material-symbols-outlined text-purple-600 text-2xl">settings</span>
@@ -255,8 +241,6 @@
                         <span class="font-medium text-purple-700">Sistema</span>
                         <span class="text-xs text-purple-500">Errores internos</span>
                     </button>
-                    
-                    <!-- Datos -->
                     <button type="button" class="support-category-btn group p-4 rounded-xl bg-green-50 hover:bg-green-100 border-2 border-transparent hover:border-green-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="datos">
                         <div class="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
                             <span class="material-symbols-outlined text-green-600 text-2xl">database</span>
@@ -264,8 +248,6 @@
                         <span class="font-medium text-green-700">Datos</span>
                         <span class="text-xs text-green-500">Base de datos</span>
                     </button>
-                    
-                    <!-- Otro -->
                     <button type="button" class="support-category-btn group p-4 rounded-xl bg-amber-50 hover:bg-amber-100 border-2 border-transparent hover:border-amber-400 transition-all duration-200 flex flex-col items-center gap-2" data-category="otro">
                         <div class="w-12 h-12 bg-amber-100 group-hover:bg-amber-200 rounded-full flex items-center justify-center transition-colors">
                             <span class="material-symbols-outlined text-amber-600 text-2xl">help</span>
@@ -275,8 +257,8 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- Step 2: Mensaje -->
+
+            <!-- Step 2: Message -->
             <div id="support-step-message" class="hidden" style="display: none;">
                 <div class="px-6 py-3 bg-neutral-50 border-b flex items-center justify-between">
                     <button type="button" id="support-back-btn" class="flex items-center gap-1 text-neutral-600 hover:text-neutral-800 transition-colors">
@@ -288,12 +270,10 @@
                     <label class="block text-sm font-medium text-neutral-700 mb-2">
                         Ponme una sugerencia/problema rápidamente:
                     </label>
-                    <textarea id="support-message" 
-                              rows="5" 
+                    <textarea id="support-message"
+                              rows="5"
                               placeholder="Describe tu problema o sugerencia..."
                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"></textarea>
-                    
-                    <!-- Mensajes de error/éxito -->
                     <p id="support-error" class="hidden mt-2 text-sm text-red-600 flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">error</span>
                         <span>Error</span>
@@ -312,300 +292,14 @@
             </div>
         </div>
     </div>
-    
-    <!-- CSRF Token para AJAX -->
+
+    <!-- CSRF Token for AJAX -->
     {% csrf_token %}
-    </div>
 
-    <!-- Script de Soporte -->
+    <!-- Global scripts -->
     <script src="{% static 'js/support.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
 
-    <!-- Notifications dropdown toggle -->
-    <script>
-    (function () {
-        const btn = document.getElementById('notif-btn');
-        const dropdown = document.getElementById('notif-dropdown');
-        if (!btn || !dropdown) return;
-
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('hidden');
-            // Close history if open
-            const hd = document.getElementById('history-dropdown');
-            if (hd) hd.classList.add('hidden');
-        });
-
-        document.addEventListener('click', function () {
-            dropdown.classList.add('hidden');
-        });
-
-        dropdown.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-    })();
-    </script>
-
-    <!-- History dropdown -->
-    <script>
-    (function () {
-        const btn = document.getElementById('history-btn');
-        const dropdown = document.getElementById('history-dropdown');
-        const entriesContainer = document.getElementById('history-entries');
-        const loadMoreContainer = document.getElementById('history-load-more');
-        const loadMoreBtn = document.getElementById('history-more-btn');
-        if (!btn || !dropdown) return;
-
-        let offset = 0;
-        let loaded = false;
-
-        function formatTimeAgo(isoStr) {
-            const now = new Date();
-            const then = new Date(isoStr);
-            const diffMs = now - then;
-            const diffMin = Math.floor(diffMs / 60000);
-            if (diffMin < 1) return 'ahora';
-            if (diffMin < 60) return diffMin + ' min';
-            const diffH = Math.floor(diffMin / 60);
-            if (diffH < 24) return diffH + 'h';
-            const diffD = Math.floor(diffH / 24);
-            if (diffD < 30) return diffD + 'd';
-            return then.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-        }
-
-        function renderEntries(entries, append) {
-            if (!append) entriesContainer.innerHTML = '';
-            if (entries.length === 0 && !append) {
-                entriesContainer.innerHTML = '<div class="px-4 py-8 text-center"><span class="material-symbols-outlined text-neutral-300 text-4xl">history</span><p class="text-sm text-neutral-400 mt-2">Sin historial todavía</p></div>';
-                return;
-            }
-            entries.forEach(function (e) {
-                const div = document.createElement('div');
-                div.className = 'px-4 py-3 border-b border-neutral-50 flex items-start gap-3 hover:bg-neutral-50';
-                div.innerHTML =
-                    '<span class="material-symbols-outlined text-primary-400 shrink-0" style="font-size:20px;margin-top:2px;">' + e.icon + '</span>' +
-                    '<div class="flex-1 min-w-0">' +
-                        '<p class="text-neutral-700 text-sm leading-snug" style="word-break:break-word;">' + e.message + '</p>' +
-                        '<p class="text-[11px] text-neutral-400 mt-0.5">' + formatTimeAgo(e.created_at) + '</p>' +
-                    '</div>';
-                entriesContainer.appendChild(div);
-            });
-        }
-
-        function fetchHistory(append) {
-            fetch('{% url "history_list" %}?offset=' + offset)
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    renderEntries(data.entries, append);
-                    offset += data.entries.length;
-                    if (data.has_more) {
-                        loadMoreContainer.classList.remove('hidden');
-                    } else {
-                        loadMoreContainer.classList.add('hidden');
-                    }
-                })
-                .catch(function () {
-                    if (!append) entriesContainer.innerHTML = '<div class="px-4 py-4 text-center text-sm text-neutral-400">Error al cargar el historial</div>';
-                });
-        }
-
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('hidden');
-            // Close notifications if open
-            const nd = document.getElementById('notif-dropdown');
-            if (nd) nd.classList.add('hidden');
-            if (!loaded) {
-                loaded = true;
-                offset = 0;
-                fetchHistory(false);
-            }
-        });
-
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                fetchHistory(true);
-            });
-        }
-
-        document.addEventListener('click', function () {
-            dropdown.classList.add('hidden');
-        });
-
-        dropdown.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-    })();
-    </script>
-    
-    <style>
-        /* Sidebar expandible con transición suave */
-        #main-sidebar {
-            overflow: hidden;
-            width: 7.5rem;
-        }
-
-        .sidebar-fixed-links {
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 7.5rem;
-            padding: 0 1.5rem 1.5rem;
-            box-sizing: border-box;
-            z-index: 20;
-        }
-
-        #main-sidebar.expandable-sidebar {
-            transition-duration: 220ms;
-        }
-        
-        /* Estado expandido del sidebar */
-        #main-sidebar.sidebar-expanded {
-            width: 27rem;
-        }
-
-        #main-sidebar.expandable-sidebar:hover {
-            width: 21.6rem;
-        }
-
-        #main-sidebar.sidebar-expanded .sidebar-fixed-links {
-            width: 27rem;
-        }
-
-        #main-sidebar.expandable-sidebar:hover .sidebar-fixed-links {
-            width: 21.6rem;
-        }
-        
-        #main-sidebar.sidebar-expanded .sidebar-title,
-        #main-sidebar.sidebar-expanded .sidebar-subtitle,
-        #main-sidebar.sidebar-expanded .sidebar-text,
-        #main-sidebar.sidebar-expanded .sidebar-quick-actions,
-        #main-sidebar.sidebar-expanded .sidebar-session,
-        #main-sidebar.expandable-sidebar:hover .sidebar-title,
-        #main-sidebar.expandable-sidebar:hover .sidebar-subtitle,
-        #main-sidebar.expandable-sidebar:hover .sidebar-text,
-        #main-sidebar.expandable-sidebar:hover .sidebar-quick-actions {
-            display: block !important;
-        }
-        
-        #main-sidebar.sidebar-expanded .sidebar-chevron,
-        #main-sidebar.expandable-sidebar:hover .sidebar-chevron {
-            display: none !important;
-        }
-        
-        #main-sidebar.sidebar-expanded .sidebar-link,
-        #main-sidebar.expandable-sidebar:hover .sidebar-link {
-            padding-left: 1.25rem; /* px-5 */
-            padding-right: 1.25rem;
-            justify-content: flex-start;
-            align-items: center;
-        }
-        
-        #main-sidebar.sidebar-expanded .sidebar-icon,
-        #main-sidebar.expandable-sidebar:hover .sidebar-icon {
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-        }
-
-        .sidebar-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 1.5rem;
-        }
-
-        #main-sidebar.sidebar-expanded .sidebar-text,
-        #main-sidebar.expandable-sidebar:hover .sidebar-text {
-            text-align: left;
-        }
-
-        .active-sidebar-link {
-            display: flex !important;
-            width: 100% !important;
-            box-sizing: border-box;
-        }
-
-        .header-action-btn {
-            font-size: 1rem;
-            font-weight: 700 !important;
-            text-decoration: none !important;
-            letter-spacing: 0;
-        }
-
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
-        }
-
-        #scroll-top-btn:hover .material-symbols-outlined {
-            color: white !important;
-        }
-
-        .header-action-btn .material-symbols-outlined {
-            font-size: 20px;
-            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24 !important;
-        }
-        /* Remove underline from sidebar links */
-        .sidebar-link {
-            text-decoration: none !important;
-        }
-
-        /* Support modal - missing utility classes */
-        #webcrumbs .rounded-xl { border-radius: 12px; }
-        #webcrumbs .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-        #webcrumbs .max-w-md { max-width: 28rem; }
-        #webcrumbs .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        #webcrumbs .py-4 { padding-bottom: 16px; padding-top: 16px; }
-        #webcrumbs .py-8 { padding-bottom: 32px; padding-top: 32px; }
-        #webcrumbs .border-2 { border-width: 2px; }
-        #webcrumbs .border-transparent { border-color: transparent; }
-        #webcrumbs .text-4xl { font-size: 36px; line-height: 40px; }
-        #webcrumbs .resize-none { resize: none; }
-        #webcrumbs .text-neutral-400 { color: #a3a3a3 !important; }
-        #webcrumbs .border-neutral-300 { border-color: #d4d4d4; }
-        #webcrumbs .text-red-600 { color: #dc2626 !important; }
-
-        /* Amber */
-        #webcrumbs .bg-amber-50 { background-color: #fffbeb !important; }
-        #webcrumbs .bg-amber-100 { background-color: #fef3c7 !important; }
-        #webcrumbs .hover\:bg-amber-100:hover { background-color: #fef3c7 !important; }
-        #webcrumbs .text-amber-600 { color: #d97706 !important; }
-        #webcrumbs .text-amber-700 { color: #b45309 !important; }
-        #webcrumbs .text-amber-500 { color: #f59e0b !important; }
-        #webcrumbs .hover\:text-amber-700:hover { color: #b45309 !important; }
-        #webcrumbs .hover\:border-amber-400:hover { border-color: #fbbf24 !important; }
-
-        /* Blue */
-        #webcrumbs .bg-blue-50 { background-color: #eff6ff !important; }
-        #webcrumbs .hover\:bg-blue-100:hover { background-color: #dbeafe !important; }
-        #webcrumbs .text-blue-600 { color: #2563eb !important; }
-        #webcrumbs .text-blue-700 { color: #1d4ed8 !important; }
-        #webcrumbs .text-blue-500 { color: #3b82f6 !important; }
-        #webcrumbs .hover\:border-blue-400:hover { border-color: #60a5fa !important; }
-
-        /* Purple */
-        #webcrumbs .bg-purple-50 { background-color: #faf5ff !important; }
-        #webcrumbs .bg-purple-100 { background-color: #f3e8ff !important; }
-        #webcrumbs .hover\:bg-purple-100:hover { background-color: #f3e8ff !important; }
-        #webcrumbs .text-purple-600 { color: #9333ea !important; }
-        #webcrumbs .text-purple-700 { color: #7e22ce !important; }
-        #webcrumbs .text-purple-500 { color: #a855f7 !important; }
-        #webcrumbs .hover\:border-purple-400:hover { border-color: #c084fc !important; }
-
-        /* Green (extra) */
-        #webcrumbs .bg-green-50 { background-color: #f0fdf4 !important; }
-        #webcrumbs .hover\:bg-green-100:hover { background-color: #dcfce7 !important; }
-        #webcrumbs .text-green-700 { color: #15803d !important; }
-        #webcrumbs .hover\:border-green-400:hover { border-color: #4ade80 !important; }
-
-        /* Group hover for category buttons */
-        #webcrumbs :is(.group:hover .group-hover\:bg-blue-200) { background-color: #bfdbfe !important; }
-        #webcrumbs :is(.group:hover .group-hover\:bg-purple-200) { background-color: #e9d5ff !important; }
-        #webcrumbs :is(.group:hover .group-hover\:bg-green-200) { background-color: #bbf7d0 !important; }
-        #webcrumbs :is(.group:hover .group-hover\:bg-amber-200) { background-color: #fde68a !important; }
-
-        #webcrumbs .hover\:bg-white\/20:hover { background-color: rgba(255,255,255,0.2); }
-        #webcrumbs .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgb(139 92 246); }
-        #webcrumbs .focus\:border-primary-500:focus { border-color: rgb(139 92 246); }
-    </style>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

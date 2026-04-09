@@ -112,20 +112,4 @@
     </form>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var form = document.getElementById('birthdayForm');
-    var submitBtn = document.getElementById('submitBtn');
-    if (form && submitBtn) {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('¿Enviar emails de cumpleaños a los estudiantes de hoy?')) {
-                e.preventDefault();
-                return;
-            }
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
-        });
-    }
-});
-</script>
 {% endblock %}

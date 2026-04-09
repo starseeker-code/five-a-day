@@ -143,32 +143,4 @@
     </form>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var receiptType = document.getElementById('receipt_type');
-    var quarterlyFields = document.getElementById('quarterlyFields');
-    var monthlyFields = document.getElementById('monthlyFields');
-
-    receiptType.addEventListener('change', function() {
-        if (this.value === 'quarterly_child') {
-            quarterlyFields.classList.remove('hidden');
-            monthlyFields.classList.add('hidden');
-        } else {
-            quarterlyFields.classList.add('hidden');
-            monthlyFields.classList.remove('hidden');
-        }
-    });
-
-    var form = document.getElementById('receiptsForm');
-    var submitBtn = document.getElementById('submitBtn');
-    form.addEventListener('submit', function(e) {
-        if (!confirm('¿Estás seguro de enviar los recibos a {{ parent_count }} padre(s)?')) {
-            e.preventDefault();
-            return;
-        }
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
-    });
-});
-</script>
 {% endblock %}

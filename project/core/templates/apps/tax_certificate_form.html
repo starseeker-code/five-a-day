@@ -82,18 +82,4 @@
     </form>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var form = document.getElementById('taxCertificateForm');
-    var submitBtn = document.getElementById('submitBtn');
-    form.addEventListener('submit', function(e) {
-        if (!confirm('¿Estás seguro de generar y enviar certificados fiscales a {{ parents_with_payments }} padre(s)?')) {
-            e.preventDefault();
-            return;
-        }
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Generando y enviando...';
-    });
-});
-</script>
 {% endblock %}

@@ -114,6 +114,9 @@ INSTALLED_APPS = [  # https://www.djangoproject.com/
     # https://django-environ.readthedocs.io/en/latest/
     "gsheets",  # https://pypi.org/project/django-gsheets/
     "core",
+    "students",
+    "billing",
+    "comms",
 ]
 
 MIDDLEWARE = [

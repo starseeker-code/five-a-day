@@ -7,9 +7,9 @@
 
 {% block extra_css %}
 <style>
-#webcrumbs #studentsTableBody td,
-#webcrumbs #studentsTableBody td .text-sm { font-size: 1.1375rem !important; }
-#webcrumbs #studentsTableBody td .text-xs { font-size: 0.975rem !important; }
+#studentsTableBody td,
+#studentsTableBody td .text-sm { font-size: 1.1375rem !important; }
+#studentsTableBody td .text-xs { font-size: 0.975rem !important; }
 </style>
 {% endblock %}
 
@@ -318,9 +318,10 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Modal functionality
-    const modal = document.getElementById('studentModal');
+{% load static %}
+<script src="{% static 'js/students.js' %}"></script>
+{% endblock %}
+{% comment %}
     const closeBtn = document.getElementById('closeModal');
     const cancelBtn = document.getElementById('cancelBtn');
     const form = document.getElementById('studentForm');
@@ -580,5 +581,4 @@
             newStudentArrow.textContent = 'expand_more';
         }
     });
-</script>
-{% endblock %}
+{% endcomment %}

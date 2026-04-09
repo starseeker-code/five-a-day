@@ -6,14 +6,14 @@
 {% block sidebar_hover %}expandable-sidebar{% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none" style="text-decoration:none;">
+<a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none no-underline">
     <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago
 </a>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-#webcrumbs .stat-number {
+.stat-number {
     font-size: 3.25rem;
     font-weight: 800;
     line-height: 1;
@@ -21,11 +21,11 @@
     display: block;
 }
 /* Cards: +30% text */
-#webcrumbs .grid > div h4 { font-size: 1.1375rem !important; }
-#webcrumbs .grid > div .mt-4.text-sm { font-size: 1.1375rem !important; }
+.grid > div h4 { font-size: 1.1375rem !important; }
+.grid > div .mt-4.text-sm { font-size: 1.1375rem !important; }
 /* Todo list: +30% text */
-#webcrumbs .todo-item span.flex-1 { font-size: 1.1375rem !important; }
-#webcrumbs .todo-item span.shrink-0 { font-size: 0.975rem !important; }
+.todo-item span.flex-1 { font-size: 1.1375rem !important; }
+.todo-item span.shrink-0 { font-size: 0.975rem !important; }
 /* Pending count trigger */
 #pendingCountTrigger { cursor: pointer; }
 </style>
@@ -42,7 +42,7 @@
                 </h4>
                 <p class="text-3xl font-bold text-neutral-800">{{ pending_payments_count }}</p>
                 {% if pending_payments_count > 0 %}
-                <a href="{% url 'payment_reminder_form' %}" class="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-primary-600 mt-1 transition-colors" style="text-decoration:none;" title="Enviar recordatorio de pago">
+                <a href="{% url 'payment_reminder_form' %}" class="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-primary-600 mt-1 transition-colors" class="no-underline" title="Enviar recordatorio de pago">
                     <span class="material-symbols-outlined" style="font-size:14px;">send</span>
                     Recordatorio
                 </a>
@@ -111,7 +111,7 @@
         <div class="mt-4 text-sm text-neutral-600">
             {% if upcoming_events %}
                 {% for event in upcoming_events %}
-                    <a href="{% if event.is_fun_friday %}{% url 'fun_friday_view' %}{% else %}{% url event.url_name %}{% endif %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium" style="text-decoration:none;">
+                    <a href="{% if event.is_fun_friday %}{% url 'fun_friday_view' %}{% else %}{% url event.url_name %}{% endif %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium" class="no-underline">
                         {{ event.name }}
                     </a>
                     <span class="text-neutral-400">({{ event.date|date:"d/m" }}){% if not forloop.last %}, {% endif %}</span>
@@ -248,238 +248,7 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const todoText = document.getElementById('todoText');
-    const addTodoBtn = document.getElementById('addTodoBtn');
-    const todoList = document.getElementById('todoList');
-    const todoError = document.getElementById('todoError');
-    const customDate = document.getElementById('customDate');
-    const dateBtns = document.querySelectorAll('.todo-date-btn');
-
-    let selectedDate = getTodayISO();
-    let activeMode = 'hoy';
-
-    // ── Date helpers ────────────────────────────────────────────
-    function getTodayISO() {
-        const d = new Date();
-        return d.toISOString().split('T')[0];
-    }
-
-    function getThisWeekFridayISO() {
-        const d = new Date();
-        const day = d.getDay(); // 0=Sun … 6=Sat
-        // Days until the next Friday (if today is Fri use today, if Sat/Sun → next Fri)
-        const daysUntilFriday = day <= 5 ? 5 - day : 7 - day + 5;
-        d.setDate(d.getDate() + daysUntilFriday);
-        return d.toISOString().split('T')[0];
-    }
-
-    function formatDisplayDate(isoStr) {
-        const [y, m, da] = isoStr.split('-');
-        return `${da}/${m}/${y}`;
-    }
-
-    // ── Button state management ──────────────────────────────────
-    function setActiveBtn(mode) {
-        activeMode = mode;
-        dateBtns.forEach(btn => {
-            const isActive = btn.dataset.mode === mode;
-            btn.classList.toggle('bg-primary-100', isActive);
-            btn.classList.toggle('text-primary-700', isActive);
-            btn.classList.toggle('ring-2', isActive);
-            btn.classList.toggle('ring-primary-400', isActive);
-            btn.classList.toggle('bg-neutral-100', !isActive);
-            btn.classList.toggle('text-neutral-700', !isActive);
-        });
-        customDate.classList.toggle('hidden', mode !== 'fecha');
-    }
-
-    document.getElementById('btnHoy').addEventListener('click', function () {
-        selectedDate = getTodayISO();
-        setActiveBtn('hoy');
-    });
-
-    document.getElementById('btnSemana').addEventListener('click', function () {
-        selectedDate = getThisWeekFridayISO();
-        setActiveBtn('semana');
-    });
-
-    document.getElementById('btnFecha').addEventListener('click', function () {
-        setActiveBtn('fecha');
-        customDate.focus();
-        if (customDate.value) selectedDate = customDate.value;
-    });
-
-    customDate.addEventListener('change', function () {
-        if (this.value) selectedDate = this.value;
-    });
-
-    // ── CSRF token helper ────────────────────────────────────────
-    function getCsrfToken() {
-        return document.cookie.split(';')
-            .map(c => c.trim())
-            .find(c => c.startsWith('csrftoken='))
-            ?.split('=')[1] || '';
-    }
-
-    // ── Show/hide error ──────────────────────────────────────────
-    function showError(msg) {
-        todoError.textContent = msg;
-        todoError.classList.remove('hidden');
-        setTimeout(() => todoError.classList.add('hidden'), 3000);
-    }
-
-    // ── Build todo row HTML ──────────────────────────────────────
-    function buildTodoRow(todo) {
-        const overdue = todo.is_overdue;
-        const textClass = overdue ? 'text-red-500 font-medium' : 'text-neutral-700';
-        const dateClass = overdue ? 'text-red-400 font-semibold' : 'text-neutral-400';
-        const row = document.createElement('div');
-        row.id = `todo-${todo.id}`;
-        row.className = 'todo-item flex items-center gap-3 py-3 px-1 group hover:bg-neutral-50 rounded-lg transition-colors';
-        row.dataset.overdue = overdue ? 'true' : 'false';
-        row.innerHTML = `
-            <input type="checkbox" class="todo-checkbox w-4 h-4 rounded border-neutral-300 text-primary-500 cursor-pointer accent-primary-500" data-id="${todo.id}">
-            <span class="flex-1 text-sm ${textClass}">${escapeHtml(todo.text)}</span>
-            <span class="text-xs ${dateClass} shrink-0">${todo.due_date_display}</span>
-        `;
-        row.querySelector('.todo-checkbox').addEventListener('change', handleCheckbox);
-        return row;
-    }
-
-    function escapeHtml(str) {
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    // ── Insert row in correct due_date order ─────────────────────
-    function insertTodoSorted(row, isoDate) {
-        const emptyMsg = document.getElementById('emptyTodos');
-        if (emptyMsg) emptyMsg.remove();
-
-        const existing = todoList.querySelectorAll('.todo-item');
-        let inserted = false;
-        for (const el of existing) {
-            const elDate = el.querySelector('.todo-checkbox')
-                ? el.querySelector('span:last-child').textContent.trim()
-                : null;
-            // Compare using iso date stored in data attribute
-            const elIso = el.dataset.isoDate || '9999-12-31';
-            if (isoDate <= elIso) {
-                todoList.insertBefore(row, el);
-                inserted = true;
-                break;
-            }
-        }
-        if (!inserted) todoList.appendChild(row);
-        row.dataset.isoDate = isoDate;
-    }
-
-    // ── Add todo ─────────────────────────────────────────────────
-    addTodoBtn.addEventListener('click', submitTodo);
-    todoText.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') submitTodo();
-    });
-
-    function submitTodo() {
-        if (activeMode === 'fecha' && customDate.value) {
-            selectedDate = customDate.value;
-        }
-
-        const text = todoText.value.trim();
-        if (!text) { showError('Escribe una tarea antes de añadirla'); return; }
-        if (!selectedDate) { showError('Selecciona una fecha'); return; }
-
-        addTodoBtn.disabled = true;
-
-        fetch('{% url "create_todo" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken(),
-            },
-            body: JSON.stringify({ text, due_date: selectedDate }),
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const row = buildTodoRow(data.todo);
-                insertTodoSorted(row, data.todo.due_date_iso);
-                todoText.value = '';
-            } else {
-                showError(data.error || 'Error al añadir la tarea');
-            }
-        })
-        .catch(() => showError('Error de conexión'))
-        .finally(() => { addTodoBtn.disabled = false; });
-    }
-
-    // ── Complete (delete) todo ───────────────────────────────────
-    function handleCheckbox(e) {
-        const checkbox = e.target;
-        const id = checkbox.dataset.id;
-        const row = document.getElementById(`todo-${id}`);
-
-        checkbox.disabled = true;
-        row.style.opacity = '0.4';
-
-        fetch(`/api/todos/${id}/complete/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() },
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                row.remove();
-                if (!todoList.querySelector('.todo-item')) {
-                    const p = document.createElement('p');
-                    p.id = 'emptyTodos';
-                    p.className = 'text-sm text-neutral-400 py-4 text-center';
-                    p.textContent = 'No hay tareas pendientes';
-                    todoList.appendChild(p);
-                }
-            } else {
-                checkbox.disabled = false;
-                row.style.opacity = '1';
-            }
-        })
-        .catch(() => {
-            checkbox.disabled = false;
-            row.style.opacity = '1';
-        });
-    }
-
-    // Attach listeners to server-rendered rows
-    document.querySelectorAll('.todo-checkbox').forEach(cb => {
-        cb.addEventListener('change', handleCheckbox);
-    });
-
-    // ── Pending students modal ───────────────────────────────────
-    const pendingTrigger = document.getElementById('pendingCountTrigger');
-    const pendingModal = document.getElementById('pending-modal');
-    const pendingCloseBtn = document.getElementById('pending-close-btn');
-
-    function openPendingModal() { pendingModal.style.display = 'flex'; }
-    function closePendingModal() { pendingModal.style.display = 'none'; }
-
-    if (pendingTrigger) pendingTrigger.addEventListener('click', openPendingModal);
-    if (pendingCloseBtn) pendingCloseBtn.addEventListener('click', closePendingModal);
-    if (pendingModal) {
-        pendingModal.addEventListener('click', (e) => {
-            if (e.target === pendingModal) closePendingModal();
-        });
-    }
-
-    // Store iso dates on server-rendered rows for sorting
-    document.querySelectorAll('.todo-item').forEach(row => {
-        const dateSpan = row.querySelector('span:last-child');
-        if (dateSpan) {
-            const parts = dateSpan.textContent.trim().split('/');
-            if (parts.length === 3) {
-                row.dataset.isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-        }
-    });
-});
-</script>
+{% load static %}
+<script>document.body.dataset.createTodoUrl = '{% url "create_todo" %}';</script>
+<script src="{% static 'js/home.js' %}"></script>
 {% endblock %}
