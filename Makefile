@@ -232,41 +232,47 @@ reset-db:
 # ============================================================================
 # TESTING
 # ============================================================================
+# Tests use PostgreSQL by default (requires `make up` for the DB container).
+# Set TEST_DB_ENGINE=sqlite to fall back to SQLite for quick local runs.
 
-# Run all tests inside Docker
+# Run all tests inside Docker (uses the container's PostgreSQL)
 test:
 	docker compose exec web python -m pytest project/tests/ -v --tb=short
 
-# Run all tests locally (no Docker needed, uses SQLite)
+# Run tests locally against the Docker PostgreSQL (default)
 test-local:
-	cd project && python -m pytest tests/ -v --tb=short
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -v --tb=short
+
+# Run tests locally with SQLite (no Docker needed)
+test-sqlite:
+	cd project && TEST_DB_ENGINE=sqlite python -m pytest tests/ -v --tb=short
 
 # Verbose output with full tracebacks
 test-verbose:
-	cd project && python -m pytest tests/ -v --tb=long -s
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -v --tb=long -s
 
 # Coverage report
 test-coverage:
-	cd project && python -m pytest tests/ --cov=core --cov=students --cov=billing --cov=comms --cov-report=term-missing --cov-report=html
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ --cov=core --cov=students --cov=billing --cov=comms --cov-report=term-missing --cov-report=html
 	@echo "HTML report: project/htmlcov/index.html"
 
 # Run specific test modules
 test-models:
-	cd project && python -m pytest tests/test_models.py -v --tb=short
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/test_models.py -v --tb=short
 
 test-services:
-	cd project && python -m pytest tests/test_services.py -v --tb=short
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/test_services.py -v --tb=short
 
 test-views:
-	cd project && python -m pytest tests/test_views.py -v --tb=short
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/test_views.py -v --tb=short
 
 # Stop on first failure
 test-fast:
-	cd project && python -m pytest tests/ -x -v --tb=short
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -x -v --tb=short
 
 # Run tests matching a keyword (usage: make test-k K=payment)
 test-k:
-	cd project && python -m pytest tests/ -v -k "$(K)" --tb=short
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -v -k "$(K)" --tb=short
 
 # ============================================================================
 # EMAIL & PAYMENTS
@@ -300,6 +306,29 @@ clean-all:
 	else \
 		echo "Cancelled."; \
 	fi
+
+# ============================================================================
+# VERSIONING
+# ============================================================================
+# App version is defined in two places:
+#   1. pyproject.toml → version = "x.y.z"
+#   2. project/settings.py → APP_VERSION fallback = "x.y.z"
+# This command updates both at once.
+
+version:
+	@if [ -z "$(V)" ]; then \
+		echo "Usage: make version V=1.1.0"; \
+		echo ""; \
+		echo "Current version:"; \
+		grep 'version = ' pyproject.toml | head -1; \
+		grep 'APP_VERSION' project/project/settings.py | head -1; \
+		exit 1; \
+	fi
+	@sed -i 's/^version = ".*"/version = "$(V)"/' pyproject.toml
+	@sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "$(V)")/' project/project/settings.py
+	@echo "Version updated to $(V) in:"
+	@echo "  - pyproject.toml"
+	@echo "  - project/settings.py"
 
 # ============================================================================
 # PRODUCTION

@@ -21,6 +21,7 @@ Five a Day eVolution is a Django student management system for a small English a
 - **Session-based custom auth** — `SimpleAuthMiddleware` uses `LOGIN_USERNAME`/`LOGIN_PASSWORD` from env vars. No Django User model.
 - **Tailwind CSS via CDN** — no build tools. Custom violet palette defined in `base.html`'s Tailwind config block.
 - **All JS extracted to static files** — 13 modules in `core/static/js/`. Django template variables passed via `data-*` attributes or small inline config scripts.
+- **PostgreSQL everywhere** — same database engine in development, testing, and production. Never use SQLite for anything other than quick local fallback (`TEST_DB_ENGINE=sqlite`).
 
 ### Dependency flow
 
@@ -37,19 +38,19 @@ comms ← core/views (student creation triggers welcome email)
 
 ```bash
 cd project
-poetry install
+uv sync
 python manage.py migrate
 python manage.py runserver
 ```
 
-Tests: `python -m pytest tests/ -v` (uses SQLite via `project/settings_test.py`)
+Tests: `python -m pytest tests/ -v` (uses PostgreSQL via `project/settings_test.py`, or `TEST_DB_ENGINE=sqlite` for SQLite fallback)
 
 ## Important files
 
 | File | What it does |
 | ---- | ------------ |
 | `project/settings.py` | Main settings — DB config, email, Celery, middleware |
-| `project/settings_test.py` | Test overrides — SQLite, simple static storage |
+| `project/settings_test.py` | Test overrides — PostgreSQL default with SQLite fallback |
 | `project/urls.py` | Root URL conf — includes students, billing, comms, core |
 | `core/views/__init__.py` | Re-exports all views for URL routing compatibility |
 | `core/templates/base.html` | Main layout — Tailwind CDN config, sidebar, header, support modal |
@@ -67,9 +68,9 @@ Tests: `python -m pytest tests/ -v` (uses SQLite via `project/settings_test.py`)
 - **Models**: Every model has explicit `db_table`. All use `created_at`/`updated_at` timestamps. BigAutoField PKs.
 - **Views**: Mix of CBVs (student CRUD) and FBVs (everything else). AJAX endpoints return `JsonResponse` with `{"success": bool, ...}`.
 - **Forms**: Django ModelForms for data entry. EnrollmentForm delegates to EnrollmentService.
-- **Templates**: Extend `base.html`. Blocks: `title`, `sidebar_class`, `sidebar_hover`, `page_title`, `page_subtitle`, `header_actions`, `extra_css`, `content`, `modals`, `extra_js`.
+- **Templates**: Extend `base.html`. All names in English. Blocks: `title`, `sidebar_class`, `sidebar_hover`, `page_title`, `page_subtitle`, `header_actions`, `extra_css`, `content`, `modals`, `extra_js`.
 - **JS**: External files in `core/static/js/`. Django data passed via `data-*` attrs on body or small `<script>window.CONFIG = {...}</script>` blocks.
-- **Testing**: pytest with pytest-django. Tests in `project/tests/`. Fixtures in `conftest.py`. All view tests use `authenticated_client` fixture.
+- **Testing**: pytest with pytest-django. Tests in `project/tests/`. Fixtures in `conftest.py`. All view tests use `authenticated_client` fixture. Tests run against PostgreSQL by default.
 
 ## Common tasks
 
@@ -107,4 +108,79 @@ All pricing flows through `billing/services/`. The single source of truth is `Si
 - **SiteConfiguration singleton** — always access via `SiteConfiguration.get_config()`, never query directly. It auto-creates with defaults if missing.
 - **Celery eager mode** — without Redis, tasks run synchronously. Don't rely on task.delay() being truly async in development.
 - **`#webcrumbs` removed** — the old CSS scoping wrapper is gone. If you see references to it in old code, delete them.
-- **Two `search_students` views existed** — the duplicate was removed during refactoring. Only one remains.
+- **Template names are English** — all email templates were renamed from Spanish (e.g., `matricula_niño.html` → `enrollment_child.html`). Never create templates with Spanish names.
+- **Version in two places** — `pyproject.toml` and `settings.py`. Use `make version V=x.y.z` to update both.
+
+## Django Best Practices (enforced in this project)
+
+### Models
+
+- **Always set `db_table` explicitly** — prevents Django from auto-generating `appname_modelname` tables that break when models move between apps. Every model in this project has it.
+- **Use string FK references for cross-app relationships** — `models.ForeignKey('students.Student', ...)` instead of importing the model directly. This avoids circular imports and makes app dependencies explicit.
+- **Never put business logic in models** — models define data structure, properties, and simple computed fields (`is_overdue`, `full_name`, `age`). Complex logic (pricing, discount calculations, payment generation) lives in the service layer (`billing/services/`).
+- **Use `select_related` and `prefetch_related` everywhere** — every queryset that touches related models should use these. Check `core/transactions.py` for examples. The N+1 query problem is the most common Django performance issue.
+- **Use `models.Index` for frequently filtered fields** — Student is indexed on `group`, `active`, `birth_date`. Payment on `student`, `parent`, `payment_status`, `due_date`.
+- **Use database constraints** — `UniqueConstraint` with conditions (e.g., one active enrollment per student), `unique_together`, and validators. Let the database enforce invariants, not just Python code.
+- **Decimal, not Float, for money** — all financial fields use `DecimalField(max_digits=8, decimal_places=2)` with `MinValueValidator`. Never use `FloatField` for currency.
+
+### Views
+
+- **Fat services, thin views** — views handle HTTP (request parsing, response building, redirects, messages). Business logic lives in services. If a view function is doing calculations, move them to a service method.
+- **Use `@require_http_methods` on FBVs** — explicitly declare which HTTP methods a view accepts. Every AJAX endpoint in this project uses this decorator.
+- **Use `get_object_or_404` instead of try/except** — cleaner and returns a proper 404. Used throughout the project.
+- **Wrap multi-model writes in `transaction.atomic()`** — student creation (Student + StudentParent + Enrollment + Payment) uses this. If any step fails, everything rolls back.
+- **Return consistent JSON for AJAX** — always `{"success": True/False, ...}` or `{"valid": True/False, ...}`. Frontend code depends on this contract.
+- **Don't import models at module level in views if it causes circular imports** — use lazy imports inside the function body when needed (see `StudentCreateView.form_valid`).
+
+### Forms
+
+- **Forms validate, services execute** — `EnrollmentForm.clean()` validates input. `EnrollmentService.create_enrollment()` does the actual creation. The form's `create_enrollment()` method is a thin bridge.
+- **Use Django's form validation** — `clean_<field>()` methods for per-field validation, `clean()` for cross-field validation. Don't validate in views.
+- **Set `input_formats` for date fields** — this project accepts both `%Y-%m-%d` (HTML5 date input) and `%d/%m/%Y` (Spanish format).
+
+### Templates
+
+- **Extend, don't repeat** — every authenticated page extends `base.html`. Use blocks for customization.
+- **Keep templates logic-light** — complex conditionals and calculations should happen in the view's context, not in `{% if %}` chains in templates.
+- **Pass Django data to JS via data attributes or config objects** — never embed `{% url %}` or `{{ variable }}` inside external JS files. Use `data-*` attributes on HTML elements or a small inline `<script>window.CONFIG = {...}</script>`.
+- **All template filenames in English** — `enrollment_child.html`, not `matricula_niño.html`.
+
+### Testing
+
+- **Test against PostgreSQL** — SQLite has different behavior for constraints, transactions, and date handling. Always test against the same database you deploy to. Use `make test-sqlite` only for quick iteration.
+- **Use fixtures in conftest.py** — shared fixtures (`student`, `parent`, `group`, `teacher`, `active_enrollment`, `pending_payment`, `authenticated_client`) avoid repetition.
+- **Test at three levels** — model tests (data logic), service tests (business logic), view tests (HTTP behavior). Don't test Django internals.
+- **Use `pytest.mark.django_db`** — either per-test or as `pytestmark` at module level. Without it, tests can't access the database.
+- **Use `authenticated_client` fixture for view tests** — it pre-sets the session authentication that `SimpleAuthMiddleware` checks.
+- **Parametrize repetitive tests** — error pages and email form views use `@pytest.mark.parametrize` to avoid duplicating test functions.
+
+### Security
+
+- **Never trust user input** — all form data goes through Django forms with validation. Raw `request.POST.get()` is only used for simple string values in AJAX handlers.
+- **CSRF protection on every POST** — Django's `CsrfViewMiddleware` is active. JS uses `getCsrfToken()` from cookies for AJAX. The only `@csrf_exempt` is the health check.
+- **Don't expose secrets in templates** — `LOGIN_PASSWORD`, API keys, etc. are never rendered in HTML. Google OAuth credentials are only used server-side.
+- **Validate relationships before writes** — creating a payment validates that the student-parent relationship exists. This prevents orphaned records.
+- **Use `PROTECT` for foreign keys** — deleting a Teacher won't cascade-delete their Groups. Deleting a Student won't cascade-delete Payments. Only explicit `CASCADE` where appropriate (StudentParent through model).
+
+### Performance
+
+- **Avoid N+1 queries** — use `select_related` (FK/OneToOne) and `prefetch_related` (M2M/reverse FK). The `transactions.py` module provides pre-built optimized querysets.
+- **Don't evaluate querysets at module level** — the old `all_students = Student.objects.filter(...)` in `transactions.py` was evaluated once at import time. Now it's wrapped in functions that return fresh querysets per request.
+- **Paginate large result sets** — the database view and payment list use Django's `Paginator`. The history dropdown uses offset-based AJAX pagination.
+- **Use `values_list` when you only need IDs** — `student.parents.values_list('id', flat=True)` instead of fetching full Parent objects.
+- **Cache the SiteConfiguration** — `SiteConfiguration.get_config()` does a single DB query per call. For request-scoped reuse, store the result in a local variable.
+
+### Email
+
+- **Use the EmailService class** — never call `django.core.mail.send_mail()` directly. The `EmailService` handles HTML rendering, inline images, attachments, and logging.
+- **All emails have a convenience function** — `comms/services/email_functions.py` provides typed functions like `send_birthday_email(recipient, name)` instead of raw template/context calls.
+- **Celery tasks for async sends** — student creation queues a welcome email via `send_welcome_email_task.delay()`. If Celery isn't available (no Redis), it runs synchronously via eager mode.
+- **Always set `fail_silently=True` for non-critical emails** — a failed birthday email should not crash the application.
+
+### Code Organization
+
+- **Explicit imports only** — never `from app.models import *`. Every import names what it needs.
+- **Cross-app references use string FKs** — `'students.Student'` in billing models, not `from students.models import Student`.
+- **Keep `__init__.py` files minimal** — the `core/views/__init__.py` re-exports are an exception for URL routing compatibility. Other `__init__.py` files should be empty.
+- **Group related functionality** — all pricing logic in `billing/services/`, all email logic in `comms/services/`, all view logic in `core/views/`. Don't scatter related code across apps.
+- **Management commands import from services** — `generate_payments` command calls `PaymentService` methods. Commands are thin wrappers around service logic.

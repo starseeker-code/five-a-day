@@ -1,56 +1,105 @@
 # Five a Day eVolution
 
 <p align="center">
-  <img src="docs/resources/logo.png" alt="Five a Day Logo" width="200">
+  <img src="docs/resources/logo.png" alt="Five a Day Logo" width="320">
+  <br>
+  <em>Student Management System for Five a Day English Academy</em>
+  <br>
+  <em>Albacete, Spain</em>
 </p>
 
-**Student management system for Five a Day English Academy** — a small English language school in Albacete, Spain. Built to centralize student records, automate billing, and streamline email communications for a team of 3-10 admins managing up to 2,000 students.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-v1.0.0-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
+  <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
+  <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
+</p>
 
-### Objectives
+---
 
-- Replace manual spreadsheets with a centralized, searchable database
-- Automate monthly/quarterly payment generation and tracking
-- Streamline parent communication with templated emails (12 types)
-- Provide a dashboard for daily operations (pending payments, birthdays, tasks)
-- Support the academic year cycle (September-June) with proper enrollment management
+Built to centralize student records, automate billing cycles, and streamline parent communication for a small English academy managing up to 2,000 students with 3-10 admin users.
+
+**Key objectives:**
+- Replace manual Google Sheets with a searchable, relational database
+- Automate monthly and quarterly payment generation and tracking
+- Streamline parent communication with 12 templated email types (previews, test sends, bulk sends)
+- Provide an operational dashboard for daily tasks: pending payments, birthdays, upcoming events, todos
+- Support the full academic year cycle (September enrollment through June closure)
 
 ### Project Status
 
 | | |
 |---|---|
-| **URL** | [Production deployment on GCP](https://five-a-day.netlify.app) |
-| **Documentation** | This README + [DEPLOYMENT.md](DEPLOYMENT.md) + per-app READMEs |
-| **Status** | Pre-production |
-| **Version** | v1.0.0 (development) |
-
-#### Changelog
+| **Production URL** | [five-a-day.netlify.app](https://five-a-day.netlify.app) |
+| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
+| **State** | Pre-production |
+| **Production version** | v1.0.0 |
+| **Development version** | v1.0.0 |
 
 | Version | Date | Description |
 |---------|------|-------------|
-| v1.0.0 | 2026-04-09 | Multi-app architecture, service layer, 112 tests, frontend cleanup |
-| v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker compose workflow |
+| **v1.0.0** | 2026-04-10 | Multi-app architecture, service layer, 112 tests, frontend cleanup, full documentation |
+| v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
 | v0.29.0 | 2025-03-01 | Enrollment system with discounts, adult students, email automation |
 
 ---
 
 ## Table of Contents
 
-1. [Version History & Roadmap](#1-version-history--roadmap)
-2. [Tech Stack](#2-tech-stack)
-3. [Database Schema](#3-database-schema)
-4. [Development & Docker](#4-development--docker)
-5. [Project Structure & Architecture](#5-project-structure--architecture)
-6. [Features by View](#6-features-by-view)
-7. [Testing](#7-testing)
-8. [Migrations](#8-migrations)
-9. [Contributing](#9-contributing)
-10. [License](#10-license)
+- [Version History & Roadmap](#version-history--roadmap)
+  - [v1.0.0 — Architecture Refactor & Test Suite](#v100)
+  - [v0.30.2 — Docker & History System](#v0302)
+  - [v0.29.0 — Enrollment & Email System](#v0290)
+  - [Roadmap: v1.1 through v1.12](#roadmap)
+- [Tech Stack](#tech-stack)
+  - [Backend](#backend)
+  - [Frontend](#frontend)
+  - [Infrastructure & Deployment](#infrastructure--deployment)
+  - [Python Dependencies](#python-dependencies)
+- [Database Schema](#database-schema)
+  - [ER Diagram](#er-diagram)
+  - [Key Constraints](#key-constraints)
+- [Development & Docker](#development--docker)
+  - [Quick Start](#quick-start)
+  - [Make Commands](#make-commands)
+  - [Environment Configuration](#environment-configuration)
+  - [Environment Variables Reference](#environment-variables-reference)
+  - [App Versioning](#app-versioning)
+- [Project Structure & Architecture](#project-structure--architecture)
+  - [Architecture Overview](#architecture-overview)
+  - [App Dependency Flow](#app-dependency-flow)
+  - [Directory Layout](#directory-layout)
+  - [App: core](#app-core)
+  - [App: students](#app-students)
+  - [App: billing](#app-billing)
+  - [App: comms](#app-comms)
+  - [Design Decisions](#design-decisions)
+- [Features by View](#features-by-view)
+  - [Home (Dashboard)](#home-dashboard)
+  - [Students](#students)
+  - [Student Create](#student-create)
+  - [Student Detail & Update](#student-detail--update)
+  - [Payments](#payments)
+  - [Schedule](#schedule)
+  - [Fun Friday](#fun-friday)
+  - [Apps (Email Tools)](#apps-email-tools)
+  - [Management](#management)
+  - [Database (All Info)](#database-all-info)
+  - [Login](#login)
+- [Testing](#testing)
+  - [Overview](#testing-overview)
+  - [Model Tests](#model-tests)
+  - [Service Tests](#service-tests)
+  - [View Tests](#view-tests)
+- [Migrations](#migrations)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 1. Version History & Roadmap
+## Version History & Roadmap
 
-<details>
+<details id="v100">
 <summary><strong>v1.0.0 — Architecture Refactor & Test Suite (current)</strong></summary>
 
 **Architecture**
@@ -67,18 +116,21 @@
 
 **Testing**
 - 112 pytest tests: 34 model, 24 service, 54 view tests
-- Test settings with SQLite (no Docker needed)
+- Tests run against PostgreSQL (same as production)
 - Found and fixed Payment `active` field bug
 
+**Templates**
+- Renamed all Spanish-named email templates to English (e.g., `matricula_niño.html` -> `enrollment_child.html`)
+
 **Documentation**
-- Comprehensive README with 10 sections
+- Comprehensive README with all sections
 - Per-app README.md files (core, students, billing, comms)
 - CLAUDE.md for AI-assisted development
 - DEPLOYMENT.md for Google Cloud Platform
 
 </details>
 
-<details>
+<details id="v0302">
 <summary><strong>v0.30.2 — Docker & History System</strong></summary>
 
 - Docker Compose with PostgreSQL 16 + Django
@@ -89,7 +141,7 @@
 
 </details>
 
-<details>
+<details id="v0290">
 <summary><strong>v0.29.0 — Enrollment & Email System</strong></summary>
 
 - Enrollment system with 3 plans (monthly full/part-time, quarterly)
@@ -103,72 +155,69 @@
 
 ### Roadmap
 
-<details>
-<summary><strong>v1.1 — Waiting List & Group Capacity</strong></summary>
+<details id="roadmap">
+<summary><strong>Click to expand full roadmap (v1.1 — v1.12)</strong></summary>
 
-**Waiting list system**: Students can be created with a `waiting_list` flag instead of being immediately enrolled. When a group has capacity (a student leaves or withdraws), waiting list students are surfaced for assignment.
+#### v1.1 — Waiting List & Group Capacity
+
+Students can be created with a `waiting_list` flag instead of being immediately enrolled. When a group has capacity (a student leaves), waiting list students are surfaced for assignment.
 
 - New `is_waiting` boolean on Student model
 - `max_students` soft limit on Group model with `student_count` tracking
 - Notification when a student is deactivated and a group drops below capacity
 - Waiting list management view: filter by group preference, priority by creation date
 - Quick-assign flow: from waiting list or student creation, assign to group with one click
-- Dashboard widget showing groups with available spots and waiting students count
+- Dashboard widget showing groups with available spots and waiting students
 
-</details>
+#### v1.2 — Google Sheets Integration
 
-<details>
-<summary><strong>v1.2 — Google Sheets Integration</strong></summary>
+Automatic export of student/payment data to Google Sheets for existing spreadsheet workflows. Read and write via `gspread` using already-configured Google OAuth credentials.
 
-Automatic export of student/payment data to Google Sheets for the school's existing spreadsheet workflows. Read and write via `gspread` using the already-configured Google OAuth credentials.
+#### v1.3 — PDF Invoice Generation
 
-</details>
+Proper PDF generation using WeasyPrint. Invoice/receipt PDFs for individual payments and quarterly summaries. Replace the current HTML-fallback tax certificate.
 
-<details>
-<summary><strong>v1.3 — PDF Invoice Generation</strong></summary>
+#### v1.4 — Celery + Redis Deployment
 
-Proper PDF generation using WeasyPrint. Invoice/receipt PDFs for individual payments and quarterly summaries, downloadable from the payment detail page. Replace the current HTML-fallback tax certificate.
+Full async task processing with Redis broker. Move all email sends to background tasks. Add Celery Beat for scheduled jobs: daily birthday emails at 8:00 AM, monthly payment generation on the 1st, monthly reports on the 28th.
 
-</details>
+#### v1.5 — Expense Tracking
 
-<details>
-<summary><strong>v1.4 — Celery + Redis Deployment</strong></summary>
+Track academy expenses (rent, supplies, salaries) with categories, recurring templates, and monthly totals. Income-vs-expense dashboard widget showing profitability.
 
-Full async task processing with Redis broker. Move all email sends to background tasks. Celery Beat for scheduled jobs: daily birthday emails, monthly payment generation, monthly reports.
+#### v1.6 — Multi-User Permissions
 
-</details>
+Replace SimpleAuthMiddleware with Django's built-in auth. Roles: admin (full access), teacher (read-only students + schedule), assistant (everything except configuration).
 
-<details>
-<summary><strong>v1.5 — Expense Tracking</strong></summary>
+#### v1.7 — Advanced Reporting & Analytics
 
-Track academy expenses (rent, supplies, salaries) with categories, recurring templates, and monthly totals. Income-vs-expense dashboard widget.
+Monthly and yearly financial reports with charts. Student retention analytics. Payment collection rates. Group utilization metrics. Exportable to PDF.
 
-</details>
+#### v1.8 — SMS Notifications (Twilio)
 
-<details>
-<summary><strong>v1.6 — Multi-User Permissions</strong></summary>
+SMS as an alternative notification channel for payment reminders and urgent communications. Opt-in per parent. Fallback to email when SMS fails.
 
-Replace SimpleAuthMiddleware with Django's auth system. Roles: admin (full), teacher (read-only students + schedule), assistant (everything except config).
+#### v1.9 — Parent Portal
 
-</details>
+Read-only web portal for parents to view enrollment status, payment history, upcoming events, and download receipts/certificates. Separate authentication from admin panel.
 
-<details>
-<summary><strong>v1.7 — Parent Portal</strong></summary>
+#### v1.10 — Audit Log & Security Hardening
 
-Read-only web portal for parents to view enrollment status, payment history, upcoming events, and download receipts/certificates.
+Full audit trail for all data changes (who changed what, when). Rate limiting on login and API endpoints. Two-factor authentication for admin users.
 
-</details>
+#### v1.11 — Stripe Payment Integration
 
-<details>
-<summary><strong>v2.0 — Stripe Payments</strong></summary>
+Online payment via Stripe. Parents receive payment links by email. Automatic reconciliation with pending payments. Receipts generated on completion.
 
-Online payment via Stripe. Parents receive payment links by email. Automatic reconciliation with pending payments.
+#### v1.12 — Mobile Optimization & PWA
+
+Progressive Web App support: installable on mobile, offline-capable dashboard, push notifications for overdue payments and birthdays.
 
 </details>
 
 ---
 
-## 2. Tech Stack
+## Tech Stack
 
 ### Backend
 
@@ -176,54 +225,56 @@ Online payment via Stripe. Parents receive payment links by email. Automatic rec
 |-----------|---------|---------|
 | Python | 3.12+ | Runtime |
 | Django | 5.2.5 | Web framework |
-| PostgreSQL | 16 (Alpine) | Production database |
-| SQLite | 3 | Development/test database |
-| Celery | 5.5.3 | Async task queue (eager mode without Redis) |
+| PostgreSQL | 16 (Alpine) | Database (production, development, and testing) |
+| Celery | 5.5.3 | Async task queue (eager mode without Redis, full async with Redis in v1.4) |
+| Celery Beat | (bundled with Celery) | Scheduled task execution (birthday emails, payment generation — v1.4) |
+| Redis | 7 (Alpine) | Message broker for Celery (planned, v1.4) |
 | Gunicorn | 21.2.0 | Production WSGI server |
 | WhiteNoise | 6.11.0 | Static file serving in production |
-| Poetry | - | Dependency management |
 
 ### Frontend
 
 | Technology | Purpose |
 |-----------|---------|
-| Tailwind CSS (CDN) | Utility-first CSS framework with custom violet primary palette |
-| Material Symbols Outlined | Icon system (Google Fonts CDN) |
-| Vanilla JavaScript | 13 static JS modules, zero build tools |
-| Trebuchet MS | Primary font |
-| Montserrat Alternates + Parisienne | Login/error page fonts (Google Fonts) |
+| [Tailwind CSS](https://tailwindcss.com/) (CDN) | Utility-first CSS with custom violet primary palette |
+| [Google Fonts](https://fonts.google.com/) | Material Symbols Outlined (icons), Montserrat Alternates (login), Parisienne (login accent) |
+| Vanilla JavaScript | 13 static modules — zero build tools, no framework |
 
-### Infrastructure
+### Infrastructure & Deployment
 
 | Technology | Purpose |
 |-----------|---------|
-| Docker | Containerization (multi-stage build, non-root user) |
+| Docker | Multi-stage build, non-root `django` user |
 | Docker Compose | Service orchestration (PostgreSQL + Django) |
-| Google Cloud Platform | Production hosting (Cloud Run + Cloud SQL) |
-| Gmail SMTP | Email sending (app password) |
-| Google OAuth 2.0 | Admin authentication (optional) |
+| Google Cloud Platform | Production hosting: Cloud Run + Cloud SQL |
+| Gmail SMTP | Email sending (app password authentication) |
+| Google OAuth 2.0 | Optional admin authentication |
+| Make | 45+ development commands |
 
-### Python Packages
+### Python Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| `djangorestframework` | Installed but not actively used (future API) |
 | `django-cors-headers` | CORS handling for future API consumers |
 | `django-filter` | Query filtering utilities |
-| `django-extensions` | Development utilities (shell_plus, etc.) |
-| `django-gsheets` | Google Sheets integration (future) |
-| `gspread` | Google Sheets API client |
+| `django-extensions` | Development utilities (shell_plus, graph_models) |
+| `django-gsheets` + `gspread` | Google Sheets integration (v1.2) |
+| `django-redis` | Redis cache backend (v1.4) |
+| `django-storages` | Cloud storage backends (future) |
 | `pandas` | Data processing for exports |
-| `openpyxl` | Excel file generation |
-| `httpx` | HTTP client |
-| `psycopg2-binary` | PostgreSQL adapter |
-| `dj-database-url` | Database URL parsing (Cloud deployments) |
-| `python-dotenv` | .env file loading |
+| `openpyxl` | Excel file generation (.xlsx) |
+| `httpx` | HTTP client for external API calls |
+| `psycopg2-binary` | PostgreSQL database adapter |
+| `dj-database-url` | Database URL parsing for cloud deployments |
+| `python-dotenv` | Environment variable loading from .env |
+| `markdown` | Markdown rendering |
 | `pytest` + `pytest-django` | Testing framework |
 
 ---
 
-## 3. Database Schema
+## Database Schema
+
+### ER Diagram
 
 ```mermaid
 erDiagram
@@ -289,6 +340,7 @@ erDiagram
         decimal quarterly_enrollment_discount
         decimal sibling_discount
         decimal june_discount
+        decimal full_year_bonus
     }
 
     EnrollmentType {
@@ -377,128 +429,173 @@ erDiagram
 
 ### Key Constraints
 
-- **SiteConfiguration**: Singleton (pk=1), cannot be deleted
-- **Enrollment**: UniqueConstraint — only one active enrollment per student
-- **Student-Parent**: Unique together (student, parent)
-- **FunFridayAttendance**: Unique together (student, date)
-- **ScheduleSlot**: Unique together (row, day, col)
+| Constraint | Model | Rule |
+|-----------|-------|------|
+| Singleton | SiteConfiguration | Always pk=1, cannot be deleted |
+| Unique active | Enrollment | Only one active enrollment per student |
+| Unique pair | StudentParent | (student, parent) |
+| Unique pair | FunFridayAttendance | (student, date) |
+| Unique triple | ScheduleSlot | (row, day, col) |
+| Unique | Teacher.email, Group.group_name, Parent.dni, EnrollmentType.name | |
 
 ---
 
-## 4. Development & Docker
+## Development & Docker
 
 ### Quick Start
 
 ```bash
-# Clone and configure
-git clone <repo-url>
+# Clone the repository
+git clone https://github.com/starseeker-code/five-a-day.git
 cd five-a-day
-cp .env.example .env   # Edit with your values
 
-# Docker (recommended)
-make build
-make up                # http://localhost:8000
+# Configure environment
+cp .env.example .env   # Edit with your values (see Environment Configuration below)
+```
 
-# Local (no Docker)
-poetry install
+**Docker (recommended):**
+
+```bash
+make build             # Build images
+make up                # Start PostgreSQL + Django → http://localhost:8000
+make migrate           # Apply migrations (first time only)
+```
+
+**Local development (no Docker):**
+
+```bash
+uv sync                # Install dependencies
 cd project
 python manage.py migrate
 python manage.py runserver
 ```
 
+> **Important**: The `.env` file controls whether the app runs in production or development mode. Before starting, set at minimum:
+> - `DJANGO_ENV=development` — enables development behaviors (auto superuser, no collectstatic)
+> - `DJANGO_DEBUG=true` — enables Django debug mode, detailed error pages
+> - `POSTGRES_PASSWORD` — required for database connection
+
 ### Make Commands
+
+Run `make` or `make help` for the full list. Key commands:
 
 | Command | Description |
 |---------|-------------|
-| **Setup** | |
-| `make setup` | Copy .env.example to .env |
-| `make build` | Build Docker images |
-| `make rebuild` | Full rebuild (no cache) + start |
 | **Lifecycle** | |
 | `make up` | Start all services (detached) |
 | `make down` | Stop and remove containers |
-| `make restart` | Restart all services |
 | `make dev` | Start in foreground (logs visible) |
-| **Monitoring** | |
-| `make logs` | Tail all logs |
-| `make logs-web` | Tail web logs |
-| `make ps` | Show running services |
-| `make health` | Full health check |
+| `make rebuild` | Full rebuild (no cache) + start |
 | **Django** | |
 | `make shell` | Django shell in container |
-| `make bash` | Bash in container |
 | `make migrate` | Apply migrations |
-| `make makemigrations` | Create migrations (all apps) |
+| `make makemigrations` | Create migrations (all 4 apps) |
 | `make check` | Django system checks |
 | **Database** | |
 | `make dbshell` | PostgreSQL shell |
 | `make backup` | Dump DB to backups/ |
-| `make restore FILE=x` | Restore from SQL file |
-| `make reset-db` | Recreate database (destructive) |
+| `make reset-db` | Recreate database (destructive!) |
 | **Testing** | |
-| `make test` | Run all tests (Docker) |
-| `make test-local` | Run all tests (local, SQLite) |
-| `make test-verbose` | Tests with full tracebacks |
-| `make test-coverage` | Tests with coverage report |
+| `make test` | Run all tests in Docker (PostgreSQL) |
+| `make test-local` | Run tests locally against Docker PostgreSQL |
+| `make test-sqlite` | Run tests with SQLite (no Docker needed) |
+| `make test-coverage` | Tests with HTML coverage report |
 | `make test-models` | Only model tests |
 | `make test-services` | Only service tests |
 | `make test-views` | Only view tests |
 | `make test-fast` | Stop on first failure |
 | `make test-k K=payment` | Run tests matching keyword |
-| **Email** | |
+| **Versioning** | |
+| `make version V=1.1.0` | Update version in pyproject.toml + settings.py |
+| `make version` | Show current version locations |
+| **Email & Payments** | |
 | `make send-test-email` | Send test birthday email |
 | `make test-all-emails` | List all email templates |
-| **Payments** | |
 | `make generate-payments` | Generate current month's payments |
 | `make generate-payments-dry` | Preview without creating |
+| **Health** | |
+| `make health` | Full health check (Django + DB + HTTP) |
+| `make check-deploy` | Django deployment checklist |
 
-### Environment Variables
+### Environment Configuration
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DJANGO_ENV` | `development` or `production` | No (default: development) |
-| `DJANGO_SECRET_KEY` | Django secret key | Yes in production |
-| `DJANGO_DEBUG` | Enable debug mode (`true`/`false`) | No (default: false) |
-| `DJANGO_ALLOWED_HOSTS` | Comma-separated allowed hosts | No (default: localhost) |
-| `DATABASE` | Set to `postgres` for PostgreSQL | No (default: SQLite) |
-| `DATABASE_URL` | Full database URL (Cloud deployments) | No |
-| `POSTGRES_DB` | PostgreSQL database name | When using postgres |
-| `POSTGRES_USER` | PostgreSQL user | When using postgres |
-| `POSTGRES_PASSWORD` | PostgreSQL password | When using postgres |
-| `POSTGRES_HOST` | PostgreSQL host | When using postgres |
-| `POSTGRES_PORT` | PostgreSQL port | No (default: 5432) |
-| `EMAIL_HOST_USER` | Gmail address for SMTP | Yes for email features |
-| `EMAIL_SECRET` | Gmail app password | Yes for email features |
-| `SUPPORT_EMAIL` | Support ticket recipient | No |
-| `LOGIN_USERNAME` | Admin login username | No (default: fiveaday) |
-| `LOGIN_PASSWORD` | Admin login password | No (default: Fiveaday123!) |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | No (for Google login) |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | No (for Google login) |
-| `GOOGLE_REDIRECT_URI` | OAuth callback URI | No (auto-detected) |
-| `GOOGLE_ALLOWED_EMAIL` | Restrict Google login to this email | No |
-| `CELERY_BROKER_URL` | Redis URL for Celery | No (falls back to eager) |
-| `APP_VERSION` | Application version string | No (default: 0.30.2) |
-| `EMAIL_TEST_1` | Test email recipient 1 | No (for email preview) |
-| `EMAIL_TEST_2` | Test email recipient 2 | No (for email preview) |
+The project supports three environments, controlled by `DJANGO_ENV` and `DJANGO_DEBUG`:
+
+| Environment | `DJANGO_ENV` | `DJANGO_DEBUG` | Database | Static Files | Use Case |
+|------------|-------------|---------------|----------|-------------|----------|
+| **Production** | `production` | `false` | PostgreSQL (Cloud SQL) | WhiteNoise + collectstatic | Live deployment |
+| **Development** | `development` | `true` | PostgreSQL (Docker) | Django dev server | Local coding |
+| **Testing** | (via settings_test.py) | `false` | PostgreSQL (Docker) | Simple storage | `make test` |
+
+> **Defaults are production-safe**: `DJANGO_DEBUG` defaults to `false` and `DJANGO_ENV` defaults to `development`. In production, always set `DJANGO_ENV=production` and ensure `DJANGO_SECRET_KEY` is a strong random value.
+
+The database is **always PostgreSQL** — in Docker development, in tests, and in production. Tests run against the same Docker PostgreSQL container to ensure realistic behavior. For quick local test runs without Docker, use `make test-sqlite`.
+
+### Environment Variables Reference
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| **Core** | | | |
+| `DJANGO_ENV` | Environment: `development` / `production` | No | `development` |
+| `DJANGO_DEBUG` | Debug mode: `true` / `false` | No | `false` |
+| `DJANGO_SECRET_KEY` | Secret key | **Yes in production** | dev fallback |
+| `DJANGO_ALLOWED_HOSTS` | Comma-separated hosts | No | `localhost,127.0.0.1` |
+| **Database** | | | |
+| `DATABASE` | Set to `postgres` for PostgreSQL | No | `postgres` |
+| `DATABASE_URL` | Full URL (Cloud deployments) | No | — |
+| `POSTGRES_DB` | Database name | No | `fiveaday_db` |
+| `POSTGRES_USER` | Database user | No | `fiveaday_user` |
+| `POSTGRES_PASSWORD` | Database password | **Yes** | — |
+| `POSTGRES_HOST` | Database host | No | `db` (Docker) |
+| `POSTGRES_PORT` | Database port | No | `5432` |
+| **Email** | | | |
+| `EMAIL_HOST_USER` | Gmail address | For email features | — |
+| `EMAIL_SECRET` | Gmail app password | For email features | — |
+| `SUPPORT_EMAIL` | Support ticket recipient | No | — |
+| `EMAIL_TEST_1` / `EMAIL_TEST_2` | Test email recipients | No | — |
+| **Auth** | | | |
+| `LOGIN_USERNAME` | Admin username | No | `fiveaday` |
+| `LOGIN_PASSWORD` | Admin password | No | `Fiveaday123!` |
+| `GOOGLE_CLIENT_ID` | OAuth client ID | For Google login | — |
+| `GOOGLE_CLIENT_SECRET` | OAuth client secret | For Google login | — |
+| `GOOGLE_REDIRECT_URI` | OAuth callback URL | For Google login | auto-detected |
+| `GOOGLE_ALLOWED_EMAIL` | Restrict Google login | No | `EMAIL_HOST_USER` |
+| **Other** | | | |
+| `APP_VERSION` | Version string | No | from settings.py |
+| `CELERY_BROKER_URL` | Redis URL for Celery | No | eager mode |
+| `SESSION_COOKIE_AGE` | Session duration (seconds) | No | `86400` (24h) |
+| `LOG_LEVEL` | Logging level | No | `DEBUG`/`INFO` |
+
+### App Versioning
+
+The app version is defined in **two places** and should be updated together:
+
+1. **`pyproject.toml`** line 3: `version = "x.y.z"` — package metadata
+2. **`project/settings.py`** line 17: `APP_VERSION = os.getenv("APP_VERSION", "x.y.z")` — runtime fallback
+
+Use `make version V=1.1.0` to update both at once. The version appears in:
+- `/health/` endpoint response
+- Support ticket emails
+- Can be overridden at runtime via the `APP_VERSION` environment variable
 
 ---
 
-## 5. Project Structure & Architecture
+## Project Structure & Architecture
 
-### High-Level Architecture
+### Architecture Overview
 
 ```mermaid
 graph TB
-    Browser[Browser] --> Django[Django / Gunicorn]
-    Django --> PG[(PostgreSQL)]
+    Browser[Browser] --> Django[Django / Gunicorn :8000]
+    Django --> PG[(PostgreSQL :5432)]
     Django --> SMTP[Gmail SMTP]
     Django --> OAuth[Google OAuth]
 
     subgraph "Django Apps"
-        Core[core<br/>Dashboard, Auth, Schedule]
-        Students[students<br/>Student, Parent, Teacher, Group]
-        Billing[billing<br/>Payment, Enrollment, Pricing]
-        Comms[comms<br/>Email Service, Tasks]
+        Core["<b>core</b><br/>Dashboard, Auth<br/>Schedule, Utilities<br/><i>4 models</i>"]
+        Students["<b>students</b><br/>Student, Parent<br/>Teacher, Group<br/><i>5 models</i>"]
+        Billing["<b>billing</b><br/>Payment, Enrollment<br/>Pricing, Exports<br/><i>4 models, 3 services</i>"]
+        Comms["<b>comms</b><br/>Email Service<br/>Tasks, Commands<br/><i>0 models</i>"]
     end
 
     Core --> Students
@@ -513,56 +610,33 @@ graph TB
 
 ```mermaid
 graph LR
-    students["students<br/>(foundation)"] --> billing["billing<br/>(FK refs)"]
-    students --> core["core<br/>(FK refs)"]
-    students --> comms["comms<br/>(recipients)"]
-    billing --> comms["comms<br/>(tax certs)"]
-    billing --> core
-    comms --> core
+    students["<b>students</b><br/>(foundation — no dependencies)"] --> billing["<b>billing</b><br/>(FK to Student, Parent)"]
+    students --> core["<b>core</b><br/>(FK to Student, Group)"]
+    students --> comms["<b>comms</b><br/>(email recipients)"]
+    billing --> comms
 ```
 
-### Directory Structure
+### Directory Layout
 
 ```text
 five-a-day/
 ├── project/
 │   ├── project/                  Django settings module
-│   │   ├── settings.py           Main settings (DB, email, Celery, middleware)
-│   │   ├── settings_test.py      Test overrides (SQLite, simple storage)
-│   │   ├── urls.py               Root URL conf (includes 4 app URL files)
+│   │   ├── settings.py           Main settings
+│   │   ├── settings_test.py      Test overrides (PostgreSQL or SQLite)
+│   │   ├── urls.py               Root URL conf → includes 4 app URL files
 │   │   ├── celery.py             Celery configuration
-│   │   └── wsgi.py / asgi.py     Server entry points
+│   │   └── wsgi.py / asgi.py
 │   │
 │   ├── core/                     Dashboard, Auth, Schedule, Utilities
 │   │   ├── models.py             TodoItem, HistoryLog, FunFridayAttendance, ScheduleSlot
-│   │   ├── views/                12 view modules (see below)
-│   │   │   ├── __init__.py       Re-exports all views for URL compatibility
-│   │   │   ├── auth.py           Login, logout, Google OAuth
-│   │   │   ├── dashboard.py      Home dashboard, database view
-│   │   │   ├── students.py       Student CRUD (CBVs + FBVs)
-│   │   │   ├── parents.py        Parent creation
-│   │   │   ├── payments.py       Payment CRUD, search, export
-│   │   │   ├── management.py     Config, teachers, groups, enrollment API
-│   │   │   ├── app_forms.py      10 email form views
-│   │   │   ├── schedule.py       Weekly schedule, Fun Friday list
-│   │   │   ├── fun_friday_attendance.py  Attendance AJAX toggles
-│   │   │   ├── todos.py          Todo CRUD, history API
-│   │   │   ├── support.py        Support ticket email
-│   │   │   └── errors.py         Error handlers, health check
+│   │   ├── views/                12 view modules
 │   │   ├── constants.py          DIAS_ES, MESES_ES, SCHEDULED_APPS
-│   │   ├── middleware.py         SimpleAuthMiddleware (session-based)
-│   │   ├── context_processors.py Notifications, todos, history count
+│   │   ├── middleware.py         SimpleAuthMiddleware
+│   │   ├── context_processors.py Notifications injected into all templates
 │   │   ├── transactions.py       Optimized queryset builders
-│   │   ├── templates/            ALL HTML templates
-│   │   │   ├── base.html         Main layout (Tailwind CDN, sidebar, header)
-│   │   │   ├── home.html, login.html, students.html, ...
-│   │   │   ├── payments/         Payment templates
-│   │   │   ├── apps/             Email form templates
-│   │   │   └── emails/           12 email templates
-│   │   └── static/
-│   │       ├── css/app.css       Sidebar transitions, icon font settings
-│   │       ├── js/               13 JavaScript modules
-│   │       └── images/           Logo
+│   │   ├── templates/            ALL HTML templates (base, pages, emails)
+│   │   └── static/               CSS (app.css) + JS (13 modules) + images
 │   │
 │   ├── students/                 People Management
 │   │   ├── models.py             Student, Parent, StudentParent, Teacher, Group
@@ -573,313 +647,350 @@ five-a-day/
 │   ├── billing/                  Financial Management
 │   │   ├── models.py             SiteConfiguration, EnrollmentType, Enrollment, Payment
 │   │   ├── forms.py              EnrollmentForm (delegates to service)
-│   │   ├── constants.py          Pricing seeds, choice tuples, utility functions
-│   │   ├── services/
-│   │   │   ├── enrollment_service.py  Enrollment creation + discount logic
-│   │   │   ├── payment_service.py     Payment generation + calculations
-│   │   │   └── pricing_service.py     Centralized pricing from SiteConfiguration
-│   │   ├── exports.py            Excel/CSV export builders
+│   │   ├── constants.py          Pricing seeds, choice tuples
+│   │   ├── services/             EnrollmentService, PaymentService, PricingService
+│   │   ├── exports.py            Excel/CSV builders
 │   │   ├── admin.py              Payment + Enrollment admin with actions
 │   │   ├── urls.py               20 URL patterns
-│   │   └── management/commands/
-│   │       └── generate_payments.py
+│   │   └── management/commands/  generate_payments
 │   │
 │   ├── comms/                    Communications
-│   │   ├── services/
-│   │   │   ├── email_service.py  EmailService class + singleton
-│   │   │   └── email_functions.py 12 convenience email functions + PDF gen
-│   │   ├── tasks.py              6 Celery tasks (welcome, birthday, reminders)
+│   │   ├── services/             EmailService + 12 email functions + PDF gen
+│   │   ├── tasks.py              6 Celery tasks
 │   │   ├── urls.py               10 URL patterns
-│   │   └── management/commands/
-│   │       ├── send_email.py     CLI email sending (8 modes)
-│   │       └── test_all_emails.py Send one test of each template
+│   │   └── management/commands/  send_email, test_all_emails
 │   │
-│   ├── tests/                    pytest test suite
-│   │   ├── test_models.py        34 tests
-│   │   ├── test_services.py      24 tests
-│   │   └── test_views.py         54 tests
+│   ├── tests/                    pytest suite (112 tests)
 │   └── conftest.py               Shared fixtures
 │
-├── Dockerfile                    Multi-stage build, non-root user
-├── docker-compose.yml            PostgreSQL + Django (+ future Redis/Celery)
-├── Makefile                      40+ development commands
-├── pyproject.toml                Poetry dependencies
-├── CLAUDE.md                     AI-assisted development context
-├── DEPLOYMENT.md                 Google Cloud Platform deployment guide
-└── .env                          Environment configuration
+├── Dockerfile                    Multi-stage build
+├── docker-compose.yml            PostgreSQL + Django
+├── Makefile                      45+ commands
+├── pyproject.toml                Dependencies (uv/pip compatible)
+├── CLAUDE.md                     AI development context
+└── DEPLOYMENT.md                 GCP deployment guide
 ```
+
+### App: core
+
+Dashboard, authentication, scheduling, and shared utilities. Owns all views and templates.
+
+| Component | Details |
+|-----------|---------|
+| **Models** | TodoItem, HistoryLog (1000-entry cap), FunFridayAttendance, ScheduleSlot |
+| **Views** | 12 modules: auth, dashboard, students, parents, payments, management, app_forms, schedule, fun_friday_attendance, todos, support, errors |
+| **Middleware** | SimpleAuthMiddleware — session-based, protects all routes except /login/, /health/, /static/ |
+| **Templates** | base.html (layout), 15+ page templates, 12 email templates, error pages |
+| **Static** | app.css (sidebar/icons), 13 JS modules, logo |
+
+See [core/README.md](project/core/README.md) for details.
+
+### App: students
+
+People management — the foundation app with no external dependencies.
+
+| Component | Details |
+|-----------|---------|
+| **Models** | Student (with age calc, withdrawal tracking), Parent (DNI unique), Teacher, Group, StudentParent (M2M through) |
+| **Forms** | StudentForm (birth_date validation), ParentForm (DNI validation), ParentFormSet |
+| **Admin** | StudentAdmin with StudentParentInline, ParentAdmin with ParentStudentInline |
+| **URLs** | 12 patterns: CRUD + search + fun friday attendance |
+
+See [students/README.md](project/students/README.md) for details.
+
+### App: billing
+
+Financial management with a dedicated service layer.
+
+| Component | Details |
+|-----------|---------|
+| **Models** | SiteConfiguration (singleton pricing), EnrollmentType (plan types), Enrollment (with discount flags), Payment (with overdue detection) |
+| **Services** | EnrollmentService (creation + discounts), PaymentService (generation + calculations), PricingService (centralized config access) |
+| **Constants** | Pricing seeds, ENROLLMENT_TYPE_CHOICES, SCHEDULE_TYPE_CHOICES, PAYMENT_METHOD_CHOICES, etc. |
+| **Exports** | build_database_workbook() → multi-sheet .xlsx |
+| **Commands** | `generate_payments --month X --year Y [--dry-run]` |
+| **URLs** | 20 patterns: payment CRUD, enrollment API, management, exports |
+
+See [billing/README.md](project/billing/README.md) for details.
+
+### App: comms
+
+Email communications — no database models, pure service layer.
+
+| Component | Details |
+|-----------|---------|
+| **EmailService** | Generic HTML email sender with inline images and attachments |
+| **Email functions** | 12 convenience functions (birthday, welcome, enrollment, payment reminder, receipts, tax cert, etc.) |
+| **Celery tasks** | 6 tasks with retry logic: welcome, birthday (single + batch), payment reminders, generic, enrollment confirmation |
+| **Commands** | `send_email --template X [--test]`, `test_all_emails [--only X,Y]` |
+| **URLs** | 10 patterns: all email app form views |
+
+See [comms/README.md](project/comms/README.md) for details.
 
 ### Design Decisions
 
-**Why views stay in core**: Models are split across apps, but all views remain in `core/views/` because templates, middleware, and URL routing are all centralized. Moving views would mean templates need to move too, and for 3-10 users this complexity isn't worth it.
-
-**Why a service layer**: Business logic (enrollment pricing, payment calculations, discount rules) was originally in forms and views. The service layer in `billing/services/` makes this logic testable and reusable.
-
-**Why Tailwind CDN**: The project has zero build tools. The CDN approach means all Tailwind utilities are instantly available — no more manually adding missing CSS classes to a compiled file.
-
-**Why session-based auth**: For 3-10 known users, Django's full auth system (User model, permissions, groups) is overkill. `SimpleAuthMiddleware` with env var credentials is simpler and sufficient until v1.6.
-
-**Why SiteConfiguration singleton**: All pricing is editable from the management panel. The singleton pattern (`pk=1`, auto-create with defaults) ensures there's always a config row without migration complexity.
+| Decision | Rationale |
+|----------|-----------|
+| Views stay in core | Models split across apps, but all views in `core/views/` avoids template/URL fragmentation. Each app's `urls.py` imports from core. |
+| Service layer in billing | Business logic (pricing, discounts, payment generation) extracted from forms/views into testable services. |
+| SiteConfiguration singleton | All pricing editable from UI. Auto-creates with defaults. No hardcoded prices in views. |
+| Session-based auth | SimpleAuthMiddleware with env var credentials. Sufficient for 3-10 users until v1.6. |
+| Tailwind CDN | Zero build tools. All utilities available instantly. Custom violet palette in config block. |
+| PostgreSQL everywhere | Same database engine in development, testing, and production. Avoids SQLite behavioral differences. |
 
 ---
 
-## 6. Features by View
+## Features by View
 
 ### Home (Dashboard)
 
-The main landing page after login. Shows real-time operational data.
+The main landing page. Shows real-time operational data for the current month.
 
-- **Pending payments card**: Count + student names with amounts. Click to expand full list modal.
-- **Birthdays card**: Monthly birthday count with today's birthdays highlighted.
-- **Upcoming events**: Fun Fridays and scheduled email sends for the current month.
-- **Monthly revenue**: Expected vs actual revenue (completed payments) for the current month.
-- **Todo list**: Create tasks with date selection (today / this Friday / custom date). Overdue items shown in red. Complete by checking the checkbox (deletes + logs to history).
-- **History dropdown**: Lazy-loaded, paginated history of all user actions (payments, enrollments, config changes, emails sent).
-- **Notification bell**: Shows today's due tasks and scheduled email sends.
+- **Pending payments card** — count + student names with amounts. Click count to expand modal with full student list and individual amounts.
+- **Birthdays card** — monthly count with today's birthdays highlighted by name.
+- **Upcoming events** — Fun Fridays and scheduled email sends for the rest of the month, linked to their form views.
+- **Monthly revenue** — expected total (all due this month) vs completed total (paid this month), with payment count.
+- **Todo list** — create tasks with date selector (today / this week's Friday / custom date picker). Overdue items shown in red. Check to complete (deletes + logs to HistoryLog). Sorted by due date.
+- **History dropdown** — lazy-loaded, paginated (20 per page) log of all actions: payments completed, students enrolled, emails sent, config changes.
+- **Notification bell** — badge count of today's due tasks + today's scheduled email sends.
 
 ### Students
 
-Student list with toolbar and inline actions.
+Student management with toolbar, inline actions, and real-time filtering.
 
-- **Student table**: Name, group, enrollment type, Fun Friday status. Color-coded group badges.
-- **Search**: Real-time client-side filtering by name.
-- **Sort**: Cycle through date ascending/descending, name A-Z/Z-A.
-- **Fun Friday toggle**: One-click toggle attendance for this week. Icon shows: green check (this week), amber check (this + last week), amber X (last week only), grey X (neither).
-- **Fun Friday filter**: 3-state cycle — all / not this week / this week only.
-- **Student type filter**: 4-state cycle — all / children only / adults only / language cheque students.
-- **New student dropdown**: Choose flow — new parent + student, existing parent + student, or adult student.
+- **Student table** — columns: name, group (color badge), enrollment type, Fun Friday status icon. Rows have `data-*` attributes for client-side filtering.
+- **Search** — real-time filter by name (client-side, no server round-trip).
+- **Sort** — 4-state cycle: date ascending → date descending → name A-Z → name Z-A.
+- **Fun Friday toggle** — per-row button. States: green check (registered this week), amber check (this + last week), amber X (only last week), grey X (neither). AJAX POST to `/api/students/{id}/fun-friday/toggle/`.
+- **Fun Friday filter** — 3-state cycle: all → not this week → this week only.
+- **Type filter** — 4-state cycle: all → children only → adults only → language cheque students.
+- **New student dropdown** — choose creation flow: new parent → new student, existing parent → new student, or adult student (no parent).
 
 ### Student Create
 
-Multi-step creation form with price preview.
+Multi-step creation form with live price calculator.
 
-- **Parent section**: Select existing parent (with search + pagination) or create new (name, DNI, phone, email, IBAN).
-- **Student section**: Name, birth date, school, allergies, GDPR consent, group selection.
-- **Enrollment section**: Plan selector (monthly full-time, part-time, quarterly). Checkboxes for language cheque and sibling discount. Special price override. Live price calculator with breakdown.
-- **Adult mode**: Separate flow — no parent needed, email/phone on student, fixed adult group pricing.
-- **Success page**: Shows enrollment fee amount, auto-redirects to student list. Option to create sibling.
-- **On creation**: Creates Student + StudentParent link + Enrollment (active) + Payment (enrollment fee, pending). Logs to history. Queues welcome email via Celery task.
+- **Parent selection** — either create new (name, DNI, phone, email, IBAN) or search existing parents with pagination (6 per page).
+- **Student fields** — first name, last name, birth date (validated: not future), school, allergies, GDPR consent, group selector.
+- **Enrollment plan** — dropdown: monthly full-time (2 days/week), monthly part-time (1 day/week), quarterly. Checkboxes: language cheque discount, sibling discount (with sibling search), special/manual price.
+- **Live price calculator** — updates as you change plan/discounts. Shows base price, strikethrough, final price, and breakdown text (e.g., "trimestral incl. -5%, -20 cheque").
+- **Adult mode** — no parent needed, email/phone on student, fixed adult_group pricing.
+- **On submit** — atomic transaction creates: Student → StudentParent link → Enrollment (active) → Payment (enrollment fee, pending) → HistoryLog entry → Celery welcome email task.
+- **Success page** — shows student name, enrollment fee amount. Auto-redirects to student list after 4 seconds. Option to "create sibling" (pre-fills same parent).
 
-### Student Detail
+### Student Detail & Update
 
-Full student profile with related data.
-
-- **Personal info**: Name, birth date, age, school, group, GDPR status, allergies.
-- **Parents section**: Linked parents with contact info.
-- **Enrollment history**: All enrollments with status, dates, amounts. Active enrollment highlighted.
-- **Payment modality toggle**: Switch between monthly and quarterly (AJAX).
-- **Payment history**: All payments for this student.
-- **Fun Friday dates**: Add/remove attendance dates.
-
-### Student Update
-
-Same form as create, pre-filled with current data. Updates enrollment when saved (old enrollment finished, new one created).
+- **Detail view** — personal info, linked parents with contact details, enrollment history (all enrollments, active highlighted), payment history, Fun Friday dates with add/remove.
+- **Enrollment modality toggle** — switch monthly ↔ quarterly via AJAX.
+- **Update view** — same form as create, pre-filled. Saves student changes + finishes old enrollment + creates new enrollment.
 
 ### Payments
 
-Payment management with search, filtering, and quick actions.
+Payment management with search, filtering, pagination, and quick-complete.
 
-- **Stats bar**: Expected total, completed total, pending total, overdue total for the current period.
-- **Payment table**: Student, parent, concept, amount, method, status, dates. Sortable columns.
-- **Search**: Real-time client-side filtering by student/parent name, concept, reference.
-- **Status filter**: 4-state cycle — all / pending / completed / overdue.
-- **Type filter**: Cycle through all / enrollment / monthly / quarterly / other.
-- **Quick complete**: Click the status badge on a pending payment → dropdown to select payment method (cash/transfer/card) → one-click mark as completed with today's date. Logs to history.
-- **Payment create**: Search student + parent (autocomplete), validates the relationship exists, select type/method/amount/dates/concept.
-- **Payment detail**: Read-only view of all payment fields.
-- **CSV export**: Download all payments as CSV.
-- **Excel export**: Download full database (students + enrollments + payments) as multi-sheet .xlsx.
+- **Stats bar** — 4 cards: expected total, completed total, pending total, overdue total. All for the current period.
+- **Payment table** — columns: student, parent, concept, amount, method, status badge, due date, payment date. Client-side pagination (10 per page).
+- **Search** — real-time filter by student name, parent name, concept, or reference number.
+- **Status filter** — 4-state cycle: all → pending → completed → overdue.
+- **Type filter** — 5-state: all → enrollment → monthly → quarterly → other.
+- **Quick complete** — click a pending status badge → dropdown with 3 payment methods (cash / transfer / card) → one click marks as completed with today's date, logs to history.
+- **Create payment** — autocomplete student search → autocomplete parent search → validates student-parent relationship → select type, method, amount, dates, concept.
+- **Detail view** — read-only display of all payment fields.
+- **Export** — CSV download (all payments) and Excel download (full database: students + enrollments + payments as multi-sheet .xlsx).
 
 ### Schedule
 
-Weekly class schedule grid.
+Weekly class timetable with drag-and-drop group assignment.
 
-- **Grid layout**: 5 days (Mon-Fri) x 3 time rows x 2 columns. Friday has different hours.
-- **Group assignment**: In edit mode, click a cell to select a group from a dropdown. Saves via AJAX.
-- **Group colors**: Each group has a color. Cells show group name, teacher, and student list.
-- **Time display**: Row 1: 16:10-17:30, Row 2: 17:40-19:00, Row 3: 19:10-20:30. Friday: 16:00-17:20.
+- **Grid** — 5 columns (Mon-Fri) × 3 time rows × 2 sub-columns. Time slots: 16:10-17:30, 17:40-19:00, 19:10-20:30. Friday: 16:00-17:20.
+- **Edit mode** — toggle button. In edit mode, click any cell → dropdown to assign a group. Saves via AJAX to `/api/schedule/slot/save/`.
+- **Cell display** — group color, group name, teacher first name, student first names.
 
 ### Fun Friday
 
-Dedicated Fun Friday management view.
+Dedicated attendance management for the weekly Fun Friday event.
 
-- **Student list**: All non-adult active students grouped by class group.
-- **Toggle attendance**: One-click toggle for this week's Friday.
-- **This week / Last week**: Shows who attended last week and who's registered this week.
-- **Search and filter**: Same search/sort/filter as student list.
+- **Student list** — all non-adult active students, grouped by class group.
+- **Toggle buttons** — same icon system as student list. AJAX toggles.
+- **This week / Last week panels** — lists of registered students for each Friday.
+- **Search, sort, filter** — same tools as student list.
 
 ### Apps (Email Tools)
 
-Hub page listing all 10 email form views. Each form follows the same pattern:
+Hub page listing all 10 email communication tools. Each follows a consistent pattern:
 
-1. **Form fields**: Specific to the email type (dates, content, recipients).
-2. **Live preview**: Toggle email preview panel, shows rendered HTML with current form data (fetched via AJAX).
-3. **Test send**: Send to EMAIL_TEST_1/EMAIL_TEST_2 env vars before real send.
-4. **Send**: Iterates over parent emails, sends individually, counts success/failures, logs to history.
+1. **Form** — fields specific to the email type (dates, activity description, year, etc.)
+2. **Email preview** — collapsible panel showing the rendered email HTML. "Refresh" button fetches live preview with current form data via AJAX.
+3. **Test send** — sends to `EMAIL_TEST_1` / `EMAIL_TEST_2` env vars for verification before bulk send.
+4. **Send** — iterates over qualifying parent emails, sends individually, counts success/failures, logs to HistoryLog, shows flash messages.
 
-| App | Template | Trigger | Recipients |
-|-----|----------|---------|------------|
-| Fun Friday | `fun_friday.html` | Weekly manual | Parents with active non-adult students |
-| Payment Reminder | `recordatorio_pago_mensual_trimestral.html` | Monthly manual | Parents with active students |
-| Vacation Closure | `recordatorio_cierre_vacaciones.html` | Manual | All parents |
-| Tax Certificate | `certificado_renta.html` | Yearly (April) | Parents with payments in the year |
-| Monthly Report | `monthly_report.html` | Monthly manual | All parents (personalized per parent) |
-| Birthday | `happy_birthday.html` | Daily manual | Parents of today's birthday students |
-| Receipts (child) | `recibo_trimestre_niño.html` | Quarterly manual | Parents with active children |
-| Receipts (adult) | `recibo_adulto.html` | Monthly manual | Adult students |
-| Welcome | `welcome_student.html` | On student creation | Parent of new student |
-| Enrollment | `matricula_niño.html` / `matricula_adulto.html` | On enrollment | Parent of enrolled student |
+| App | Email Template | Recipients | Trigger |
+|-----|---------------|------------|---------|
+| Fun Friday | `fun_friday.html` | Parents with active non-adult students | Weekly, manual |
+| Payment Reminder | `payment_reminder.html` | Parents with active students | Monthly, manual |
+| Vacation Closure | `vacation_closure.html` | All parents | Manual |
+| Tax Certificate | `tax_certificate.html` | Parents with completed payments in year | Yearly (April) |
+| Monthly Report | `monthly_report.html` | All parents (personalized per parent) | Monthly, manual |
+| Birthday | `happy_birthday.html` | Parents of today's birthday students | Daily, manual |
+| Receipts (child) | `receipt_quarterly_child.html` | Parents with active children | Quarterly, manual |
+| Receipts (adult) | `receipt_adult.html` | Adult students | Monthly, manual |
+| Welcome | `welcome_student.html` | Parent of new student | On creation (auto) |
+| Enrollment | `enrollment_child.html` / `enrollment_adult.html` | Parent of enrolled student | On enrollment |
 
 ### Management
 
-Admin configuration panel.
+Admin configuration panel with live editing.
 
-- **Pricing config**: All enrollment fees, monthly fees, and discounts. Edit mode toggle — saves via AJAX to SiteConfiguration singleton.
-- **Teachers**: Create new teachers (name, email, phone, admin flag). List active teachers.
-- **Groups**: Create new groups (name, color, assigned teacher). Teacher dropdown populated via AJAX.
-- **Language cheque report**: API endpoint returning all students with active language cheque for government reporting.
+- **Pricing config** — all fees and discounts from SiteConfiguration. Toggle edit mode → modify values → save via AJAX. Fields: children/adult enrollment fees, full-time/part-time/adult monthly fees, 8 discount types.
+- **Teachers** — create via modal (name, email, phone, admin flag). Validates unique email. Lists active teachers.
+- **Groups** — create via modal (name, color picker, teacher dropdown). Teacher list populated via AJAX from `/api/teachers/`. Validates unique name.
+- **Language cheque API** — `GET /api/students/language-cheque/` returns all students with active language cheque for government reporting.
 
 ### Database (All Info)
 
-Paginated read-only views of all students and payments with sorting options.
+Paginated read-only tables of all data.
 
-- **Students tab**: Paginated table sorted by creation date, ID, first name, or last name.
-- **Payments tab**: Paginated table sorted by creation date or student name.
-- **Excel export**: Download complete database as multi-sheet .xlsx file.
+- **Students tab** — sortable by creation date, ID, first name, last name. Paginated (20 per page).
+- **Payments tab** — sortable by creation date or student name. Paginated (20 per page).
+- **Excel export button** — downloads complete database as `five_a_day_YYYYMMDD.xlsx`.
 
 ### Login
 
-Standalone page (does not extend base.html). Custom design with Montserrat Alternates + Parisienne fonts, gradient background.
+Standalone page with custom styling (does not extend base.html).
 
-- **Credentials login**: Username/password from env vars.
-- **Google OAuth**: Optional — redirects to Google consent screen, validates email matches `GOOGLE_ALLOWED_EMAIL`.
-- **Session**: Sets `is_authenticated` and `username` in Django session.
+- **Credentials login** — username/password from `LOGIN_USERNAME` / `LOGIN_PASSWORD` env vars.
+- **Google OAuth** — optional. Button shown if `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are configured. Validates email matches `GOOGLE_ALLOWED_EMAIL`. Stores Google credentials in session for Gmail/Sheets API access.
+- **Session** — sets `is_authenticated=True` and `username` in Django session. 24-hour expiry.
 
 ---
 
-## 7. Testing
+## Testing
 
-### Overview
+### Testing Overview
 
 | Metric | Value |
 |--------|-------|
-| Total tests | 112 |
-| Test files | 3 |
-| Runtime | ~1.5 seconds (SQLite) |
-| Framework | pytest + pytest-django |
-| Settings | `project/settings_test.py` (SQLite, no WhiteNoise manifest) |
+| **Total tests** | 112 |
+| **Test files** | 3 (test_models, test_services, test_views) |
+| **Runtime** | ~2 seconds |
+| **Database** | PostgreSQL (same as production) or SQLite fallback |
+| **Framework** | pytest 8.4 + pytest-django 4.11 |
+| **Settings** | `project/settings_test.py` |
+| **Fixtures** | `conftest.py` — 15 shared fixtures |
 
-Run tests: `make test-local` or `cd project && python -m pytest tests/ -v`
+```bash
+make test              # Inside Docker (PostgreSQL)
+make test-local        # Local against Docker PostgreSQL
+make test-sqlite       # Local with SQLite (no Docker)
+make test-coverage     # Generate HTML coverage report
+make test-fast         # Stop on first failure
+make test-k K=payment  # Run tests matching keyword
+```
 
-### Model Tests (34 tests) — `test_models.py`
+### Model Tests
 
-| Group | Tests | What's verified |
-|-------|-------|-----------------|
-| Academic year helpers | 5 | `current_academic_year()` for Sep-onwards and before-Sep dates, start/end date calculations |
-| SiteConfiguration | 4 | Singleton creation, pk=1 enforcement, delete prevention, default pricing values |
-| Student | 4 | `full_name`, `age` calculation, `__str__`, parent M2M relationship |
-| Parent | 2 | `full_name`, DNI uniqueness constraint |
-| Teacher & Group | 4 | `full_name`, `__str__`, teacher-group FK, group name uniqueness |
-| Enrollment | 5 | `__str__`, `is_paid` false/true, `remaining_amount`, unique active constraint |
-| Payment | 4 | `is_overdue` with past/future/completed dates, `clean()` auto-sets payment_date |
-| TodoItem | 2 | `is_overdue` for past and future dates |
-| HistoryLog | 3 | `log()` entry creation, 1000-entry cap enforcement, `log_debounced()` skip logic |
+34 tests in `test_models.py` covering model logic, properties, and database constraints.
+
+| Group | Count | Coverage |
+|-------|-------|----------|
+| Academic year helpers | 5 | `current_academic_year()` for both semesters, `academic_year_start_date`, `academic_year_end_date` |
+| SiteConfiguration | 4 | Singleton creation, pk=1 enforcement, delete prevention, default values |
+| Student & Parent | 6 | Properties (`full_name`, `age`), string representation, M2M relationship, DNI uniqueness |
+| Teacher & Group | 4 | Properties, FK relationship, name uniqueness |
+| Enrollment | 5 | Properties (`is_paid`, `remaining_amount`), string representation, unique active constraint |
+| Payment | 4 | `is_overdue` detection (past/future/completed), `clean()` auto-sets payment_date |
+| TodoItem & HistoryLog | 5 | `is_overdue`, log creation, 1000-entry cap, debounced logging |
 | FunFridayAttendance | 1 | Unique (student, date) constraint |
 
-### Service Tests (24 tests) — `test_services.py`
+### Service Tests
 
-| Group | Tests | What's verified |
-|-------|-------|-----------------|
+24 tests in `test_services.py` covering business logic in the service layer.
+
+| Group | Count | Coverage |
+|-------|-------|----------|
 | PricingService | 7 | Monthly fees by schedule type, enrollment fees by student type, quarterly price calculation |
-| EnrollmentService | 9 | Monthly full/part-time creation, quarterly creation, sibling discount, language cheque discount, combined discounts, special/manual pricing, adult enrollment, minimum amount floor |
-| PaymentService | 8 | Monthly amount calculation (plain, sibling, language cheque, June discount), quarterly amount, payment completion, academic month/quarter validation |
+| EnrollmentService | 9 | All enrollment plans (monthly full/part, quarterly), all discount types (sibling, language cheque, both), special pricing, adult enrollment, minimum amount floor (0.01) |
+| PaymentService | 8 | Monthly/quarterly amount calculations with all discount combos, June bonus, payment completion, academic month/quarter validation |
 
-### View Tests (54 tests) — `test_views.py`
+### View Tests
 
-| Group | Tests | What's verified |
-|-------|-------|-----------------|
-| Auth middleware | 6 | Unauthenticated redirect, login page accessible, health check public, valid/invalid login, logout |
-| Dashboard | 2 | Home and all_info page load (200 status) |
-| Student views | 4 | List, detail, create page, search API |
-| Parent views | 2 | Create page, search API with results |
-| Payment views | 8 | List, create, detail, quick-complete (valid + invalid method), statistics, CSV export, student-parent validation (valid + invalid) |
-| Todo API | 3 | Create todo, create with empty text (400), complete todo with history log |
-| History API | 2 | List entries, pagination (20 per page, has_more flag) |
-| Management | 6 | Management page, config update, teacher create (+ duplicate email), group create, teachers API |
-| Schedule | 2 | Schedule page, Fun Friday page |
-| App forms | 9 | All 8 email form pages load (parametrized), welcome_form redirects |
-| Enrollment API | 3 | Modality update (valid + invalid), language cheque students endpoint |
+54 tests in `test_views.py` covering HTTP responses, AJAX APIs, and user flows.
+
+| Group | Count | Coverage |
+|-------|-------|----------|
+| Authentication | 6 | Unauthenticated redirect, login page, health check, valid/invalid login, logout |
+| Page loads | 8 | Dashboard, all_info, student list/detail/create, parent create, payment list/create |
+| Payment operations | 8 | Quick-complete (valid + invalid), statistics, CSV export, student-parent validation |
+| AJAX APIs | 5 | Todo create/complete, history list + pagination |
+| Management | 6 | Config update, teacher create (+ duplicate), group create, teachers API |
+| Email forms | 9 | All 8 form pages load + welcome redirect (parametrized) |
+| Enrollment API | 3 | Modality update (valid + invalid), language cheque endpoint |
 | Error pages | 5 | All 5 error pages render with correct status codes (parametrized) |
+| Schedule | 2 | Schedule page, Fun Friday page |
+| Search | 2 | Student search, parent search with results |
 
 ---
 
-## 8. Migrations
+## Migrations
 
-All migrations were regenerated from scratch during the v1.0.0 multi-app split. The database can be recreated at any time since the project hasn't reached production with live data.
+All migrations were regenerated from scratch during the v1.0.0 multi-app split.
 
-| App | Migration | Models Created | Dependencies |
-|-----|-----------|----------------|--------------|
-| `students` | `0001_initial` | Teacher, Group, Parent, Student, StudentParent | None |
-| `billing` | `0001_initial` | SiteConfiguration, EnrollmentType, Enrollment, Payment | `students.0001_initial` |
-| `core` | `0001_initial` | TodoItem, HistoryLog, FunFridayAttendance, ScheduleSlot | `students.0001_initial` |
-| `comms` | (none) | No models | — |
-
-### Creating New Migrations
+| App | Migration | Models | Depends On |
+|-----|-----------|--------|------------|
+| `students` | `0001_initial` | Teacher, Group, Parent, Student, StudentParent | — |
+| `billing` | `0001_initial` | SiteConfiguration, EnrollmentType, Enrollment, Payment | `students.0001` |
+| `core` | `0001_initial` | TodoItem, HistoryLog, FunFridayAttendance, ScheduleSlot | `students.0001` |
+| `comms` | — | (no models) | — |
 
 ```bash
-# After modifying models
+# After modifying models:
 make makemigrations   # Creates migrations for all 4 apps
 make migrate          # Applies them
-
-# Or locally
-cd project
-python manage.py makemigrations students billing core comms
-python manage.py migrate
 ```
 
 ---
 
-## 9. Contributing
+## Contributing
 
 ### Development Workflow
 
 1. Create a feature branch from `main`
 2. Make changes following the conventions below
 3. Run `make test-local` — all 112 tests must pass
-4. Run `python manage.py check` — no issues
-5. Create a pull request with a clear description
+4. Run `make check` — no Django system check issues
+5. Create a pull request with clear description of changes
 
 ### Code Conventions
 
 | Area | Convention |
 |------|-----------|
-| Language | Code in English, UI/templates in Spanish |
-| Models | Explicit `db_table`, `created_at`/`updated_at` timestamps, BigAutoField PKs |
-| Views | CBVs for CRUD, FBVs for everything else. AJAX returns `{"success": bool, ...}` |
-| Forms | Django ModelForms. Business logic delegates to services, not forms. |
-| Templates | Extend `base.html`. Use blocks: `title`, `page_title`, `content`, `extra_js` |
-| JS | External files in `core/static/js/`. Django data via `data-*` attrs or `window.CONFIG` |
-| Services | Pure business logic in `billing/services/`. No Django request/response objects. |
-| Tests | pytest with fixtures in `conftest.py`. Use `authenticated_client` for view tests. |
-| Imports | Explicit imports only — no `from app.models import *` |
-| Pricing | Always read from `SiteConfiguration.get_config()`, never hardcode |
+| **Language** | Code in English, UI/templates in Spanish, comments mixed |
+| **Models** | Explicit `db_table`, `created_at`/`updated_at` timestamps, BigAutoField PKs |
+| **Views** | CBVs for CRUD, FBVs for everything else. AJAX returns `{"success": bool, ...}` |
+| **Forms** | ModelForms for data entry. Business logic delegates to services. |
+| **Templates** | Extend `base.html`. Blocks: `title`, `page_title`, `content`, `extra_js` |
+| **JS** | External files in `core/static/js/`. Django data via `data-*` attrs or `window.CONFIG` |
+| **Services** | Pure business logic in `billing/services/`. No request/response objects. |
+| **Tests** | pytest with fixtures in `conftest.py`. `authenticated_client` for view tests. |
+| **Imports** | Always explicit — no `from app.models import *` |
+| **Pricing** | Always from `SiteConfiguration.get_config()`, never hardcoded |
+| **Template names** | Always in English (e.g., `enrollment_child.html`, not `matricula_niño.html`) |
 
-### Adding a New Feature
+### Adding a Feature
 
-1. **Model**: Add to the correct app (students=people, billing=money, core=cross-cutting). Use explicit `db_table`.
-2. **Service**: If it has business logic, add a service method in `billing/services/` or create a new service.
-3. **View**: Add to the appropriate `core/views/` module. Add to `__init__.py` re-exports.
-4. **URL**: Add to the correct app's `urls.py`.
-5. **Template**: Create in `core/templates/`. Extend `base.html`.
-6. **Tests**: Add fixtures to `conftest.py`, tests to `test_models.py`/`test_services.py`/`test_views.py`.
-7. **Admin**: Register in the correct app's `admin.py`.
-
----
-
-## 10. License
-
-Private project — all rights reserved. Developed for Five a Day English Academy, Albacete, Spain.
+1. **Model** → correct app (students/billing/core), explicit `db_table`
+2. **Service** → `billing/services/` or new service if it has business logic
+3. **View** → appropriate `core/views/` module, add to `__init__.py` re-exports
+4. **URL** → correct app's `urls.py`
+5. **Template** → `core/templates/`, extend `base.html`
+6. **Tests** → fixtures in `conftest.py`, tests in correct test file
+7. **Admin** → correct app's `admin.py`
+8. **Docs** → update this README, app README, CLAUDE.md if needed
 
 ---
 
-*Built with Django, designed for simplicity, tested for reliability.*
+## License
+
+Private project — all rights reserved.
+
+Developed for Five a Day English Academy, Albacete, Spain.

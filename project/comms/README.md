@@ -24,12 +24,12 @@ Convenience functions for each email type. Each wraps `email_service.send_email(
 | -------- | -------- | ------- |
 | `send_birthday_email` | `happy_birthday` | Daily cron / manual |
 | `send_welcome_email` | `welcome_student` | On student creation |
-| `send_enrollment_confirmation_email` | `matricula_niño` | On enrollment |
+| `send_enrollment_confirmation_email` | `enrollment_child` | On enrollment |
 | `send_fun_friday_email` | `fun_friday` | Weekly manual |
-| `send_payment_reminder_email` | `recordatorio_pago_mensual_trimestral` | Monthly manual |
-| `send_quarterly_receipt_email` | `recibo_trimestre_niño` | Quarterly manual |
-| `send_vacation_closure_email` | `recordatorio_cierre_vacaciones` | Manual |
-| `send_tax_certificate_email` | `certificado_renta` | Yearly (April) |
+| `send_payment_reminder_email` | `payment_reminder` | Monthly manual |
+| `send_quarterly_receipt_email` | `receipt_quarterly_child` | Quarterly manual |
+| `send_vacation_closure_email` | `vacation_closure` | Manual |
+| `send_tax_certificate_email` | `tax_certificate` | Yearly (April) |
 | `send_all_tax_certificates` | (iterates parents) | Yearly batch |
 | `send_monthly_report` | `monthly_report` | Monthly manual |
 | `generate_tax_certificate_pdf` | (HTML to PDF) | Called by tax certificate |

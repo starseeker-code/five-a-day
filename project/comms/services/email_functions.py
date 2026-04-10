@@ -133,7 +133,7 @@ def send_enrollment_confirmation_email(
         True si se envio correctamente
     """
     return email_service.send_email(
-        template_name='matricula_niño',
+        template_name='enrollment_child',
         recipients=parent_email,
         subject=f'🎉 Confirmación de Matrícula - {student_name}',
         context={
@@ -242,7 +242,7 @@ def send_payment_reminder_email(
         True si se envio correctamente
     """
     return email_service.send_email(
-        template_name='recordatorio_pago_mensual_trimestral',
+        template_name='payment_reminder',
         recipients=recipients,
         subject=f'💳 Recordatorio de Pago - {month}',
         context={
@@ -289,7 +289,7 @@ def send_quarterly_receipt_email(
     attachments = [receipt_pdf] if receipt_pdf else None
 
     return email_service.send_email(
-        template_name='recibo_trimestre_niño',
+        template_name='receipt_quarterly_child',
         recipients=parent_email,
         subject=f'🧾 Recibo Trimestral - {student_name}',
         context={
@@ -338,7 +338,7 @@ def send_vacation_closure_email(
         True si se envio correctamente
     """
     return email_service.send_email(
-        template_name='recordatorio_cierre_vacaciones',
+        template_name='vacation_closure',
         recipients=recipients,
         subject=f'🏖️ Cierre por {closure_reason} - Five a Day',
         context={
@@ -571,7 +571,7 @@ def send_tax_certificate_email(
         return False
 
     return email_service.send_email(
-        template_name='certificado_renta',
+        template_name='tax_certificate',
         recipients=parent.email,
         subject=f'Certificado Fiscal {year} - Five a Day',
         context={

@@ -43,7 +43,7 @@ def get_email_apps():
         },
         {
             "key": "payment_reminder",
-            "template": "recordatorio_pago_mensual_trimestral",
+            "template": "payment_reminder",
             "subject": f"[TEST] Recordatorio de Pago - {MESES[today.month - 1]}",
             "context": {
                 "payment_start_day_name": DIAS[today.replace(day=1).weekday()],
@@ -59,7 +59,7 @@ def get_email_apps():
         },
         {
             "key": "vacation_closure",
-            "template": "recordatorio_cierre_vacaciones",
+            "template": "vacation_closure",
             "subject": "[TEST] Cierre por Navidad - Five a Day",
             "context": {
                 "start_closure_day_name": "lunes", "start_closure_day_number": 23,
@@ -71,7 +71,7 @@ def get_email_apps():
         },
         {
             "key": "tax_certificate",
-            "template": "certificado_renta",
+            "template": "tax_certificate",
             "subject": f"[TEST] Certificado Fiscal {today.year - 1}",
             "context": {"year": today.year - 1, "parent_name": "Padre de Prueba"},
             "description": "Certificado fiscal anual (abril)",
@@ -108,28 +108,28 @@ def get_email_apps():
         },
         {
             "key": "receipt_quarterly",
-            "template": "recibo_trimestre_niño",
+            "template": "receipt_quarterly_child",
             "subject": "[TEST] Recibo Trimestral",
             "context": {"student_name": "Alumno de Prueba", "month_1": "enero", "month_2": "febrero", "month_3": "marzo"},
             "description": "Recibo trimestral niños",
         },
         {
             "key": "receipt_adult",
-            "template": "recibo_adulto",
+            "template": "receipt_adult",
             "subject": f"[TEST] Recibo Mensual - {MESES[today.month - 1].title()}",
             "context": {"month": MESES[today.month - 1]},
             "description": "Recibo mensual adultos",
         },
         {
             "key": "enrollment_child",
-            "template": "matricula_niño",
+            "template": "enrollment_child",
             "subject": "[TEST] Confirmación de Matrícula",
             "context": {"student": "Alumno de Prueba", "genero": "m", "academic_year": f"{today.year}-{today.year + 1}", "month": "septiembre"},
             "description": "Confirmación matrícula niño",
         },
         {
             "key": "enrollment_adult",
-            "template": "matricula_adulto",
+            "template": "enrollment_adult",
             "subject": "[TEST] Confirmación de Matrícula Adulto",
             "context": {"genero": "f", "academic_year": f"{today.year}-{today.year + 1}", "month": "septiembre"},
             "description": "Confirmación matrícula adulto",

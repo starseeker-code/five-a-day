@@ -48,7 +48,7 @@ All templates live in `core/templates/`:
 - `home.html`, `login.html`, `schedule.html`, `fun_friday.html`, etc.
 - `payments/` — payment list, create, detail
 - `apps/` — email form views + `_email_preview.html` partial
-- `emails/` — 12 HTML email templates extending `emails/base_email.html`
+- `emails/` — 12 HTML email templates extending `emails/base_email.html` (all named in English: `enrollment_child.html`, `payment_reminder.html`, etc.)
 - `400.html` through `500.html` — error pages
 
 ## Static Files
