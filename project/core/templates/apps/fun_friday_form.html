@@ -183,48 +183,4 @@
     </form>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const activityDescription = document.getElementById('activity_description');
-    const form = document.getElementById('funFridayForm');
-    const submitBtn = document.getElementById('submitBtn');
-
-    // Validación antes de enviar
-    form.addEventListener('submit', function(e) {
-        const htmlContent = activityDescription.value.trim();
-        
-        // Validación básica de HTML
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const parseErrors = doc.querySelectorAll('parsererror');
-        
-        // Verificar que el HTML no está vacío
-        if (!htmlContent) {
-            e.preventDefault();
-            alert('❌ La descripción de la actividad no puede estar vacía');
-            return;
-        }
-
-        // Verificar rango de edades
-        const minAge = parseInt(document.getElementById('min_age').value);
-        const maxAge = parseInt(document.getElementById('max_age').value);
-        if (minAge > maxAge) {
-            e.preventDefault();
-            alert('❌ La edad mínima no puede ser mayor que la edad máxima');
-            return;
-        }
-
-        // Confirmar envío
-        const parentCount = {{ parent_count }};
-        if (!confirm(`¿Estás seguro de enviar el Fun Friday a ${parentCount} padre(s)?`)) {
-            e.preventDefault();
-            return;
-        }
-
-        // Deshabilitar botón durante envío
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
-    });
-});
-</script>
 {% endblock %}

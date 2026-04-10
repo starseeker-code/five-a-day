@@ -13,7 +13,10 @@ handler405 = h405
 handler500 = h500
 
 urlpatterns = [
-    path('health/', health_check, name='health_check'),  # Health check para Render
+    path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
-    path("", include("core.urls"))
+    path("", include("students.urls")),
+    path("", include("billing.urls")),
+    path("", include("comms.urls")),
+    path("", include("core.urls")),
 ]

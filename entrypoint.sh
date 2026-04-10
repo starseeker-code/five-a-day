@@ -1,106 +1,106 @@
 #!/bin/sh
 # ============================================================================
-# ENTRYPOINT SCRIPT - Inicialización para Docker y Render.com
+# ENTRYPOINT SCRIPT - Docker and Render.com Initialization
 # ============================================================================
-# Este script funciona en dos modos:
-# 1. Docker local (desarrollo): Espera PostgreSQL, ejecuta migraciones, lanza runserver
-# 2. Render.com (producción): Ejecuta migraciones, collectstatic, lanza Gunicorn
+# This script operates in two modes:
+# 1. Local Docker (development): Waits for PostgreSQL, runs migrations, starts runserver
+# 2. Render.com (production): Runs migrations, collectstatic, starts Gunicorn
 
-set -e  # Salir si algún comando falla
+set -e  # Exit if any command fails
 
 # ============================================================================
-# Detectar entorno
+# Detect Environment
 # ============================================================================
 IS_RENDER=false
 if [ -n "$RENDER" ] || [ -n "$DATABASE_URL" ]; then
     IS_RENDER=true
     echo "=========================================="
-    echo "🚀 Five a Day - Iniciando en Render.com..."
+    echo "🚀 Five a Day - Starting on Render.com..."
     echo "=========================================="
 else
     echo "==================================="
-    echo "🚀 Five a Day - Inicializando..."
+    echo "🚀 Five a Day - Initializing..."
     echo "==================================="
 fi
 
 # ============================================================================
-# Crear directorios necesarios (solo en Docker local)
+# Create necessary directories (Docker local only)
 # ============================================================================
 if [ "$IS_RENDER" = false ]; then
     mkdir -p /app/logs /app/staticfiles /app/mediafiles
 fi
 
 # ============================================================================
-# Verificar variables de entorno críticas en Render
+# Check critical environment variables on Render
 # ============================================================================
 if [ "$IS_RENDER" = true ]; then
     if [ -z "$DATABASE_URL" ] && [ -z "$POSTGRES_HOST" ]; then
-        echo "❌ ERROR: No hay configuración de base de datos (DATABASE_URL o POSTGRES_HOST)"
+        echo "❌ ERROR: No database configuration (DATABASE_URL or POSTGRES_HOST)"
         exit 1
     fi
     
     if [ "$DJANGO_DEBUG" = "True" ]; then
-        echo "⚠️  ADVERTENCIA: DEBUG está activado en producción"
+        echo "⚠️ WARNING: DEBUG is enabled in production"
     fi
 fi
 
 # ============================================================================
-# Función: Esperar a que PostgreSQL esté disponible (solo Docker local)
+# Function: Wait for PostgreSQL to be available (Local Docker only)
 # ============================================================================
 wait_for_postgres() {
-    echo "⏳ Esperando a PostgreSQL..."
+    echo "⏳ Waiting for PostgreSQL..."
     
     until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\q' 2>/dev/null; do
-        echo "   PostgreSQL no está disponible - esperando..."
+        echo "   PostgreSQL is unavailable - waiting..."
         sleep 2
     done
     
-    echo "✅ PostgreSQL está disponible!"
+    echo "✅ PostgreSQL is available!"
 }
 
 # ============================================================================
-# Esperar a que la base de datos esté lista (solo Docker local)
+# Wait for the database to be ready (Local Docker only)
 # ============================================================================
 if [ "$IS_RENDER" = false ] && [ "$DATABASE" = "postgres" ]; then
     wait_for_postgres
 fi
 
 # ============================================================================
-# Ejecutar migraciones de Django
+# Run Django Migrations
 # ============================================================================
-echo "📦 Aplicando migraciones de base de datos..."
+echo "📦 Applying database migrations..."
 python project/manage.py migrate --noinput
 
 # ============================================================================
-# Recolectar archivos estáticos
+# Collect Static Files
 # ============================================================================
-# En Render: Siempre (producción con WhiteNoise)
-# En Docker: Solo si DJANGO_ENV=production
+# On Render: Always (production with WhiteNoise)
+# On Docker: Only if DJANGO_ENV=production
 if [ "$IS_RENDER" = true ] || [ "$DJANGO_ENV" = "production" ]; then
-    echo "📁 Recolectando archivos estáticos..."
+    echo "📁 Collecting static files..."
     python project/manage.py collectstatic --noinput --clear
 fi
 
 # ============================================================================
-# Crear superusuario si no existe
+# Create Superuser if it doesn't exist
 # ============================================================================
 if [ "$DJANGO_SUPERUSER_USERNAME" ] && [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
-    echo "👤 Verificando superusuario..."
-    python project/manage.py createsuperuser --noinput 2>/dev/null || echo "✅ Superusuario ya existe."
+    echo "👤 Verifying superuser..."
+    python project/manage.py createsuperuser --noinput 2>/dev/null || echo "✅ Superuser already exists."
 else
     if [ "$IS_RENDER" = true ]; then
-        echo "⚠️  Variables de superusuario no configuradas en Render"
+        echo "⚠️ Superuser variables not configured on Render"
     fi
 fi
 
 # ============================================================================
-# Iniciar servidor
+# Start Server
 # ============================================================================
 if [ "$IS_RENDER" = true ]; then
-    # RENDER: Iniciar Gunicorn
+    # RENDER: Start Gunicorn
     echo "=========================================="
-    echo "✨ Inicialización completada!"
-    echo "🌐 Iniciando servidor Gunicorn..."
+    echo "✨ Initialization complete!"
+    echo "🚀 Starting Gunicorn server..."
     echo "=========================================="
     
     exec gunicorn \
@@ -112,9 +112,9 @@ if [ "$IS_RENDER" = true ]; then
         --error-logfile - \
         project.wsgi:application
 else
-    # DOCKER LOCAL: Ejecutar el comando pasado (runserver)
+    # LOCAL DOCKER: Execute passed command (runserver)
     echo "==================================="
-    echo "✨ Inicialización completada!"
+    echo "✨ Initialization complete!"
     echo "==================================="
     
     exec "$@"

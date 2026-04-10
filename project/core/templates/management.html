@@ -94,30 +94,9 @@
                     </h4>
                     <form id="discounts-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Cheque idioma (€ fijo)</label>
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">Cheque idioma (€ fijo/mes)</label>
                             <input type="number" step="0.01" name="language_cheque_discount"
                                    value="{{ config.language_cheque_discount|unlocalize }}"
-                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Alumno antiguo (€ fijo)</label>
-                            <input type="number" step="0.01" name="old_student_discount"
-                                   value="{{ config.old_student_discount|unlocalize }}"
-                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Año completo (€ fijo, no adultos)</label>
-                            <input type="number" step="0.01" name="full_year_bonus"
-                                   value="{{ config.full_year_bonus|unlocalize }}"
-                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Matrícula trimestral (%)</label>
-                            <input type="number" step="0.01" name="quarterly_enrollment_discount"
-                                   value="{{ config.quarterly_enrollment_discount|unlocalize }}"
                                    class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
                                    disabled>
                         </div>
@@ -125,27 +104,6 @@
                             <label class="block text-sm font-medium text-neutral-600 mb-1">Hermanos (% mensual)</label>
                             <input type="number" step="0.01" name="sibling_discount"
                                    value="{{ config.sibling_discount|unlocalize }}"
-                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Medio mes — septiembre (%)</label>
-                            <input type="number" step="0.01" name="half_month_discount"
-                                   value="{{ config.half_month_discount|unlocalize }}"
-                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Solo 1 semana — primer mes (%)</label>
-                            <input type="number" step="0.01" name="one_week_discount"
-                                   value="{{ config.one_week_discount|unlocalize }}"
-                                   class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-600 mb-1">Solo 3 semanas (%)</label>
-                            <input type="number" step="0.01" name="three_week_discount"
-                                   value="{{ config.three_week_discount|unlocalize }}"
                                    class="config-input w-full px-4 py-2 border border-neutral-300 rounded-md bg-neutral-100 cursor-not-allowed"
                                    disabled>
                         </div>
@@ -237,8 +195,8 @@
 <div id="modal-teacher" style="display:none; position:fixed; inset:0; background-color:rgba(0,0,0,0.5); z-index:50; align-items:center; justify-content:center;">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
         <div class="px-6 py-4 flex justify-between items-center" style="background-color:#fff; border-bottom:1px solid #f3f4f6;">
-            <h3 class="text-lg font-semibold" style="color:#ec4899;">Nuevo Profesor</h3>
-            <button type="button" onclick="closeModal('modal-teacher')" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;" onmouseover="this.style.backgroundColor='#fdf2f8'" onmouseout="this.style.backgroundColor='transparent'">
+            <h3 class="text-lg font-semibold" style="color:#8b5cf6;">Nuevo Profesor</h3>
+            <button type="button" onclick="closeModal('modal-teacher')" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;" onmouseover="this.style.backgroundColor='#f5f3ff'" onmouseout="this.style.backgroundColor='transparent'">
                 <span class="material-symbols-outlined text-xl">close</span>
             </button>
         </div>
@@ -246,32 +204,32 @@
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-1.5">Nombre *</label>
                 <input type="text" name="first_name" required
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-violet-400 focus:border-violet-400">
             </div>
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-1.5">Apellidos *</label>
                 <input type="text" name="last_name" required
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-violet-400 focus:border-violet-400">
             </div>
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-1.5">Email *</label>
                 <input type="email" name="email" required
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-violet-400 focus:border-violet-400">
             </div>
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-1.5">Teléfono</label>
                 <input type="tel" name="phone"
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-violet-400 focus:border-violet-400">
             </div>
             <div class="flex items-center gap-2">
-                <input type="checkbox" name="admin" id="teacher-admin" class="rounded border-neutral-300 text-pink-400 focus:ring-pink-400">
+                <input type="checkbox" name="admin" id="teacher-admin" class="rounded border-neutral-300 text-violet-400 focus:ring-violet-400">
                 <label for="teacher-admin" class="text-sm text-neutral-700">Administrador</label>
             </div>
             <div class="flex justify-between items-center" style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid #f3f4f6;">
-                <button type="button" onclick="closeModal('modal-teacher')" class="transition-colors" style="background-color:#fce7f3; color:#500724; font-weight:900; padding:0.75rem 2.25rem; border-radius:9999px;">
+                <button type="button" onclick="closeModal('modal-teacher')" class="transition-colors" style="background-color:#ede9fe; color:#2e1065; font-weight:900; padding:0.75rem 2.25rem; border-radius:9999px;">
                     Cancelar
                 </button>
-                <button type="submit" class="transition-colors flex items-center gap-2" style="background-color:#fbcfe8; color:#500724; font-weight:900; padding:0.6rem 1.75rem; border-radius:0.5rem;">
+                <button type="submit" class="transition-colors flex items-center gap-2" style="background-color:#ddd6fe; color:#2e1065; font-weight:900; padding:0.6rem 1.75rem; border-radius:0.5rem;">
                     <span class="material-symbols-outlined text-sm">save</span>
                     Crear Profesor
                 </button>
@@ -284,8 +242,8 @@
 <div id="modal-group" style="display:none; position:fixed; inset:0; background-color:rgba(0,0,0,0.5); z-index:50; align-items:center; justify-content:center;">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
         <div class="px-6 py-4 flex justify-between items-center" style="background-color:#fff; border-bottom:1px solid #f3f4f6;">
-            <h3 class="text-lg font-semibold" style="color:#ec4899;">Nuevo Grupo</h3>
-            <button type="button" onclick="closeModal('modal-group')" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;" onmouseover="this.style.backgroundColor='#fdf2f8'" onmouseout="this.style.backgroundColor='transparent'">
+            <h3 class="text-lg font-semibold" style="color:#8b5cf6;">Nuevo Grupo</h3>
+            <button type="button" onclick="closeModal('modal-group')" class="p-1.5 rounded-full transition-colors" style="color:#9ca3af;" onmouseover="this.style.backgroundColor='#f5f3ff'" onmouseout="this.style.backgroundColor='transparent'">
                 <span class="material-symbols-outlined text-xl">close</span>
             </button>
         </div>
@@ -293,7 +251,7 @@
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-1.5">Nombre del Grupo *</label>
                 <input type="text" name="group_name" required
-                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400"
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-violet-400 focus:border-violet-400"
                        placeholder="Ej: A, B, C, ...">
             </div>
             <div>
@@ -307,7 +265,7 @@
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-1.5">Profesora *</label>
                 <select name="teacher_id" id="select-teacher" required
-                        class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-pink-400 focus:border-pink-400">
+                        class="w-full px-4 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-violet-400 focus:border-violet-400">
                     <option value="">Seleccionar profesor...</option>
                     {% for teacher in teachers %}
                     <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
@@ -315,10 +273,10 @@
                 </select>
             </div>
             <div class="flex justify-between items-center" style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid #f3f4f6;">
-                <button type="button" onclick="closeModal('modal-group')" class="transition-colors" style="background-color:#fce7f3; color:#500724; font-weight:900; padding:0.75rem 2.25rem; border-radius:9999px;">
+                <button type="button" onclick="closeModal('modal-group')" class="transition-colors" style="background-color:#ede9fe; color:#2e1065; font-weight:900; padding:0.75rem 2.25rem; border-radius:9999px;">
                     Cancelar
                 </button>
-                <button type="submit" class="transition-colors flex items-center gap-2" style="background-color:#fbcfe8; color:#500724; font-weight:900; padding:0.6rem 1.75rem; border-radius:0.5rem;">
+                <button type="submit" class="transition-colors flex items-center gap-2" style="background-color:#ddd6fe; color:#2e1065; font-weight:900; padding:0.6rem 1.75rem; border-radius:0.5rem;">
                     <span class="material-symbols-outlined text-sm">save</span>
                     Crear Grupo
                 </button>
@@ -337,254 +295,16 @@
 {% endblock %}
 
 {% block extra_js %}
+{% load static %}
 <script>
-    const csrfToken = '{{ csrf_token }}';
-    let editMode = false;
-    
-    // Toggle sección desplegable
-    function toggleSection(sectionId) {
-        const section = document.getElementById(sectionId);
-        const iconId = sectionId.replace('-section', '-icon');
-        const icon = document.getElementById(iconId);
-        
-        section.classList.toggle('hidden');
-        icon.style.transform = section.classList.contains('hidden') ? '' : 'rotate(180deg)';
-    }
-    
-    // Mostrar/ocultar modal
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-        document.body.style.overflow = '';
-    }
-    
-    // Toast de notificación
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const toastIcon = document.getElementById('toast-icon');
-        
-        toastMessage.textContent = message;
-        
-        if (type === 'success') {
-            toast.querySelector('div').className = 'bg-green-500 text-white px-6 py-3 rounded-lg flex items-center gap-3';
-            toastIcon.textContent = 'check_circle';
-        } else {
-            toast.querySelector('div').className = 'bg-red-500 text-white px-6 py-3 rounded-lg flex items-center gap-3';
-            toastIcon.textContent = 'error';
-        }
-        
-        toast.classList.remove('translate-y-full', 'opacity-0');
-        
-        setTimeout(() => {
-            toast.classList.add('translate-y-full', 'opacity-0');
-        }, 3000);
-    }
-    
-    // Modo edición de configuración
-    document.getElementById('btn-edit-values').addEventListener('click', function() {
-        editMode = !editMode;
-        const inputs = document.querySelectorAll('.config-input');
-        const saveContainer = document.getElementById('save-config-container');
-        const editBtn = document.getElementById('btn-edit-values');
-        
-        if (editMode) {
-            inputs.forEach(input => {
-                input.disabled = false;
-                input.classList.remove('bg-neutral-100', 'cursor-not-allowed');
-                input.classList.add('bg-white', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500');
-            });
-            saveContainer.classList.remove('hidden');
-            editBtn.innerHTML = '<span class="material-symbols-outlined">close</span> Cancelar Edición';
-            editBtn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
-            editBtn.classList.add('bg-red-500', 'hover:bg-red-600');
-            
-            // Abrir sección de precios si está cerrada
-            const preciosSection = document.getElementById('precios-section');
-            if (preciosSection.classList.contains('hidden')) {
-                toggleSection('precios-section');
-            }
-        } else {
-            cancelEdit();
-        }
-    });
-    
-    function cancelEdit() {
-        editMode = false;
-        const inputs = document.querySelectorAll('.config-input');
-        const saveContainer = document.getElementById('save-config-container');
-        const editBtn = document.getElementById('btn-edit-values');
-        
-        inputs.forEach(input => {
-            input.disabled = true;
-            input.classList.add('bg-neutral-100', 'cursor-not-allowed');
-            input.classList.remove('bg-white', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500');
-        });
-        saveContainer.classList.add('hidden');
-        editBtn.innerHTML = '<span class="material-symbols-outlined">edit</span> Cambiar Valores';
-        editBtn.classList.add('bg-primary-500', 'hover:bg-primary-600');
-        editBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-    }
-    
-    document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
-    
-    // Guardar configuración
-    document.getElementById('btn-save-config').addEventListener('click', async function() {
-        const data = {};
-        document.querySelectorAll('.config-input').forEach(input => {
-            if (!input.disabled && input.name) {
-                const parsedValue = Number.parseFloat(String(input.value).replace(',', '.'));
-                if (Number.isNaN(parsedValue)) {
-                    showToast('Revisa los importes antes de guardar', 'error');
-                    return;
-                }
-                data[input.name] = parsedValue;
-            }
-        });
-        
-        try {
-            const response = await fetch('{% url "update_site_config" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                showToast(result.message, 'success');
-                cancelEdit();
-            } else {
-                showToast(result.message, 'error');
-            }
-        } catch (error) {
-            showToast('Error al guardar la configuración', 'error');
-        }
-    });
-    
-    // Nuevo Profesor
-    document.getElementById('btn-new-teacher').addEventListener('click', function() {
-        openModal('modal-teacher');
-    });
-    
-    document.getElementById('form-teacher').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const data = {
-            first_name: formData.get('first_name'),
-            last_name: formData.get('last_name'),
-            email: formData.get('email'),
-            phone: formData.get('phone') || '',
-            admin: formData.get('admin') === 'on'
-        };
-        
-        try {
-            const response = await fetch('{% url "create_teacher" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                showToast(result.message, 'success');
-                closeModal('modal-teacher');
-                // Recargar página para ver el nuevo profesor
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(result.message, 'error');
-            }
-        } catch (error) {
-            showToast('Error al crear el profesor', 'error');
-        }
-    });
-    
-    // Nuevo Grupo
-    document.getElementById('btn-new-group').addEventListener('click', async function() {
-        // Refrescar lista de profesores antes de abrir
-        try {
-            const response = await fetch('{% url "api_get_teachers" %}');
-            const data = await response.json();
-            
-            const select = document.getElementById('select-teacher');
-            select.innerHTML = '<option value="">Seleccionar profesor...</option>';
-            
-            data.teachers.forEach(teacher => {
-                const option = document.createElement('option');
-                option.value = teacher.id;
-                option.textContent = teacher.full_name;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error al cargar profesores:', error);
-        }
-        
-        openModal('modal-group');
-    });
-    
-    document.getElementById('form-group').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const data = {
-            group_name: formData.get('group_name'),
-            color: formData.get('color') || '#6366f1',
-            teacher_id: parseInt(formData.get('teacher_id'))
-        };
-        
-        try {
-            const response = await fetch('{% url "create_group" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                showToast(result.message, 'success');
-                closeModal('modal-group');
-                // Recargar página para ver el nuevo grupo
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(result.message, 'error');
-            }
-        } catch (error) {
-            showToast('Error al crear el grupo', 'error');
-        }
-    });
-    
-    // Cerrar modales al hacer click fuera
-    document.querySelectorAll('[id^="modal-"]').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal(this.id);
-            }
-        });
-    });
-    
-    // Cerrar modales con Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('[id^="modal-"]').forEach(modal => {
-                if (modal.style.display !== 'none') closeModal(modal.id);
-            });
-        }
-    });
+window.MANAGEMENT_CONFIG = {
+    updateConfigUrl: '{% url "update_site_config" %}',
+    createTeacherUrl: '{% url "create_teacher" %}',
+    getTeachersUrl: '{% url "api_get_teachers" %}',
+    createGroupUrl: '{% url "create_group" %}',
+    csrfToken: '{{ csrf_token }}'
+};
 </script>
+<script src="{% static 'js/management.js' %}"></script>
+
 {% endblock %}

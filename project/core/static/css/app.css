@@ -1,0 +1,117 @@
+/* ============================================================================
+   Five a Day — Custom styles (non-Tailwind)
+   Only styles that CANNOT be expressed as Tailwind utility classes go here.
+   ============================================================================ */
+
+/* ── Material Symbols icon font settings ──────────────────────────────────── */
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+    font-feature-settings: 'liga' !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── Sidebar expandable behavior ──────────────────────────────────────────── */
+#main-sidebar {
+    overflow: hidden;
+    width: 7.5rem;
+}
+
+.sidebar-fixed-links {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 7.5rem;
+    padding: 0 1.5rem 1.5rem;
+    box-sizing: border-box;
+    z-index: 20;
+}
+
+#main-sidebar.expandable-sidebar {
+    transition-duration: 220ms;
+}
+
+#main-sidebar.sidebar-expanded {
+    width: 27rem;
+}
+
+#main-sidebar.expandable-sidebar:hover {
+    width: 21.6rem;
+}
+
+#main-sidebar.sidebar-expanded .sidebar-fixed-links {
+    width: 27rem;
+}
+
+#main-sidebar.expandable-sidebar:hover .sidebar-fixed-links {
+    width: 21.6rem;
+}
+
+/* Show text elements when expanded */
+#main-sidebar.sidebar-expanded .sidebar-title,
+#main-sidebar.sidebar-expanded .sidebar-subtitle,
+#main-sidebar.sidebar-expanded .sidebar-text,
+#main-sidebar.sidebar-expanded .sidebar-quick-actions,
+#main-sidebar.sidebar-expanded .sidebar-session,
+#main-sidebar.expandable-sidebar:hover .sidebar-title,
+#main-sidebar.expandable-sidebar:hover .sidebar-subtitle,
+#main-sidebar.expandable-sidebar:hover .sidebar-text,
+#main-sidebar.expandable-sidebar:hover .sidebar-quick-actions {
+    display: block !important;
+}
+
+#main-sidebar.sidebar-expanded .sidebar-chevron,
+#main-sidebar.expandable-sidebar:hover .sidebar-chevron {
+    display: none !important;
+}
+
+/* Sidebar link alignment when expanded */
+#main-sidebar.sidebar-expanded .sidebar-link,
+#main-sidebar.expandable-sidebar:hover .sidebar-link {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#main-sidebar.sidebar-expanded .sidebar-icon,
+#main-sidebar.expandable-sidebar:hover .sidebar-icon {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.sidebar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+}
+
+#main-sidebar.sidebar-expanded .sidebar-text,
+#main-sidebar.expandable-sidebar:hover .sidebar-text {
+    text-align: left;
+}
+
+/* ── Sidebar links ────────────────────────────────────────────────────────── */
+.sidebar-link {
+    text-decoration: none !important;
+}
+
+.active-sidebar-link {
+    display: flex !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* ── Header action buttons ────────────────────────────────────────────────── */
+.header-action-btn {
+    font-size: 1rem;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    letter-spacing: 0;
+}
+
+/* ── Scroll-to-top hover ──────────────────────────────────────────────────── */
+#scroll-top-btn:hover .material-symbols-outlined {
+    color: white !important;
+}

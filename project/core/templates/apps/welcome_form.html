@@ -83,24 +83,4 @@
     </form>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var form = document.getElementById('welcomeForm');
-    var submitBtn = document.getElementById('submitBtn');
-    form.addEventListener('submit', function(e) {
-        var studentSelect = document.getElementById('student_id');
-        if (!studentSelect.value) {
-            e.preventDefault();
-            alert('Selecciona un estudiante');
-            return;
-        }
-        if (!confirm('¿Enviar email de bienvenida al padre del estudiante seleccionado?')) {
-            e.preventDefault();
-            return;
-        }
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span>Enviando...';
-    });
-});
-</script>
 {% endblock %}

@@ -6,41 +6,55 @@
 {% block sidebar_hover %}expandable-sidebar{% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none" style="text-decoration:none;">
+<a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none no-underline">
     <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago
 </a>
 {% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@700;800&display=swap" rel="stylesheet">
 <style>
-#webcrumbs .stat-number {
-    font-family: 'Playpen Sans', cursive !important;
+.stat-number {
     font-size: 3.25rem;
     font-weight: 800;
     line-height: 1;
     text-align: center;
     display: block;
 }
+/* Cards: +30% text */
+.grid > div h4 { font-size: 1.1375rem !important; }
+.grid > div .mt-4.text-sm { font-size: 1.1375rem !important; }
+/* Todo list: +30% text */
+.todo-item span.flex-1 { font-size: 1.1375rem !important; }
+.todo-item span.shrink-0 { font-size: 0.975rem !important; }
+/* Pending count trigger */
+#pendingCountTrigger { cursor: pointer; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- CARD 1: Pagos pendientes este mes -->
+    <!-- CARD 1: Pagos pendientes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-500 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
-            <div>
+            <div class="flex-1 text-center">
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Pagos pendientes este mes
+                    Pagos pendientes
                 </h4>
-                <p class="stat-number text-neutral-800">{{ pending_payments_count }}</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ pending_payments_count }}</p>
+                {% if pending_payments_count > 0 %}
+                <a href="{% url 'payment_reminder_form' %}" class="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-primary-600 mt-1 transition-colors" class="no-underline" title="Enviar recordatorio de pago">
+                    <span class="material-symbols-outlined" style="font-size:14px;">send</span>
+                    Recordatorio
+                </a>
+                {% endif %}
             </div>
-            <span class="material-symbols-outlined text-primary-500 text-3xl">attach_money</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-500 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-500" style="font-size:24px;">attach_money</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if pending_payments_count > 0 %}
-                <span class="text-red-500 font-medium">{{ total_pending_students }}</span> estudiante{{ total_pending_students|pluralize:"s" }} pendiente{{ total_pending_students|pluralize:"s" }}:
+                <span class="text-red-500 font-medium" id="pendingCountTrigger" title="Ver lista completa">{{ total_pending_students }}</span> estudiante{{ total_pending_students|pluralize:"s" }} pendiente{{ total_pending_students|pluralize:"s" }}:
                 <span class="text-neutral-700">
                     {{ pending_students|join:", " }}{% if has_more_pending %}<span class="text-neutral-400"> ...</span>{% endif %}
                 </span>
@@ -50,16 +64,21 @@
         </div>
     </div>
 
-    <!-- CARD 2: Cumpleaños este mes -->
+    <!-- CARD 2: Cumpleaños -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-400 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
-            <div>
+            <div class="flex-1 text-center">
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Cumpleaños este mes
+                    Cumpleaños
                 </h4>
-                <p class="stat-number text-neutral-800">{{ birthday_count }}</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ birthday_count }}</p>
+                {% if today_birthday_names %}
+                <p class="text-xs text-neutral-400 mt-1">Hoy: {{ today_birthday_names|join:", " }}</p>
+                {% endif %}
             </div>
-            <span class="material-symbols-outlined text-primary-400 text-3xl">cake</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-400 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-400" style="font-size:24px;">cake</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if birthday_count > 0 %}
@@ -73,46 +92,53 @@
         </div>
     </div>
 
-    <!-- CARD 3 (ESPACIO 1): Próximas apps este mes -->
+    <!-- CARD 3: Emails -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-600 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
-            <div>
+            <div class="flex-1 text-center">
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
-                    Próximas apps este mes
+                    Emails
                 </h4>
-                <p class="stat-number text-neutral-800">{{ upcoming_events_count }}</p>
+                <p class="text-3xl font-bold text-neutral-800">{{ upcoming_events_count }}</p>
+                {% if overdue_todos_count > 0 %}
+                <p class="text-xs text-red-400 mt-1">{{ overdue_todos_count }} tarea{{ overdue_todos_count|pluralize:"s" }} vencida{{ overdue_todos_count|pluralize:"s" }}</p>
+                {% endif %}
             </div>
-            <span class="material-symbols-outlined text-primary-600 text-3xl">email</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-600" style="font-size:24px;">email</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
             {% if upcoming_events %}
                 {% for event in upcoming_events %}
-                    <a href="{% if event.is_fun_friday %}{% url 'fun_friday_view' %}{% else %}{% url event.url_name %}{% endif %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium">
+                    <a href="{% if event.is_fun_friday %}{% url 'fun_friday_view' %}{% else %}{% url event.url_name %}{% endif %}" class="inline-block text-primary-700 hover:text-primary-900 font-medium" class="no-underline">
                         {{ event.name }}
                     </a>
                     <span class="text-neutral-400">({{ event.date|date:"d/m" }}){% if not forloop.last %}, {% endif %}</span>
                 {% endfor %}
             {% else %}
-                <span class="text-neutral-400">Sin apps programadas este mes</span>
+                <span class="text-neutral-400">Sin emails programados este mes</span>
             {% endif %}
         </div>
     </div>
 
-    <!-- CARD 4 (ESPACIO 2): Ingresos del mes -->
+    <!-- CARD 4: Ingresos del mes -->
     <div class="bg-white rounded-lg p-6 border-l-4 border-primary-300 hover:shadow-md transition-all duration-200">
         <div class="flex justify-between items-start">
-            <div>
+            <div class="flex-1 text-center">
                 <h4 class="text-sm uppercase tracking-wider text-neutral-500 mb-1">
                     Ingresos del mes
                 </h4>
-                <p class="text-3xl font-bold text-neutral-800">€{{ monthly_income_total|floatformat:0 }} <span class="text-lg font-normal text-neutral-400">/ €{{ expected_revenue|floatformat:0 }}</span></p>
+                <p class="text-3xl font-bold text-neutral-800">{{ monthly_income_total|floatformat:0 }}€ <span class="text-lg font-normal text-neutral-400">/ {{ expected_revenue|floatformat:0 }}€</span></p>
             </div>
-            <span class="material-symbols-outlined text-primary-300 text-3xl">payments</span>
+            <div class="w-12 h-12 rounded-full border-2 border-primary-300 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary-300" style="font-size:24px;">payments</span>
+            </div>
         </div>
         <div class="mt-4 text-sm text-neutral-600">
-            <span class="text-green-600 font-medium">€{{ monthly_income_total|floatformat:0 }}</span> cobrado
+            <span class="text-green-600 font-medium">{{ monthly_income_total|floatformat:0 }}€</span> cobrado
             &middot;
-            <span class="text-neutral-500">€{{ expected_revenue|floatformat:0 }}</span> esperado
+            <span class="text-neutral-500">{{ expected_revenue|floatformat:0 }}€</span> esperado
         </div>
     </div>
 
@@ -197,222 +223,32 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const todoText = document.getElementById('todoText');
-    const addTodoBtn = document.getElementById('addTodoBtn');
-    const todoList = document.getElementById('todoList');
-    const todoError = document.getElementById('todoError');
-    const customDate = document.getElementById('customDate');
-    const dateBtns = document.querySelectorAll('.todo-date-btn');
+<!-- Pending Students Modal -->
+<div id="pending-modal" style="display:none;position:fixed;inset:0;background-color:rgba(0,0,0,0.5);z-index:50;align-items:center;justify-content:center;padding:1rem;">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden" style="width:fit-content;min-width:240px;max-width:min(380px,90vw);">
+        <div class="px-6 text-white flex justify-between items-center" style="background:linear-gradient(to right,#c4b5fd,#8b5cf6);padding-top:16px;padding-bottom:16px;gap:2rem;">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                <span class="material-symbols-outlined">schedule</span>
+                Pagos pendientes este mes
+            </h3>
+            <button type="button" id="pending-close-btn" style="padding:0.4rem;border-radius:9999px;background:rgba(255,255,255,0.2);border:none;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <ul style="max-height:336px;overflow-y:auto;" class="divide-y divide-neutral-100 px-4 py-2">
+            {% for student in all_pending_students %}
+            <li class="flex items-center gap-3 py-2.5">
+                <span class="text-red-600 font-bold w-14 text-right shrink-0 tabular-nums">€{{ student.amount|floatformat:0 }}</span>
+                <span class="text-neutral-700">{{ student.display_name }}</span>
+            </li>
+            {% empty %}
+            <li class="text-neutral-400 text-sm text-center py-6">Sin pagos pendientes este mes.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 
-    let selectedDate = getTodayISO();
-    let activeMode = 'hoy';
-
-    // ── Date helpers ────────────────────────────────────────────
-    function getTodayISO() {
-        const d = new Date();
-        return d.toISOString().split('T')[0];
-    }
-
-    function getThisWeekFridayISO() {
-        const d = new Date();
-        const day = d.getDay(); // 0=Sun … 6=Sat
-        // Days until the next Friday (if today is Fri use today, if Sat/Sun → next Fri)
-        const daysUntilFriday = day <= 5 ? 5 - day : 7 - day + 5;
-        d.setDate(d.getDate() + daysUntilFriday);
-        return d.toISOString().split('T')[0];
-    }
-
-    function formatDisplayDate(isoStr) {
-        const [y, m, da] = isoStr.split('-');
-        return `${da}/${m}/${y}`;
-    }
-
-    // ── Button state management ──────────────────────────────────
-    function setActiveBtn(mode) {
-        activeMode = mode;
-        dateBtns.forEach(btn => {
-            const isActive = btn.dataset.mode === mode;
-            btn.classList.toggle('bg-primary-100', isActive);
-            btn.classList.toggle('text-primary-700', isActive);
-            btn.classList.toggle('ring-2', isActive);
-            btn.classList.toggle('ring-primary-400', isActive);
-            btn.classList.toggle('bg-neutral-100', !isActive);
-            btn.classList.toggle('text-neutral-700', !isActive);
-        });
-        customDate.classList.toggle('hidden', mode !== 'fecha');
-    }
-
-    document.getElementById('btnHoy').addEventListener('click', function () {
-        selectedDate = getTodayISO();
-        setActiveBtn('hoy');
-    });
-
-    document.getElementById('btnSemana').addEventListener('click', function () {
-        selectedDate = getThisWeekFridayISO();
-        setActiveBtn('semana');
-    });
-
-    document.getElementById('btnFecha').addEventListener('click', function () {
-        setActiveBtn('fecha');
-        customDate.focus();
-        if (customDate.value) selectedDate = customDate.value;
-    });
-
-    customDate.addEventListener('change', function () {
-        if (this.value) selectedDate = this.value;
-    });
-
-    // ── CSRF token helper ────────────────────────────────────────
-    function getCsrfToken() {
-        return document.cookie.split(';')
-            .map(c => c.trim())
-            .find(c => c.startsWith('csrftoken='))
-            ?.split('=')[1] || '';
-    }
-
-    // ── Show/hide error ──────────────────────────────────────────
-    function showError(msg) {
-        todoError.textContent = msg;
-        todoError.classList.remove('hidden');
-        setTimeout(() => todoError.classList.add('hidden'), 3000);
-    }
-
-    // ── Build todo row HTML ──────────────────────────────────────
-    function buildTodoRow(todo) {
-        const overdue = todo.is_overdue;
-        const textClass = overdue ? 'text-red-500 font-medium' : 'text-neutral-700';
-        const dateClass = overdue ? 'text-red-400 font-semibold' : 'text-neutral-400';
-        const row = document.createElement('div');
-        row.id = `todo-${todo.id}`;
-        row.className = 'todo-item flex items-center gap-3 py-3 px-1 group hover:bg-neutral-50 rounded-lg transition-colors';
-        row.dataset.overdue = overdue ? 'true' : 'false';
-        row.innerHTML = `
-            <input type="checkbox" class="todo-checkbox w-4 h-4 rounded border-neutral-300 text-primary-500 cursor-pointer accent-primary-500" data-id="${todo.id}">
-            <span class="flex-1 text-sm ${textClass}">${escapeHtml(todo.text)}</span>
-            <span class="text-xs ${dateClass} shrink-0">${todo.due_date_display}</span>
-        `;
-        row.querySelector('.todo-checkbox').addEventListener('change', handleCheckbox);
-        return row;
-    }
-
-    function escapeHtml(str) {
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    // ── Insert row in correct due_date order ─────────────────────
-    function insertTodoSorted(row, isoDate) {
-        const emptyMsg = document.getElementById('emptyTodos');
-        if (emptyMsg) emptyMsg.remove();
-
-        const existing = todoList.querySelectorAll('.todo-item');
-        let inserted = false;
-        for (const el of existing) {
-            const elDate = el.querySelector('.todo-checkbox')
-                ? el.querySelector('span:last-child').textContent.trim()
-                : null;
-            // Compare using iso date stored in data attribute
-            const elIso = el.dataset.isoDate || '9999-12-31';
-            if (isoDate <= elIso) {
-                todoList.insertBefore(row, el);
-                inserted = true;
-                break;
-            }
-        }
-        if (!inserted) todoList.appendChild(row);
-        row.dataset.isoDate = isoDate;
-    }
-
-    // ── Add todo ─────────────────────────────────────────────────
-    addTodoBtn.addEventListener('click', submitTodo);
-    todoText.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') submitTodo();
-    });
-
-    function submitTodo() {
-        if (activeMode === 'fecha' && customDate.value) {
-            selectedDate = customDate.value;
-        }
-
-        const text = todoText.value.trim();
-        if (!text) { showError('Escribe una tarea antes de añadirla'); return; }
-        if (!selectedDate) { showError('Selecciona una fecha'); return; }
-
-        addTodoBtn.disabled = true;
-
-        fetch('{% url "create_todo" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken(),
-            },
-            body: JSON.stringify({ text, due_date: selectedDate }),
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const row = buildTodoRow(data.todo);
-                insertTodoSorted(row, data.todo.due_date_iso);
-                todoText.value = '';
-            } else {
-                showError(data.error || 'Error al añadir la tarea');
-            }
-        })
-        .catch(() => showError('Error de conexión'))
-        .finally(() => { addTodoBtn.disabled = false; });
-    }
-
-    // ── Complete (delete) todo ───────────────────────────────────
-    function handleCheckbox(e) {
-        const checkbox = e.target;
-        const id = checkbox.dataset.id;
-        const row = document.getElementById(`todo-${id}`);
-
-        checkbox.disabled = true;
-        row.style.opacity = '0.4';
-
-        fetch(`/api/todos/${id}/complete/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() },
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                row.remove();
-                if (!todoList.querySelector('.todo-item')) {
-                    const p = document.createElement('p');
-                    p.id = 'emptyTodos';
-                    p.className = 'text-sm text-neutral-400 py-4 text-center';
-                    p.textContent = 'No hay tareas pendientes';
-                    todoList.appendChild(p);
-                }
-            } else {
-                checkbox.disabled = false;
-                row.style.opacity = '1';
-            }
-        })
-        .catch(() => {
-            checkbox.disabled = false;
-            row.style.opacity = '1';
-        });
-    }
-
-    // Attach listeners to server-rendered rows
-    document.querySelectorAll('.todo-checkbox').forEach(cb => {
-        cb.addEventListener('change', handleCheckbox);
-    });
-
-    // Store iso dates on server-rendered rows for sorting
-    document.querySelectorAll('.todo-item').forEach(row => {
-        const dateSpan = row.querySelector('span:last-child');
-        if (dateSpan) {
-            const parts = dateSpan.textContent.trim().split('/');
-            if (parts.length === 3) {
-                row.dataset.isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-        }
-    });
-});
-</script>
+{% load static %}
+<script>document.body.dataset.createTodoUrl = '{% url "create_todo" %}';</script>
+<script src="{% static 'js/home.js' %}"></script>
 {% endblock %}

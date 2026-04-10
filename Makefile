@@ -1,67 +1,84 @@
 # ============================================================================
-# MAKEFILE - Comandos útiles para Five a Day
+# MAKEFILE — Five a Day eVolution
 # ============================================================================
-# Simplifica comandos comunes de Docker y Django
+# Docker and Django shortcuts. Run `make` or `make help` for usage.
 
-.PHONY: help build up down restart logs shell migrate makemigrations test clean backup restore reset-db
+.PHONY: help setup build up down restart stop start rebuild dev logs logs-web \
+        logs-db ps stats shell bash migrate makemigrations createsuperuser \
+        collectstatic check dbshell backup restore reset-db test test-local \
+        test-verbose test-coverage test-models test-services test-views \
+        clean clean-all health url send-test-email generate-payments
 
 # ============================================================================
 # HELP
 # ============================================================================
 help:
-	@echo "╔════════════════════════════════════════════════════════════╗"
-	@echo "║           FIVE A DAY - Docker Commands                     ║"
-	@echo "╚════════════════════════════════════════════════════════════╝"
 	@echo ""
-	@echo "Inicio:"
-	@echo "  make setup          - Configuración inicial (copia .env)"
-	@echo "  make build          - Construir las imágenes Docker"
-	@echo "  make up             - Iniciar todos los servicios"
-	@echo "  make down           - Detener y eliminar contenedores"
-	@echo "  make restart        - Reiniciar todos los servicios"
-	@echo "  make restart-web    - Reiniciar solo el servicio web"
-	@echo "  make restart-db     - Reiniciar solo la base de datos"
-	@echo "  make stop           - Detener sin eliminar contenedores"
-	@echo "  make start          - Iniciar contenedores detenidos"
-	@echo "  make rebuild        - Reconstruir todas las imágenes"
-	@echo "  make rebuild-web    - Reconstruir solo imagen web"
+	@echo "  Five a Day — Make Commands"
+	@echo "  =========================="
 	@echo ""
-	@echo "Monitoreo:"
-	@echo "  make logs           - Ver logs de todos los servicios"
-	@echo "  make logs-web       - Ver logs del servicio web"
-	@echo "  make logs-db        - Ver logs de PostgreSQL"
-	@echo "  make ps             - Ver estado de los servicios"
-	@echo "  make stats          - Ver uso de recursos"
+	@echo "  Setup & Build:"
+	@echo "    make setup            Copy .env.example to .env"
+	@echo "    make build            Build Docker images"
+	@echo "    make rebuild          Full rebuild (no cache) + start"
+	@echo "    make rebuild-web      Rebuild only the web image"
 	@echo ""
-	@echo "Django:"
-	@echo "  make shell          - Abrir shell de Django"
-	@echo "  make bash           - Abrir bash en el contenedor web"
-	@echo "  make migrate        - Aplicar migraciones"
-	@echo "  make makemigrations - Crear nuevas migraciones"
-	@echo "  make createsuperuser- Crear superusuario"
-	@echo "  make collectstatic  - Recolectar archivos estáticos"
+	@echo "  Docker Lifecycle:"
+	@echo "    make up               Start all services (detached)"
+	@echo "    make down             Stop and remove containers"
+	@echo "    make restart          Restart all services"
+	@echo "    make restart-web      Restart only web"
+	@echo "    make restart-db       Restart only database"
+	@echo "    make stop             Stop without removing"
+	@echo "    make start            Start stopped containers"
+	@echo "    make dev              Start in foreground (logs visible)"
+	@echo "    make dev-build        Build + start in foreground"
 	@echo ""
-	@echo "Base de Datos:"
-	@echo "  make dbshell        - Abrir PostgreSQL shell"
-	@echo "  make backup         - Hacer backup de la BD"
-	@echo "  make restore FILE=  - Restaurar backup (uso: make restore FILE=backup.sql)"
-	@echo "  make reset-db       - Recrear base de datos (⚠️  elimina todos los datos)"
+	@echo "  Monitoring:"
+	@echo "    make logs             Tail logs (all services)"
+	@echo "    make logs-web         Tail web logs only"
+	@echo "    make logs-db          Tail database logs only"
+	@echo "    make ps               Show running services"
+	@echo "    make stats            Show resource usage"
+	@echo "    make health           Full health check (Django + DB)"
+	@echo "    make url              Show access URLs"
 	@echo ""
-	@echo "Testing:"
-	@echo "  make test           - Ejecutar tests"
-	@echo "  make test-coverage  - Tests con coverage"
+	@echo "  Django:"
+	@echo "    make shell            Django shell inside container"
+	@echo "    make bash             Bash shell inside container"
+	@echo "    make migrate          Apply all migrations"
+	@echo "    make makemigrations   Create migrations (all apps)"
+	@echo "    make createsuperuser  Create Django superuser"
+	@echo "    make collectstatic    Collect static files"
+	@echo "    make check            Run Django system checks"
 	@echo ""
-	@echo "Limpieza:"
-	@echo "  make clean          - Limpiar contenedores y volúmenes"
-	@echo "  make clean-all      - Limpiar todo (¡cuidado! pierdes datos)"
+	@echo "  Database:"
+	@echo "    make dbshell          PostgreSQL interactive shell"
+	@echo "    make backup           Dump DB to backups/"
+	@echo "    make restore FILE=x   Restore from SQL file"
+	@echo "    make reset-db         Drop and recreate DB (destructive!)"
 	@echo ""
-	@echo "Seguridad:"
-	@echo "  make generate-password - Generar contraseña segura"
-	@echo "  make check-deploy   - Verificar configuración para producción"
+	@echo "  Testing:"
+	@echo "    make test             Run all tests (Docker)"
+	@echo "    make test-local       Run all tests (local, no Docker)"
+	@echo "    make test-verbose     Run all tests with verbose output"
+	@echo "    make test-coverage    Run tests with coverage report"
+	@echo "    make test-models      Run only model tests"
+	@echo "    make test-services    Run only service tests"
+	@echo "    make test-views       Run only view tests"
+	@echo "    make test-fast        Run tests, stop on first failure"
 	@echo ""
-	@echo "Salud:"
-	@echo "  make health         - Verificar estado de todos los servicios"
-	@echo "  make url            - Mostrar URLs de acceso"
+	@echo "  Email:"
+	@echo "    make send-test-email  Send a test birthday email"
+	@echo "    make test-all-emails  Send one test of each email template"
+	@echo ""
+	@echo "  Payments:"
+	@echo "    make generate-payments          Generate current month"
+	@echo "    make generate-payments-dry      Preview without creating"
+	@echo ""
+	@echo "  Cleanup:"
+	@echo "    make clean            Remove stopped containers + prune"
+	@echo "    make clean-all        Remove everything including volumes"
 	@echo ""
 
 # ============================================================================
@@ -70,71 +87,58 @@ help:
 setup:
 	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
-		echo "✅ Archivo .env creado. Por favor, edítalo con tus configuraciones."; \
+		echo "Created .env — edit it with your configuration."; \
 	else \
-		echo "⚠️  El archivo .env ya existe."; \
+		echo ".env already exists."; \
 	fi
 
 # ============================================================================
-# DOCKER COMPOSE
+# DOCKER COMPOSE — LIFECYCLE
 # ============================================================================
 build:
-	@echo "🔨 Construyendo imágenes..."
 	docker compose build
 
 up:
-	@echo "🚀 Iniciando servicios..."
-	docker compose up -d
-	@echo "✅ Servicios iniciados!"
-	@echo "📱 Aplicación: http://localhost:8000"
-	@echo "🔧 Admin: http://localhost:8000/admin"
+	docker compose up -d --remove-orphans
+	@echo "Started: http://localhost:8000"
 
 down:
-	@echo "🛑 Deteniendo servicios..."
 	docker compose down
-	@echo "✅ Servicios detenidos!"
 
 restart:
-	@echo "🔄 Reiniciando servicios..."
 	docker compose restart
-	@echo "✅ Servicios reiniciados!"
 
 restart-web:
-	@echo "🔄 Reiniciando servicio web..."
 	docker compose restart web
-	@echo "✅ Servicio web reiniciado!"
 
 restart-db:
-	@echo "🔄 Reiniciando base de datos..."
 	docker compose restart db
-	@echo "✅ Base de datos reiniciada!"
 
 stop:
-	@echo "⏸️  Deteniendo servicios (sin eliminar)..."
 	docker compose stop
-	@echo "✅ Servicios detenidos!"
 
 start:
-	@echo "▶️  Iniciando servicios detenidos..."
 	docker compose start
-	@echo "✅ Servicios iniciados!"
 
 rebuild:
-	@echo "🔨 Reconstruyendo imágenes..."
 	docker compose down
 	docker compose build --no-cache
 	docker compose up -d
-	@echo "✅ Imágenes reconstruidas y servicios iniciados!"
+	@echo "Rebuilt and started: http://localhost:8000"
 
 rebuild-web:
-	@echo "🔨 Reconstruyendo imagen web..."
 	docker compose stop web
 	docker compose build --no-cache web
 	docker compose up -d web
-	@echo "✅ Imagen web reconstruida!"
+
+dev:
+	docker compose up --remove-orphans
+
+dev-build:
+	docker compose up --build --remove-orphans
 
 # ============================================================================
-# LOGS & MONITORING
+# MONITORING
 # ============================================================================
 logs:
 	docker compose logs -f
@@ -151,175 +155,183 @@ ps:
 stats:
 	docker stats
 
+health:
+	@echo "=== Services ==="
+	@docker compose ps
+	@echo ""
+	@echo "=== Django check ==="
+	@docker compose exec web python project/manage.py check 2>/dev/null || echo "(web not running)"
+	@echo ""
+	@echo "=== PostgreSQL ==="
+	@docker compose exec db pg_isready -U fiveaday_user 2>/dev/null || echo "(db not running)"
+	@echo ""
+	@echo "=== Health endpoint ==="
+	@curl -sf http://localhost:8000/health/ 2>/dev/null || echo "(not reachable)"
+
+url:
+	@echo "App:   http://localhost:8000"
+	@echo "Admin: http://localhost:8000/admin"
+	@echo "Login: http://localhost:8000/login"
+
 # ============================================================================
 # DJANGO COMMANDS
 # ============================================================================
 shell:
-	@echo "🐍 Abriendo Django shell..."
 	docker compose exec web python project/manage.py shell
 
 bash:
-	@echo "💻 Abriendo bash en contenedor web..."
 	docker compose exec web bash
 
 migrate:
-	@echo "📦 Aplicando migraciones..."
 	docker compose exec web python project/manage.py migrate
 
 makemigrations:
-	@echo "📝 Creando migraciones..."
-	docker compose exec web python project/manage.py makemigrations
+	docker compose exec web python project/manage.py makemigrations students billing core comms
 
 createsuperuser:
-	@echo "👤 Creando superusuario..."
 	docker compose exec web python project/manage.py createsuperuser
 
 collectstatic:
-	@echo "📁 Recolectando archivos estáticos..."
 	docker compose exec web python project/manage.py collectstatic --noinput
+
+check:
+	docker compose exec web python project/manage.py check
 
 # ============================================================================
 # DATABASE
 # ============================================================================
 dbshell:
-	@echo "🗄️  Abriendo PostgreSQL shell..."
 	docker compose exec db psql -U fiveaday_user -d fiveaday_db
 
 backup:
-	@echo "💾 Creando backup de base de datos..."
 	@mkdir -p backups
 	docker compose exec db pg_dump -U fiveaday_user fiveaday_db > backups/backup_$$(date +%Y%m%d_%H%M%S).sql
-	@echo "✅ Backup creado en backups/"
+	@echo "Backup saved to backups/"
 
 restore:
 	@if [ -z "$(FILE)" ]; then \
-		echo "❌ Error: Debes especificar FILE=ruta/al/backup.sql"; \
+		echo "Usage: make restore FILE=backups/backup.sql"; \
 		exit 1; \
 	fi
-	@echo "♻️  Restaurando backup desde $(FILE)..."
 	docker compose exec -T db psql -U fiveaday_user -d fiveaday_db < $(FILE)
-	@echo "✅ Backup restaurado!"
+	@echo "Restored from $(FILE)"
+
+reset-db:
+	@echo "WARNING: This will destroy ALL data in the database."
+	@read -p "Type 'yes' to confirm: " confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		docker compose down -v; \
+		docker compose up -d; \
+		sleep 15; \
+		echo "Database recreated."; \
+		docker compose ps; \
+	else \
+		echo "Cancelled."; \
+	fi
 
 # ============================================================================
 # TESTING
 # ============================================================================
-test:
-	@echo "🧪 Ejecutando tests..."
-	docker compose exec web python project/manage.py test
+# Tests use PostgreSQL by default (requires `make up` for the DB container).
+# Set TEST_DB_ENGINE=sqlite to fall back to SQLite for quick local runs.
 
+# Run all tests inside Docker (uses the container's PostgreSQL)
+test:
+	docker compose exec web python -m pytest project/tests/ -v --tb=short
+
+# Run tests locally against the Docker PostgreSQL (default)
+test-local:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -v --tb=short
+
+# Run tests locally with SQLite (no Docker needed)
+test-sqlite:
+	cd project && TEST_DB_ENGINE=sqlite python -m pytest tests/ -v --tb=short
+
+# Verbose output with full tracebacks
+test-verbose:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -v --tb=long -s
+
+# Coverage report
 test-coverage:
-	@echo "🧪 Ejecutando tests con coverage..."
-	docker compose exec web pytest --cov=core --cov-report=html
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ --cov=core --cov=students --cov=billing --cov=comms --cov-report=term-missing --cov-report=html
+	@echo "HTML report: project/htmlcov/index.html"
+
+# Run specific test modules
+test-models:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/test_models.py -v --tb=short
+
+test-services:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/test_services.py -v --tb=short
+
+test-views:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/test_views.py -v --tb=short
+
+# Stop on first failure
+test-fast:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -x -v --tb=short
+
+# Run tests matching a keyword (usage: make test-k K=payment)
+test-k:
+	cd project && TEST_DB_HOST=localhost python -m pytest tests/ -v -k "$(K)" --tb=short
+
+# ============================================================================
+# EMAIL & PAYMENTS
+# ============================================================================
+send-test-email:
+	docker compose exec web python project/manage.py send_email --template happy_birthday --test
+
+test-all-emails:
+	docker compose exec web python project/manage.py test_all_emails --list
+
+generate-payments:
+	docker compose exec web python project/manage.py generate_payments
+
+generate-payments-dry:
+	docker compose exec web python project/manage.py generate_payments --dry-run
 
 # ============================================================================
 # CLEANUP
 # ============================================================================
 clean:
-	@echo "🧹 Limpiando contenedores detenidos y volúmenes no utilizados..."
 	docker compose down
 	docker system prune -f
-	@echo "✅ Limpieza completada!"
 
 clean-all:
-	@echo "⚠️  ¡CUIDADO! Esto eliminará TODOS los datos."
-	@read -p "¿Estás seguro? (escribe 'yes'): " confirm; \
+	@echo "WARNING: This will remove ALL containers, images, and volumes."
+	@read -p "Type 'yes' to confirm: " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
 		docker compose down -v; \
 		docker system prune -af --volumes; \
-		echo "✅ Todo limpio (datos borrados)"; \
+		echo "Everything removed."; \
 	else \
-		echo "❌ Operación cancelada"; \
+		echo "Cancelled."; \
 	fi
 
 # ============================================================================
-# DATABASE RESET
+# VERSIONING
 # ============================================================================
-reset-db:
-	@echo "⚠️  ¡ADVERTENCIA! Esto eliminará TODA la base de datos."
-	@echo "Se creará una base de datos limpia con el superusuario configurado en .env"
-	@read -p "¿Estás seguro? (escribe 'yes'): " confirm; \
-	if [ "$$confirm" = "yes" ]; then \
-		echo "🗑️  Deteniendo servicios y eliminando volúmenes..."; \
-		docker compose down -v; \
-		echo "🚀 Iniciando servicios con base de datos limpia..."; \
-		docker compose up -d; \
-		echo "⏳ Esperando a que los servicios estén listos..."; \
-		sleep 15; \
-		echo "✅ Base de datos recreada! Superusuario creado con credenciales de .env"; \
-		docker compose ps; \
-	else \
-		echo "❌ Operación cancelada"; \
+# App version is defined in two places:
+#   1. pyproject.toml → version = "x.y.z"
+#   2. project/settings.py → APP_VERSION fallback = "x.y.z"
+# This command updates both at once.
+
+version:
+	@if [ -z "$(V)" ]; then \
+		echo "Usage: make version V=1.1.0"; \
+		echo ""; \
+		echo "Current version:"; \
+		grep 'version = ' pyproject.toml | head -1; \
+		grep 'APP_VERSION' project/project/settings.py | head -1; \
+		exit 1; \
 	fi
-
-# ============================================================================
-# DEVELOPMENT
-# ============================================================================
-dev:
-	@echo "🔧 Iniciando modo desarrollo..."
-	docker compose up
-
-dev-build:
-	@echo "🔧 Construyendo e iniciando modo desarrollo..."
-	docker compose up --build
+	@sed -i 's/^version = ".*"/version = "$(V)"/' pyproject.toml
+	@sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "$(V)")/' project/project/settings.py
+	@echo "Version updated to $(V) in:"
+	@echo "  - pyproject.toml"
+	@echo "  - project/settings.py"
 
 # ============================================================================
 # PRODUCTION
 # ============================================================================
-prod-build:
-	@echo "🚀 Construyendo para producción..."
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml build
-
-prod-up:
-	@echo "🚀 Iniciando en modo producción..."
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# ============================================================================
-# UTILITY
-# ============================================================================
-install-deps:
-	@echo "📦 Instalando dependencias..."
-	docker compose exec web poetry install
-
-update-deps:
-	@echo "🔄 Actualizando dependencias..."
-	docker compose exec web poetry update
-
-check:
-	@echo "🔍 Verificando configuración Django..."
-	docker compose exec web python project/manage.py check
-
-send-test-email:
-	@echo "📧 Enviando email de prueba..."
-	docker compose exec web python project/manage.py send_email --template happy_birthday --test
-
-# ============================================================================
-# QUICK ACCESS
-# ============================================================================
-url:
-	@echo "📱 Aplicación: http://localhost:8000"
-	@echo "🔧 Admin: http://localhost:8000/admin"
-	@echo "🔐 Login: http://localhost:8000/login"
-
-# ============================================================================
-# HEALTH CHECK
-# ============================================================================
-health:
-	@echo "🏥 Verificando salud de servicios..."
-	@docker compose ps
-	@echo ""
-	@echo "📊 Verificando Django..."
-	@docker compose exec web python project/manage.py check --deploy || true
-	@echo ""
-	@echo "🗄️  Verificando PostgreSQL..."
-	@docker compose exec db pg_isready -U fiveaday_user || true
-
-# ============================================================================
-# SECURITY
-# ============================================================================
-generate-password:
-	@echo "🔐 Contraseña segura generada:"
-	@python3 scripts/generate_secure_password.py
-
 check-deploy:
-	@echo "🔍 Verificando configuración para despliegue..."
 	docker compose exec web python project/manage.py check --deploy

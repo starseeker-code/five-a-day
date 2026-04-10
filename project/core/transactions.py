@@ -1,30 +1,27 @@
 from datetime import date
 from django.db.models import Q, Prefetch
-from core.models import (
-    Payment,
-    Student,
-    Parent,
-    Enrollment,
-    EnrollmentType,
-    Group,
-    Teacher,
-)
 
-# Read logic
+from billing.models import Payment, Enrollment
+from students.models import Student
 
-all_students = (
-    Student.objects.filter(active=True)
-    .select_related("group", "group__teacher")
-    .prefetch_related(
-        "parents",
-        Prefetch(
-            "enrollments", queryset=Enrollment.objects.select_related("enrollment_type")
-        ),
+
+def get_active_students():
+    """Return a queryset of active students with related data pre-fetched."""
+    return (
+        Student.objects.filter(active=True)
+        .select_related("group", "group__teacher")
+        .prefetch_related(
+            "parents",
+            Prefetch(
+                "enrollments",
+                queryset=Enrollment.objects.select_related("enrollment_type"),
+            ),
+        )
     )
-)
 
 
-def payments_for_last_two_school_years():
+def get_payments_for_last_two_school_years():
+    """Return payments from the last two school years with related data."""
     today = date.today()
     if today.month >= 9:
         current_school_start_year = today.year
@@ -41,7 +38,7 @@ def payments_for_last_two_school_years():
         | Q(created_at__date__range=(start_date, end_date))
     )
 
-    payments_qs = (
+    return (
         Payment.objects.filter(date_filter)
         .select_related(
             "student",
@@ -57,26 +54,20 @@ def payments_for_last_two_school_years():
         .order_by("-created_at")
     )
 
-    return payments_qs
 
-
-all_payments = payments_for_last_two_school_years()
-
-# For the database view, show all payments without date restrictions
-all_payments_unrestricted = (
-    Payment.objects.select_related(
-        "student",
-        "parent",
-        "enrollment",
-        "enrollment__enrollment_type",
+def get_all_payments_unrestricted():
+    """Return all payments without date restrictions, with related data."""
+    return (
+        Payment.objects.select_related(
+            "student",
+            "parent",
+            "enrollment",
+            "enrollment__enrollment_type",
+        )
+        .prefetch_related(
+            "student__parents",
+            "student__enrollments",
+            Prefetch("student__group__teacher"),
+        )
+        .order_by("-created_at")
     )
-    .prefetch_related(
-        "student__parents",
-        "student__enrollments",
-        Prefetch("student__group__teacher"),
-    )
-    .order_by("-created_at")
-)
-
-
-# Write logic
