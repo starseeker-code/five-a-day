@@ -1,0 +1,147 @@
+# ============================================================================
+# Google Cloud Run Service Configuration
+# ============================================================================
+# Deploy with:
+#   gcloud run services replace gcp-cloudrun.yaml --region=europe-southwest1
+#
+# Or build + deploy:
+#   gcloud builds submit --tag gcr.io/PROJECT_ID/fiveaday
+#   gcloud run deploy fiveaday --image gcr.io/PROJECT_ID/fiveaday \
+#     --region europe-southwest1 --allow-unauthenticated
+#
+# Environment variables should be set via:
+#   gcloud run services update fiveaday --set-env-vars KEY=VALUE
+#   Or via Secret Manager references (preferred for secrets).
+# ============================================================================
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: fiveaday
+  labels:
+    cloud.googleapis.com/location: europe-southwest1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: fiveaday-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: gcr.io/PROJECT_ID/fiveaday:latest
+          ports:
+            - name: http1
+              containerPort: 8000
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            periodSeconds: 30
+          env:
+            # ── Django settings ──
+            - name: DJANGO_ENV
+              value: "production"
+            - name: DJANGO_DEBUG
+              value: "False"
+            - name: SECURE_SSL_REDIRECT
+              value: "True"
+            - name: DJANGO_ALLOWED_HOSTS
+              value: ".run.app,.fiveaday.com,localhost"
+
+            # ── Secrets (from Secret Manager) ──
+            # Create secrets first:
+            #   echo -n "value" | gcloud secrets create SECRET_NAME --data-file=-
+            #   gcloud secrets add-iam-policy-binding SECRET_NAME \
+            #     --member=serviceAccount:fiveaday-sa@PROJECT_ID.iam.gserviceaccount.com \
+            #     --role=roles/secretmanager.secretAccessor
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secret-key
+                  key: latest
+            - name: LOGIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: login-username
+                  key: latest
+            - name: LOGIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: login-password
+                  key: latest
+            - name: EMAIL_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: email-secret
+                  key: latest
+
+            # ── Database ──
+            # Option A: Cloud SQL via Unix socket (preferred)
+            # - name: DATABASE_URL
+            #   value: "postgres://USER:PASS@/DB_NAME?host=/cloudsql/PROJECT:REGION:INSTANCE"
+            # Option B: Cloud SQL via private IP
+            - name: DATABASE
+              value: "postgres"
+            - name: POSTGRES_HOST
+              value: "10.0.0.3"  # Replace with your Cloud SQL private IP
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "fiveaday_db"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-user
+                  key: latest
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: latest
+
+            # ── Email ──
+            - name: EMAIL_HOST_USER
+              value: "hellofiveaday@gmail.com"
+            - name: DEFAULT_FROM_EMAIL
+              value: "Five a Day <hellofiveaday@gmail.com>"
+
+            # ── Security ──
+            - name: SESSION_COOKIE_SAMESITE
+              value: "Strict"
+            - name: CSRF_COOKIE_HTTPONLY
+              value: "True"
+            - name: CSRF_COOKIE_SAMESITE
+              value: "Strict"
+
+            # ── Google OAuth (optional) ──
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: google-client-id
+                  key: latest
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: google-client-secret
+                  key: latest
+  traffic:
+    - percent: 100
+      latestRevision: true

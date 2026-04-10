@@ -38,7 +38,7 @@ Student, payment, management, and email app routes live in `students/urls.py`, `
 
 ## Middleware
 
-**SimpleAuthMiddleware** — session-based auth that protects all URLs except `/login/`, `/health/`, `/static/`, `/media/`, and `/auth/google/`. Credentials come from `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars.
+**SimpleAuthMiddleware** — session-based auth that protects all URLs except `/login/`, `/health/`, `/static/`, `/media/`, and `/auth/google/*` (including `/callback/`). Credentials come from `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars (required; no hardcoded fallbacks).
 
 ## Templates
 

@@ -38,7 +38,8 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.0** | 2026-04-10 | Multi-app architecture, service layer, 112 tests, frontend cleanup, full documentation |
+| **v1.0.1** | 2026-04-10 | Security hardening, 132 tests, gender field, N+1 fixes, GCP config, transaction safety |
+| v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 112 tests, frontend cleanup, full documentation |
 | v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
 | v0.29.0 | 2025-03-01 | Enrollment system with discounts, adult students, email automation |
 

@@ -266,3 +266,60 @@ class TestFunFridayAttendance:
         FunFridayAttendance.objects.create(student=student, date=friday)
         with pytest.raises(IntegrityError):
             FunFridayAttendance.objects.create(student=student, date=friday)
+
+
+# ── ScheduleSlot ────────────────────────────────────────────────────────────
+
+from core.models import ScheduleSlot
+
+
+class TestScheduleSlot:
+    def test_create_slot(self, group, db):
+        slot = ScheduleSlot.objects.create(row=0, day=0, col=0, group=group)
+        assert str(slot) == "Slot row=0 day=0 col=0"
+
+    def test_unique_row_day_col(self, group, db):
+        ScheduleSlot.objects.create(row=0, day=1, col=0, group=group)
+        with pytest.raises(IntegrityError):
+            ScheduleSlot.objects.create(row=0, day=1, col=0, group=group)
+
+    def test_null_group(self, db):
+        slot = ScheduleSlot.objects.create(row=1, day=2, col=1, group=None)
+        assert slot.group is None
+
+
+# ── Student gender field ────────────────────────────────────────────────────
+
+
+class TestStudentGender:
+    def test_default_gender_is_m(self, student):
+        assert student.gender == 'm'
+
+    def test_gender_choices(self, group, db):
+        female_student = Student.objects.create(
+            first_name="María", last_name="Test",
+            birth_date=date(2018, 3, 1), gender='f',
+            gdpr_signed=True, group=group, active=True,
+        )
+        assert female_student.gender == 'f'
+        assert female_student.get_gender_display() == 'Femenino'
+
+
+# ── Inactive student / withdrawn ────────────────────────────────────────────
+
+
+class TestInactiveStudent:
+    def test_inactive_student_exists(self, inactive_student):
+        assert inactive_student.active is False
+        assert inactive_student.withdrawal_date is not None
+        assert inactive_student.withdrawal_reason != ""
+
+
+# ── Cancelled enrollment ────────────────────────────────────────────────────
+
+
+class TestCancelledEnrollment:
+    def test_cancelled_enrollment_status(self, cancelled_enrollment):
+        assert cancelled_enrollment.status == "cancelled"
+        # cancelled enrollment should not block creating a new active one
+        # (unique constraint only applies to status='active')

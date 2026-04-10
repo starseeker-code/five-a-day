@@ -237,7 +237,7 @@ def language_cheque_students(request):
         status='active',
         academic_year=academic_year,
         has_language_cheque=True,
-    ).select_related('student', 'student__group')
+    ).select_related('student', 'student__group').prefetch_related('student__parents')
 
     students_data = []
     for enrollment in enrollments:

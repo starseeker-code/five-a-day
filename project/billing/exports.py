@@ -71,7 +71,7 @@ def build_enrollments_sheet(ws):
             e.id, e.student.first_name, e.student.last_name,
             e.enrollment_type.display_name, e.academic_year, e.get_schedule_type_display(),
             _d(e.enrollment_period_start), _d(e.enrollment_period_end), _d(e.enrollment_date),
-            float(e.enrollment_amount), float(e.discount_percentage), float(e.final_amount),
+            str(e.enrollment_amount), str(e.discount_percentage), str(e.final_amount),
             e.get_status_display(), e.document_url, e.notes, _d(e.created_at),
         ])
     _auto_width(ws)
@@ -89,8 +89,8 @@ def build_payments_sheet(ws):
     for p in qs:
         ws.append([
             p.id, p.student.first_name, p.student.last_name,
-            p.parent.first_name, p.parent.last_name, p.parent.dni,
-            p.concept, float(p.amount), p.currency,
+            p.parent.first_name if p.parent else "", p.parent.last_name if p.parent else "", p.parent.dni if p.parent else "",
+            p.concept, str(p.amount), p.currency,
             p.get_payment_type_display(), p.get_payment_method_display(),
             p.get_payment_status_display(), _d(p.due_date), _d(p.payment_date),
             p.reference_number, p.observations, _d(p.created_at),

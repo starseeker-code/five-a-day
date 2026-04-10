@@ -9,10 +9,14 @@ import json
 import csv
 from datetime import date, datetime
 
+import logging
+
 from billing.models import Payment, Enrollment
 from students.models import Student, Parent
 from core.models import HistoryLog
 from billing import constants
+
+logger = logging.getLogger(__name__)
 
 
 def parse_date_value(date_value):
@@ -152,7 +156,7 @@ def create_payment(request):
                 enrollment=enrollment,
                 payment_type=request.POST.get("payment_type"),
                 payment_method=request.POST.get("payment_method"),
-                amount=Decimal(request.POST.get("amount")),
+                amount=Decimal(str(request.POST.get("amount", "0"))),
                 currency=request.POST.get("currency", "EUR"),
                 payment_status=request.POST.get("payment_status", "pending"),
                 due_date=request.POST.get("due_date"),
@@ -343,10 +347,7 @@ def delete_payment(request, payment_id):
         )
 
     except Exception as e:
-        print(f"ERROR deleting payment: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
+        logger.exception("Error deleting payment %s", payment_id)
 
         return JsonResponse(
             {"success": False, "error": f"Error al eliminar el pago: {str(e)}"},
@@ -362,7 +363,7 @@ def deactivate_payment(request, payment_id):
     """
     try:
         payment = get_object_or_404(Payment, id=payment_id)
-        payment.active = False  # Soft delete
+        payment.payment_status = 'cancelled'
         payment.save()
 
         return JsonResponse(

@@ -17,16 +17,17 @@ class SimpleAuthMiddleware:
     
     def __call__(self, request):
         # URLs públicas que no requieren autenticación
-        public_urls = [
-            reverse('login'),
+        login_url = reverse('login')
+        public_prefixes = [
             '/health/',         # Health check para Render
             '/static/',         # Archivos estáticos
             '/media/',          # Archivos media
-            '/auth/google/',    # Google OAuth flow
+            '/auth/google/',    # Google OAuth flow (includes /callback/)
         ]
-        
+
         # Verificar si la URL actual es pública
-        is_public = any(request.path.startswith(url) for url in public_urls)
+        path = request.path
+        is_public = path == login_url or any(path.startswith(prefix) for prefix in public_prefixes)
         
         # Si no es pública y no está autenticado, redirigir a login
         if not is_public and not request.session.get('is_authenticated'):

@@ -176,26 +176,25 @@ class SiteConfiguration(models.Model):
         Obtiene la configuración del sitio (crea una si no existe).
         Usa valores por defecto de constants.py si no hay configuración.
         """
-        try:
-            config = cls.objects.get(pk=1)
-        except cls.DoesNotExist:
-            config = cls.objects.create(
-                pk=1,
-                children_enrollment_fee=constants.CHILDREN_ENROLLMENT_FEE,
-                adult_enrollment_fee=constants.ADULT_ENROLLMENT_FEE,
-                full_time_monthly_fee=constants.FULL_TIME_MONTHLY_FEE,
-                part_time_monthly_fee=constants.PART_TIME_MONTHLY_FEE,
-                adult_group_monthly_fee=constants.ADULT_GROUP_MONTHLY_FEE,
-                language_cheque_discount=constants.LANGUAGE_CHEQUE_DISCOUNT[0],
-                quarterly_enrollment_discount=constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
-                old_student_discount=constants.OLD_STUDENT_DISCOUNT[0],
-                june_discount=constants.JUNE_DISCOUNT[0],
-                full_year_bonus=constants.FULL_YEAR_BONUS[0],
-                sibling_discount=constants.SIBLING_DISCOUNT[0],
-                half_month_discount=constants.HALF_MONTH_DISCOUNT[0],
-                one_week_discount=constants.ONE_WEEK_DISCOUNT[0],
-                three_week_discount=constants.THREE_WEEK_DISCOUNT[0],
-            )
+        config, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'children_enrollment_fee': constants.CHILDREN_ENROLLMENT_FEE,
+                'adult_enrollment_fee': constants.ADULT_ENROLLMENT_FEE,
+                'full_time_monthly_fee': constants.FULL_TIME_MONTHLY_FEE,
+                'part_time_monthly_fee': constants.PART_TIME_MONTHLY_FEE,
+                'adult_group_monthly_fee': constants.ADULT_GROUP_MONTHLY_FEE,
+                'language_cheque_discount': constants.LANGUAGE_CHEQUE_DISCOUNT[0],
+                'quarterly_enrollment_discount': constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
+                'old_student_discount': constants.OLD_STUDENT_DISCOUNT[0],
+                'june_discount': constants.JUNE_DISCOUNT[0],
+                'full_year_bonus': constants.FULL_YEAR_BONUS[0],
+                'sibling_discount': constants.SIBLING_DISCOUNT[0],
+                'half_month_discount': constants.HALF_MONTH_DISCOUNT[0],
+                'one_week_discount': constants.ONE_WEEK_DISCOUNT[0],
+                'three_week_discount': constants.THREE_WEEK_DISCOUNT[0],
+            }
+        )
         return config
 
 
@@ -323,7 +322,7 @@ class Enrollment(models.Model):
                 else self.enrollment_type.base_amount_part_time
             )
 
-            discount_amount = base_amount * (self.discount_percentage / 100)
+            discount_amount = base_amount * (self.discount_percentage / Decimal('100'))
             self.final_amount = base_amount - discount_amount
 
             if not self.enrollment_amount:

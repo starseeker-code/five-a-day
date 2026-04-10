@@ -197,6 +197,38 @@ def completed_payment(db, student, parent, active_enrollment):
 
 
 @pytest.fixture
+def inactive_student(db, group):
+    return Student.objects.create(
+        first_name="Withdrawn",
+        last_name="Student",
+        birth_date=date(2017, 1, 10),
+        gdpr_signed=True,
+        group=group,
+        active=False,
+        withdrawal_date=date(2026, 1, 15),
+        withdrawal_reason="Moved to another city",
+    )
+
+
+@pytest.fixture
+def cancelled_enrollment(db, student, enrollment_type_monthly, site_config):
+    return Enrollment.objects.create(
+        student=student,
+        enrollment_type=enrollment_type_monthly,
+        enrollment_period_start=date(2024, 9, 15),
+        enrollment_period_end=date(2025, 6, 27),
+        academic_year="2024-2025",
+        schedule_type="full_time",
+        payment_modality="monthly",
+        enrollment_amount=Decimal("54.00"),
+        discount_percentage=Decimal("0.00"),
+        final_amount=Decimal("54.00"),
+        status="cancelled",
+        enrollment_date=date(2024, 9, 1),
+    )
+
+
+@pytest.fixture
 def authenticated_client(client):
     """A Django test client with session-based auth (matching SimpleAuthMiddleware)."""
     session = client.session

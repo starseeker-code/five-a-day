@@ -48,7 +48,10 @@ def complete_todo(request, todo_id):
 def history_list(request):
     from django.utils.timesince import timesince
 
-    offset = int(request.GET.get('offset', 0))
+    try:
+        offset = int(request.GET.get('offset', 0))
+    except (ValueError, TypeError):
+        offset = 0
     limit = 20
     entries = HistoryLog.objects.all()[offset:offset + limit]
 

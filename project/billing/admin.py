@@ -61,7 +61,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'student', 'parent', 'enrollment'
+            'student', 'parent', 'enrollment', 'enrollment__enrollment_type'
         )
 
     def student_link(self, obj):
@@ -71,8 +71,8 @@ class PaymentAdmin(admin.ModelAdmin):
                 model_name = obj.student._meta.model_name
                 url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.student.id])
                 return format_html('<a href="{}">{}</a>', url, obj.student.full_name)
-            except:
-                return obj.student.full_name  # Fallback
+            except Exception:
+                return obj.student.full_name
         return '-'
     student_link.short_description = 'Student'
     student_link.admin_order_field = 'student__last_name'
@@ -84,7 +84,7 @@ class PaymentAdmin(admin.ModelAdmin):
                 model_name = obj.parent._meta.model_name
                 url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.parent.id])
                 return format_html('<a href="{}">{}</a>', url, obj.parent.full_name)
-            except:
+            except Exception:
                 return obj.parent.full_name
 
         return '-'
@@ -142,14 +142,14 @@ class PaymentAdmin(admin.ModelAdmin):
     mark_as_failed.short_description = 'Mark selected payments as failed'
 
     def soft_delete_payments(self, request, queryset):
-        updated = queryset.update(active=False)
-        self.message_user(request, f'{updated} payments deactivated (soft deleted).')
-    soft_delete_payments.short_description = 'Deactivate selected payments'
+        updated = queryset.update(payment_status='cancelled')
+        self.message_user(request, f'{updated} payments cancelled (soft deleted).')
+    soft_delete_payments.short_description = 'Cancel selected payments'
 
     def restore_payments(self, request, queryset):
-        updated = queryset.update(active=True)
-        self.message_user(request, f'{updated} payments restored.')
-    restore_payments.short_description = 'Restore selected payments'
+        updated = queryset.update(payment_status='pending')
+        self.message_user(request, f'{updated} payments restored to pending.')
+    restore_payments.short_description = 'Restore selected payments to pending'
 
     def export_to_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
@@ -181,6 +181,17 @@ class PaymentAdmin(admin.ModelAdmin):
         return response
     export_to_csv.short_description = 'Export selected payments to CSV'
 
+@admin.register(SiteConfiguration)
+class SiteConfigurationAdmin(admin.ModelAdmin):
+    list_display = ['__str__', 'full_time_monthly_fee', 'part_time_monthly_fee', 'updated_at']
+
+    def has_add_permission(self, request):
+        return not SiteConfiguration.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     list_display = [
@@ -198,6 +209,9 @@ class EnrollmentAdmin(admin.ModelAdmin):
     ]
     readonly_fields = ['created_at', 'updated_at', 'is_paid', 'remaining_amount']
     raw_id_fields = ['student']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('student', 'enrollment_type')
 
     fieldsets = (
         ('Student Information', {
@@ -227,14 +241,10 @@ class EnrollmentAdmin(admin.ModelAdmin):
 
     def is_paid_display(self, obj):
         if obj.is_paid:
-            return True  # TODO: Still testing!
-            return format_html('<span style="color: green;">✓ Paid</span>')
-        else:
-            return False  # TODO: Still testing!
-            remaining = obj.remaining_amount
-            return format_html(
-                '<span style="color: red;">✗ Pending (€{})</span>',
-                remaining
-            )
+            return format_html('<span style="color: green;">&#10003; Paid</span>')
+        remaining = obj.remaining_amount
+        return format_html(
+            '<span style="color: red;">&#10007; Pending (&euro;{})</span>',
+            remaining
+        )
     is_paid_display.short_description = 'Payment Status'
-    is_paid_display.boolean = True

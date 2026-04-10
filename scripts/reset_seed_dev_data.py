@@ -1,7 +1,10 @@
 from datetime import date, timedelta
 from decimal import Decimal
+import os
 import random
+import sys
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
 
@@ -15,6 +18,22 @@ from core.models import (
     Enrollment,
     Payment,
 )
+
+
+def _check_environment():
+    """Abort if running in production — this script destroys ALL data."""
+    env = os.getenv("DJANGO_ENV", "").lower()
+    debug = getattr(settings, "DEBUG", False)
+    if env == "production" or not debug:
+        print(
+            "ABORT: reset_seed_dev_data.py cannot run in production "
+            "(DJANGO_ENV='production' or DEBUG=False). "
+            "Set DJANGO_ENV=development and DEBUG=True to proceed."
+        )
+        sys.exit(1)
+
+
+_check_environment()
 
 
 random.seed(20260227)

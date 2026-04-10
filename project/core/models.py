@@ -19,7 +19,9 @@ class ScheduleSlot(models.Model):
 
     class Meta:
         db_table = 'schedule_slots'
-        unique_together = [('row', 'day', 'col')]
+        constraints = [
+            models.UniqueConstraint(fields=['row', 'day', 'col'], name='unique_schedule_slot'),
+        ]
         ordering = ['row', 'day', 'col']
 
     def __str__(self):
@@ -36,7 +38,9 @@ class FunFridayAttendance(models.Model):
 
     class Meta:
         db_table = 'fun_friday_attendance'
-        unique_together = [('student', 'date')]
+        constraints = [
+            models.UniqueConstraint(fields=['student', 'date'], name='unique_fun_friday_attendance'),
+        ]
         ordering = ['-date']
 
     def __str__(self):

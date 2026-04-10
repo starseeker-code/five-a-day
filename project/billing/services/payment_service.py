@@ -5,6 +5,8 @@ Extracted from generate_payments management command and views.
 from decimal import Decimal
 from datetime import date
 
+from django.db import transaction
+
 from billing.models import Enrollment, Payment, SiteConfiguration
 
 
@@ -67,10 +69,11 @@ class PaymentService:
     @staticmethod
     def complete_payment(payment_id):
         """Mark a payment as completed. Returns the updated Payment."""
-        payment = Payment.objects.select_related('student').get(id=payment_id)
-        payment.payment_status = 'completed'
-        payment.payment_date = date.today()
-        payment.save()
+        with transaction.atomic():
+            payment = Payment.objects.select_related('student').get(id=payment_id)
+            payment.payment_status = 'completed'
+            payment.payment_date = date.today()
+            payment.save()
         return payment
 
     @staticmethod

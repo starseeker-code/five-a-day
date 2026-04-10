@@ -2,13 +2,18 @@
 Service layer for enrollment business logic.
 Extracted from EnrollmentForm.create_enrollment() in forms.py.
 """
+import logging
 from decimal import Decimal
 from datetime import date
+
+from django.db import transaction
 
 from billing.models import (
     Enrollment, EnrollmentType, SiteConfiguration,
     current_academic_year, academic_year_start_date, academic_year_end_date,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EnrollmentService:
@@ -52,23 +57,24 @@ class EnrollmentService:
             config, base_amount, has_lc, has_sibling, is_adult, payment_modality
         )
 
-        enrollment = Enrollment(
-            student=student,
-            enrollment_type=enrollment_type,
-            enrollment_period_start=academic_year_start_date(start_year),
-            enrollment_period_end=academic_year_end_date(end_year),
-            academic_year=academic_year,
-            schedule_type=schedule_type,
-            payment_modality=payment_modality,
-            has_language_cheque=has_lc,
-            is_sibling_discount=has_sibling,
-            enrollment_amount=base_amount,
-            discount_percentage=discount_pct,
-            final_amount=final_amount,
-            status='active',
-            enrollment_date=today,
-        )
-        enrollment.save()
+        with transaction.atomic():
+            enrollment = Enrollment(
+                student=student,
+                enrollment_type=enrollment_type,
+                enrollment_period_start=academic_year_start_date(start_year),
+                enrollment_period_end=academic_year_end_date(end_year),
+                academic_year=academic_year,
+                schedule_type=schedule_type,
+                payment_modality=payment_modality,
+                has_language_cheque=has_lc,
+                is_sibling_discount=has_sibling,
+                enrollment_amount=base_amount,
+                discount_percentage=discount_pct,
+                final_amount=final_amount,
+                status='active',
+                enrollment_date=today,
+            )
+            enrollment.save()
         return enrollment
 
     @staticmethod
@@ -77,40 +83,41 @@ class EnrollmentService:
         Determine enrollment type, base amount, schedule type, and payment modality.
         Returns: (enrollment_type, base_amount, schedule_type, payment_modality)
         """
+        def _get_type(name):
+            try:
+                return EnrollmentType.objects.get(name=name)
+            except EnrollmentType.DoesNotExist:
+                raise ValueError(f"EnrollmentType '{name}' not found. Run seed data or create it in admin.")
+
         if is_adult:
             if is_special and manual_amount:
-                enrollment_type = EnrollmentType.objects.get(name='special')
-                return enrollment_type, manual_amount, 'adult_group', 'monthly'
+                return _get_type('special'), manual_amount, 'adult_group', 'monthly'
             else:
-                enrollment_type = EnrollmentType.objects.get(name='adults')
-                return enrollment_type, config.adult_group_monthly_fee, 'adult_group', 'monthly'
+                return _get_type('adults'), config.adult_group_monthly_fee, 'adult_group', 'monthly'
 
         plan = data.get('enrollment_plan', 'monthly_full')
 
         if is_special and manual_amount:
-            enrollment_type = EnrollmentType.objects.get(name='special')
+            et = _get_type('special')
             if plan == 'monthly_full':
-                return enrollment_type, manual_amount, 'full_time', 'monthly'
+                return et, manual_amount, 'full_time', 'monthly'
             elif plan == 'monthly_part':
-                return enrollment_type, manual_amount, 'part_time', 'monthly'
+                return et, manual_amount, 'part_time', 'monthly'
             else:
-                return enrollment_type, manual_amount, 'full_time', 'quarterly'
+                return et, manual_amount, 'full_time', 'quarterly'
 
         if plan == 'monthly_full':
-            et = EnrollmentType.objects.get(name='monthly')
-            return et, config.full_time_monthly_fee, 'full_time', 'monthly'
+            return _get_type('monthly'), config.full_time_monthly_fee, 'full_time', 'monthly'
         elif plan == 'monthly_part':
-            et = EnrollmentType.objects.get(name='monthly')
-            return et, config.part_time_monthly_fee, 'part_time', 'monthly'
+            return _get_type('monthly'), config.part_time_monthly_fee, 'part_time', 'monthly'
         elif plan == 'quarterly':
-            et = EnrollmentType.objects.get(name='quarterly')
+            et = _get_type('quarterly')
             quarterly_base = config.full_time_monthly_fee * 3
             quarterly_discount = config.quarterly_enrollment_discount
-            base_amount = quarterly_base * (1 - quarterly_discount / 100)
+            base_amount = quarterly_base * (1 - quarterly_discount / Decimal('100'))
             return et, base_amount, 'full_time', 'quarterly'
         else:
-            et = EnrollmentType.objects.get(name='monthly')
-            return et, config.full_time_monthly_fee, 'full_time', 'monthly'
+            return _get_type('monthly'), config.full_time_monthly_fee, 'full_time', 'monthly'
 
     @staticmethod
     def _apply_discounts(config, base_amount, has_lc, has_sibling, is_adult, payment_modality):
@@ -122,7 +129,7 @@ class EnrollmentService:
 
         if has_sibling and not is_adult:
             discount_pct += config.sibling_discount
-            final_amount = base_amount * (1 - config.sibling_discount / 100)
+            final_amount = base_amount * (1 - config.sibling_discount / Decimal('100'))
 
         if has_lc and not is_adult:
             lc_amount = config.language_cheque_discount

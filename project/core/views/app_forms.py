@@ -91,7 +91,7 @@ Esta semana haremos manualidades creativas con materiales reciclados.
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name='fun_friday',
                 recipients=_recipients,
@@ -99,8 +99,8 @@ Esta semana haremos manualidades creativas con materiales reciclados.
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         # Obtener datos del formulario
         event_date_str = request.POST.get("event_date")
@@ -290,7 +290,7 @@ def payment_reminder_form(request):
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name='payment_reminder',
                 recipients=_recipients,
@@ -298,8 +298,8 @@ def payment_reminder_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         payment_start_date_str = request.POST.get("payment_start_date")
         payment_end_date_str = request.POST.get("payment_end_date")
@@ -421,7 +421,7 @@ def vacation_closure_form(request):
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name='vacation_closure',
                 recipients=_recipients,
@@ -429,8 +429,8 @@ def vacation_closure_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         closure_start_str = request.POST.get("closure_start_date")
         closure_end_str = request.POST.get("closure_end_date")
@@ -533,7 +533,7 @@ def tax_certificate_form(request):
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name='tax_certificate',
                 recipients=_recipients,
@@ -541,8 +541,8 @@ def tax_certificate_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         year = int(request.POST.get("year", default_year))
         results = send_all_tax_certificates(year)
@@ -604,7 +604,7 @@ def monthly_report_form(request):
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name='monthly_report',
                 recipients=_recipients,
@@ -612,8 +612,8 @@ def monthly_report_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         month = request.POST.get("month", current_month)
         year = int(request.POST.get("year", today.year))
@@ -717,7 +717,7 @@ def birthday_form(request):
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name='happy_birthday',
                 recipients=_recipients,
@@ -725,8 +725,8 @@ def birthday_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         if not birthday_students.exists():
             messages.info(request, "ℹ️ No hay cumpleaños hoy")
@@ -810,7 +810,7 @@ def receipts_form(request):
             _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
             _ok = email_service.send_email(
                 template_name=_template,
                 recipients=_recipients,
@@ -818,8 +818,8 @@ def receipts_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         receipt_type = request.POST.get("receipt_type", "quarterly_child")
 
@@ -950,7 +950,7 @@ def enrollment_form(request):
                 _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
                 _recipients = [r for r in [_t1, _t2] if r]
                 if not _recipients:
-                    return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                    return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
                 _ok = email_service.send_email(
                     template_name='welcome_student',
                     recipients=_recipients,
@@ -958,8 +958,8 @@ def enrollment_form(request):
                     context=_ctx,
                 )
                 if _ok:
-                    return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-                return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                    return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+                return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
             else:
                 _etype = request.POST.get('enrollment_type', 'child')
                 _gender = request.POST.get('gender', 'm')
@@ -979,7 +979,7 @@ def enrollment_form(request):
                 _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
                 _recipients = [r for r in [_t1, _t2] if r]
                 if not _recipients:
-                    return JsonResponse({'ok': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                    return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
                 _ok = email_service.send_email(
                     template_name=_template,
                     recipients=_recipients,
@@ -987,8 +987,8 @@ def enrollment_form(request):
                     context=_ctx,
                 )
                 if _ok:
-                    return JsonResponse({'ok': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-                return JsonResponse({'ok': False, 'message': '❌ Error al enviar el email de prueba'})
+                    return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
+                return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
 
         student_id = request.POST.get("student_id")
         if not student_id:

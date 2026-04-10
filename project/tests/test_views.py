@@ -399,3 +399,133 @@ class TestErrorPages:
     def test_error_pages_render(self, authenticated_client, url_name, status):
         response = authenticated_client.get(reverse(url_name))
         assert response.status_code == status
+
+
+# ── Payment CRUD ────────────────────────────────────────────────────────────
+
+
+class TestPaymentCRUD:
+    def test_delete_payment(self, authenticated_client, pending_payment):
+        response = authenticated_client.post(
+            reverse("delete_payment", kwargs={"payment_id": pending_payment.id}),
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert not Payment.objects.filter(id=pending_payment.id).exists()
+
+    def test_deactivate_payment(self, authenticated_client, pending_payment):
+        response = authenticated_client.post(
+            reverse("deactivate_payment", kwargs={"payment_id": pending_payment.id}),
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        pending_payment.refresh_from_db()
+        assert pending_payment.payment_status == "cancelled"
+
+    def test_update_payment_json(self, authenticated_client, student_with_parent, pending_payment):
+        response = authenticated_client.post(
+            reverse("update_payment", kwargs={"payment_id": pending_payment.id}),
+            data=json.dumps({"concept": "Updated concept", "amount": "60.00"}),
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        pending_payment.refresh_from_db()
+        assert pending_payment.concept == "Updated concept"
+        assert pending_payment.amount == Decimal("60.00")
+
+    def test_get_payment_details_api(self, authenticated_client, pending_payment):
+        response = authenticated_client.get(
+            reverse("get_payment_details", kwargs={"payment_id": pending_payment.id}),
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["payment"]["id"] == pending_payment.id
+
+    def test_search_payments(self, authenticated_client, pending_payment):
+        response = authenticated_client.get(
+            reverse("search_payments") + "?q=Octubre",
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "results" in data
+
+
+# ── Fun Friday ──────────────────────────────────────────────────────────────
+
+
+class TestFunFridayViews:
+    def test_toggle_fun_friday(self, authenticated_client, student):
+        response = authenticated_client.post(
+            reverse("toggle_fun_friday_this_week", kwargs={"student_id": student.id}),
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["is_this_week"] is True
+
+        # Toggle off
+        response = authenticated_client.post(
+            reverse("toggle_fun_friday_this_week", kwargs={"student_id": student.id}),
+        )
+        data = response.json()
+        assert data["is_this_week"] is False
+
+    def test_toggle_fun_friday_adult_rejected(self, authenticated_client, adult_student):
+        response = authenticated_client.post(
+            reverse("toggle_fun_friday_this_week", kwargs={"student_id": adult_student.id}),
+        )
+        assert response.status_code == 400
+
+    def test_add_fun_friday_attendance(self, authenticated_client, student):
+        response = authenticated_client.post(
+            reverse("add_fun_friday_attendance", kwargs={"student_id": student.id}),
+            data=json.dumps({"date": "2025-10-03"}),
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+    def test_remove_fun_friday_attendance(self, authenticated_client, student):
+        from core.models import FunFridayAttendance
+        FunFridayAttendance.objects.create(student=student, date=date(2025, 10, 3))
+        response = authenticated_client.post(
+            reverse("remove_fun_friday_attendance", kwargs={"student_id": student.id}),
+            data=json.dumps({"date": "2025-10-03"}),
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["deleted"] is True
+
+
+# ── Support ─────────────────────────────────────────────────────────────────
+
+
+class TestSupportViews:
+    def test_submit_support_ticket_missing_message(self, authenticated_client):
+        response = authenticated_client.post(
+            reverse("submit_support_ticket"),
+            data=json.dumps({"category": "bug", "message": "short"}),
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+
+    def test_submit_support_ticket_no_email(self, authenticated_client, settings):
+        settings.SUPPORT_EMAIL = None
+        response = authenticated_client.post(
+            reverse("submit_support_ticket"),
+            data=json.dumps({
+                "category": "bug",
+                "message": "This is a longer message for testing purposes.",
+                "current_url": "/home/",
+            }),
+            content_type="application/json",
+        )
+        assert response.status_code == 500

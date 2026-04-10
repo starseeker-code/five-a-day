@@ -51,7 +51,7 @@ class Command(BaseCommand):
         enrollments = Enrollment.objects.filter(
             status='active',
             academic_year=academic_year,
-        ).select_related('student', 'student__group')
+        ).select_related('student', 'student__group').prefetch_related('student__parents')
 
         created_count = 0
         skipped_count = 0

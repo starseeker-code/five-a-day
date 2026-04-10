@@ -54,7 +54,7 @@ def send_welcome_email_task(self, parent_id: int, student_id: int, enrollment_id
             recipient_name = student.full_name
 
         if not recipient_email:
-            logger.warning(f"No email address for welcome email ({student.full_name})")
+            logger.warning("No email address for welcome email (student_id=%d)", student_id)
             return {'status': 'skipped', 'message': 'No email address'}
 
         context = {
@@ -74,15 +74,15 @@ def send_welcome_email_task(self, parent_id: int, student_id: int, enrollment_id
         )
 
         if success:
-            logger.info(f"Email de bienvenida enviado a {recipient_email} para {student.full_name}")
+            logger.info("Welcome email sent for student_id=%d", student_id)
         else:
-            logger.error(f"Error al enviar email de bienvenida a {recipient_email}")
+            logger.error("Failed to send welcome email for student_id=%d", student_id)
             raise Exception("Fallo en el envio del email")
 
         return {'status': 'success', 'recipient': recipient_email}
 
-    except (Parent.DoesNotExist, Student.DoesNotExist, Enrollment.DoesNotExist) as e:
-        logger.error(f"No se encontro el registro: {e}")
+    except (Parent.DoesNotExist, Student.DoesNotExist, Enrollment.DoesNotExist):
+        logger.error("Record not found: parent_id=%s student_id=%s enrollment_id=%s", parent_id, student_id, enrollment_id)
         return {'status': 'error', 'message': str(e)}
 
 
@@ -111,7 +111,7 @@ def send_birthday_email_task(self, student_id: int):
         parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
 
         if not parent:
-            logger.warning(f"{student.full_name} no tiene padre con email")
+            logger.warning("Student id=%d has no parent with email", student_id)
             return {'status': 'skipped', 'reason': 'no parent email'}
 
         success = email_service.send_email(
@@ -122,14 +122,14 @@ def send_birthday_email_task(self, student_id: int):
         )
 
         if success:
-            logger.info(f"Email de cumpleanos enviado a {parent.email} para {student.full_name}")
+            logger.info("Birthday email sent for student_id=%d", student_id)
         else:
             raise Exception("Fallo en el envio del email")
 
         return {'status': 'success', 'recipient': parent.email, 'student': student.full_name}
 
     except Student.DoesNotExist:
-        logger.error(f"Estudiante con ID {student_id} no existe")
+        logger.error("Student not found: id=%d", student_id)
         return {'status': 'error', 'message': 'Student not found'}
 
 
@@ -250,7 +250,7 @@ def send_generic_email_task(
     """
     from comms.services.email_service import email_service
 
-    logger.info(f"Enviando email: {template_name} -> {recipient_email}")
+    logger.info("Sending email: template=%s", template_name)
 
     success = email_service.send_email(
         template_name=template_name,
@@ -260,10 +260,10 @@ def send_generic_email_task(
     )
 
     if success:
-        logger.info(f"Email '{subject}' enviado a {recipient_email}")
-        return {'status': 'success', 'recipient': recipient_email}
+        logger.info("Email sent: template=%s", template_name)
+        return {'status': 'success'}
     else:
-        raise Exception(f"Fallo al enviar email a {recipient_email}")
+        raise Exception(f"Failed to send email: template={template_name}")
 
 
 # ============================================================================
@@ -304,7 +304,7 @@ def send_enrollment_confirmation_task(
         parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
 
         if not parent:
-            logger.error(f"No hay padre con email para {student.full_name}")
+            logger.error("No parent with email for enrollment_id=%d", enrollment_id)
             return {'status': 'error', 'message': 'No parent email'}
 
         academic_year = enrollment.academic_year
@@ -324,18 +324,18 @@ def send_enrollment_confirmation_task(
         success = send_enrollment_confirmation_email(
             parent_email=parent.email,
             student_name=student.full_name,
-            gender='m',  # TODO: Add gender field to Student model
+            gender=student.gender,
             academic_year=academic_year,
             month=MONTHS_ES[enrollment.enrollment_date.month - 1],
             attachments=attachments if attachments else None
         )
 
         if success:
-            logger.info(f"Confirmacion de matricula enviada para {student.full_name}")
+            logger.info("Enrollment confirmation sent for enrollment_id=%d", enrollment_id)
             return {'status': 'success', 'recipient': parent.email}
         else:
             raise Exception("Fallo en envio de confirmacion de matricula")
 
     except Enrollment.DoesNotExist:
-        logger.error(f"Matricula no encontrada: {enrollment_id}")
+        logger.error("Enrollment not found: id=%d", enrollment_id)
         return {'status': 'error', 'message': 'Enrollment not found'}

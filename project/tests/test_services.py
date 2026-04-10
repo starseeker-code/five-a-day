@@ -242,3 +242,29 @@ class TestPaymentService:
         assert PaymentService.should_generate_quarterly(1) is True
         assert PaymentService.should_generate_quarterly(4) is True
         assert PaymentService.should_generate_quarterly(2) is False
+
+
+# ── EnrollmentService error handling ────────────────────────────────────────
+
+
+class TestEnrollmentServiceErrors:
+    def test_missing_enrollment_type_raises_value_error(self, student, site_config):
+        """When enrollment types don't exist in DB, service should raise ValueError."""
+        data = {
+            "enrollment_plan": "monthly_full",
+            "has_language_cheque": False,
+            "is_sibling_discount": False,
+            "is_special": False,
+            "manual_amount": None,
+        }
+        # No enrollment types created — should raise ValueError
+        with pytest.raises(ValueError, match="EnrollmentType"):
+            EnrollmentService.create_enrollment(student, data)
+
+    def test_payment_statistics(self, site_config, pending_payment, completed_payment):
+        stats = PaymentService.get_payment_statistics(
+            month=pending_payment.due_date.month,
+            year=pending_payment.due_date.year,
+        )
+        assert stats["pending_count"] >= 1
+        assert isinstance(stats["pending_total"], Decimal)

@@ -19,7 +19,7 @@ from core.views.errors import (
 
 # Students
 from core.views.students import (
-    StudentsView, StudentCreateView, StudentListView, StudentUpdateView,
+    StudentCreateView, StudentListView, StudentUpdateView,
     StudentDetailView, search_students, handle_student_form, student_detail,
     update_student, get_next_friday, get_last_friday, get_ff_student_ids,
 )

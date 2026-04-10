@@ -45,7 +45,7 @@ All tasks have retry logic (3 retries, exponential backoff):
 | `send_birthday_emails_task` | Daily birthday batch | Celery Beat (8:00 AM) |
 | `send_payment_reminders` | Weekly payment reminder batch | Celery Beat |
 | `send_generic_email_task` | Generic email dispatcher | Manual |
-| `send_enrollment_confirmation_task` | Enrollment confirmation with attachments | On enrollment |
+| `send_enrollment_confirmation_task` | Enrollment confirmation with attachments (uses `student.gender` field) | On enrollment |
 
 Without Redis, Celery runs in eager mode (synchronous, same process).
 

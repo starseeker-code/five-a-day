@@ -16,8 +16,12 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        valid_username = os.getenv("LOGIN_USERNAME", "fiveaday")
-        valid_password = os.getenv("LOGIN_PASSWORD", "Fiveaday123!")
+        valid_username = os.getenv("LOGIN_USERNAME")
+        valid_password = os.getenv("LOGIN_PASSWORD")
+
+        if not valid_username or not valid_password:
+            messages.error(request, "Login credentials not configured. Set LOGIN_USERNAME and LOGIN_PASSWORD environment variables.")
+            return render(request, "login.html", {"google_oauth_available": False})
 
         if username == valid_username and password == valid_password:
             request.session["is_authenticated"] = True

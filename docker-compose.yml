@@ -33,7 +33,7 @@ services:
     
     # Puerto expuesto (solo para desarrollo local)
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     
     # Healthcheck: tests actual TCP auth, not just connectivity.
     # This ensures depends_on: service_healthy only passes when the web
