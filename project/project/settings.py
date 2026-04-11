@@ -81,8 +81,8 @@ SESSION_COOKIE_AGE = int(
 )  # 24 horas por defecto
 SESSION_COOKIE_HTTPONLY = os.getenv("SESSION_COOKIE_HTTPONLY", "True").lower() == "true"
 SESSION_COOKIE_SAMESITE = os.getenv(
-    "SESSION_COOKIE_SAMESITE", "Lax"
-)  # 'Strict' en producción
+    "SESSION_COOKIE_SAMESITE", "Strict" if not DEBUG else "Lax"
+)
 
 # ============================================================================
 # SUPPORT / TICKETING
@@ -92,10 +92,10 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", None)
 # ============================================================================
 # CSRF CONFIGURATION
 # ============================================================================
-CSRF_COOKIE_HTTPONLY = os.getenv("CSRF_COOKIE_HTTPONLY", "False").lower() == "true"
+CSRF_COOKIE_HTTPONLY = os.getenv("CSRF_COOKIE_HTTPONLY", "True" if not DEBUG else "False").lower() == "true"
 CSRF_COOKIE_SAMESITE = os.getenv(
-    "CSRF_COOKIE_SAMESITE", "Lax"
-)  # 'Strict' en producción
+    "CSRF_COOKIE_SAMESITE", "Strict" if not DEBUG else "Lax"
+)
 
 # Installed packages: httpx celery gspread pytest pandas markdown dotenv
 INSTALLED_APPS = [  # https://www.djangoproject.com/

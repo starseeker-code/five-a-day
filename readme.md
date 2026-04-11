@@ -93,6 +93,18 @@ Built to centralize student records, automate billing cycles, and streamline par
   - [Service Tests](#service-tests)
   - [View Tests](#view-tests)
 - [Migrations](#migrations)
+- [Security](#security)
+  - [Authentication](#authentication)
+  - [Session & Cookie Configuration](#session--cookie-configuration)
+  - [CSRF Protection](#csrf-protection)
+  - [Transport Security (HTTPS)](#transport-security-https)
+  - [Security Headers](#security-headers)
+  - [Infrastructure & Deployment](#infrastructure--deployment-1)
+  - [Secrets Management](#secrets-management)
+  - [Email Security](#email-security)
+  - [Data Protection & Input Validation](#data-protection--input-validation)
+  - [Logging & Monitoring](#logging--monitoring)
+  - [Future Security Improvements](#future-security-improvements)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -948,6 +960,161 @@ All migrations were regenerated from scratch during the v1.0.0 multi-app split.
 make makemigrations   # Creates migrations for all 4 apps
 make migrate          # Applies them
 ```
+
+---
+
+## Security
+
+This section documents every security decision, mechanism, and configuration in the project.
+
+### Authentication
+
+**Mechanism**: Custom session-based authentication with two backends — environment credentials and Google OAuth 2.0.
+
+| Component | File | How it works |
+|-----------|------|-------------|
+| Login view | `core/views/auth.py` | Validates username/password against `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars. Sets `request.session["is_authenticated"] = True`. No hardcoded fallbacks — if env vars are missing, login is refused with an error message. |
+| Google OAuth | `core/views/auth.py` | Full OAuth 2.0 code flow via `google-auth-oauthlib`. State token stored in session and verified on callback. ID token verified server-side via Google's public keys. Only the email matching `GOOGLE_ALLOWED_EMAIL` (or `EMAIL_HOST_USER` / `DJANGO_SUPERUSER_EMAIL`) is authorized. |
+| Auth middleware | `core/middleware.py` | `SimpleAuthMiddleware` protects all routes. Public URLs use exact match for `/login/` and prefix match for `/health/`, `/static/`, `/media/`, `/auth/google/` (covers `/callback/`). All other paths require `session["is_authenticated"]`. |
+| OAuth credentials | `core/views/auth.py` | Google tokens (access, refresh) are stored in session server-side. `client_secret` is never sent to the frontend. Allowed email check is backend-only. |
+
+**Design decisions**:
+- No Django User model — the system has 3-10 trusted admin users, so session-based auth with env var credentials is simpler and sufficient.
+- Google OAuth is optional — if `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are not set, the OAuth button is hidden.
+- `OAUTHLIB_INSECURE_TRANSPORT` is only set when `DEBUG=True` (for local HTTP testing).
+
+### Session & Cookie Configuration
+
+All cookie flags are enforced via `settings.py` with environment-aware defaults:
+
+| Setting | Development | Production | Purpose |
+|---------|------------|------------|---------|
+| `SESSION_COOKIE_AGE` | 86400 (24h) | 86400 (24h) | Session lifetime |
+| `SESSION_COOKIE_HTTPONLY` | `True` | `True` | Prevents JavaScript access to session cookie |
+| `SESSION_COOKIE_SAMESITE` | `Lax` | `Strict` | Prevents cross-site request forgery via session cookies |
+| `SESSION_COOKIE_SECURE` | `False` | `True` | Requires HTTPS for cookie transmission |
+| `CSRF_COOKIE_HTTPONLY` | `False` | `True` | Prevents JavaScript access to CSRF cookie in production |
+| `CSRF_COOKIE_SAMESITE` | `Lax` | `Strict` | Prevents cross-site CSRF cookie leakage |
+| `CSRF_COOKIE_SECURE` | `False` | `True` | Requires HTTPS for CSRF cookie |
+
+Production defaults are applied automatically when `DEBUG=False` — no manual override needed in env vars.
+
+### CSRF Protection
+
+- Django's `CsrfViewMiddleware` is active in the middleware stack.
+- All POST endpoints receive CSRF validation. JavaScript AJAX requests use `getCsrfToken()` (reads from cookies) and send via `X-CSRFToken` header.
+- `CSRF_TRUSTED_ORIGINS` is configured per deployment (`render.yaml`, `gcp-cloudrun.yaml`).
+- Only exception: `@csrf_exempt` on `/health/` endpoint (GET-only, returns `{"status": "healthy"}`).
+
+### Transport Security (HTTPS)
+
+When `DEBUG=False`, the following are enforced via `settings.py`:
+
+| Setting | Value | Effect |
+|---------|-------|--------|
+| `SECURE_SSL_REDIRECT` | `True` | All HTTP requests redirected to HTTPS |
+| `SECURE_HSTS_SECONDS` | `31536000` (1 year) | Browser remembers to use HTTPS |
+| `SECURE_HSTS_INCLUDE_SUBDOMAINS` | `True` | HSTS applies to all subdomains |
+| `SECURE_HSTS_PRELOAD` | `True` | Eligible for browser HSTS preload lists |
+
+All settings are environment-controlled and only activate when `DEBUG=False`.
+
+### Security Headers
+
+| Header | Setting | Value | Effect |
+|--------|---------|-------|--------|
+| `X-Frame-Options` | `X_FRAME_OPTIONS` | `DENY` | Prevents clickjacking — page cannot be embedded in iframes |
+| `X-Content-Type-Options` | `SECURE_CONTENT_TYPE_NOSNIFF` | `True` | Prevents MIME type sniffing attacks |
+| `X-XSS-Protection` | `SECURE_BROWSER_XSS_FILTER` | `True` | Enables browser XSS filter (legacy, supplementary) |
+
+### Infrastructure & Deployment
+
+#### Docker
+
+| Decision | Implementation |
+|----------|---------------|
+| Non-root container | `Dockerfile` creates user `django` (uid 1000) and runs as `USER django` |
+| Multi-stage build | Builder stage compiles dependencies; runtime stage uses `python:3.12-slim` without build tools |
+| No secrets in image | `.dockerignore` excludes `.env*`, `scripts/`, `.git/` |
+| DB port restricted | `docker-compose.yml` binds PostgreSQL to `127.0.0.1:5432` only (not exposed to network) |
+| Health checks | Database has auth-checking healthcheck; web service uses `/health/` endpoint |
+| Seed script guard | `scripts/reset_seed_dev_data.py` aborts if `DJANGO_ENV=production` or `DEBUG=False` |
+
+#### Render (render.yaml)
+
+| Decision | Implementation |
+|----------|---------------|
+| Auto-generated secrets | `DJANGO_SECRET_KEY` and `DJANGO_SUPERUSER_PASSWORD` use `generateValue: true` |
+| Dashboard-only secrets | `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, `LOGIN_USERNAME`, `LOGIN_PASSWORD`, `EMAIL_HOST_USER`, `EMAIL_SECRET` use `sync: false` (set in Render dashboard, not in YAML) |
+| SSL enforced | `SECURE_SSL_REDIRECT=True`, all cookie secure flags enabled |
+| Strict cookies | `SESSION_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_HTTPONLY=True` |
+
+#### Google Cloud Run (gcp-cloudrun.yaml)
+
+| Decision | Implementation |
+|----------|---------------|
+| Secret Manager | All credentials (`DJANGO_SECRET_KEY`, `LOGIN_*`, `EMAIL_SECRET`, `POSTGRES_*`, `GOOGLE_*`) loaded from GCP Secret Manager via `secretKeyRef` |
+| Service account | Runs under dedicated `fiveaday-sa` service account with least-privilege IAM |
+| Autoscaling | min=0, max=3 instances; startup probe with 50s timeout |
+| Probes | Startup probe + liveness probe on `/health/` |
+
+### Secrets Management
+
+| Rule | Implementation |
+|------|---------------|
+| No hardcoded credentials | `auth.py` requires `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars — refuses login if missing |
+| No secrets in YAML | `render.yaml` uses `generateValue` or `sync: false`; `gcp-cloudrun.yaml` uses Secret Manager refs |
+| No secrets in Docker image | `.dockerignore` excludes all `.env*` files |
+| Git history scrubbed | `.env` removed from git history via `git filter-repo` |
+| `.gitignore` coverage | `.env*` pattern excludes all env file variants |
+| Production startup validation | `settings.py` raises `ValueError` if `SECRET_KEY` is the dev default and `DEBUG=False` |
+
+### Email Security
+
+| Decision | Implementation |
+|----------|---------------|
+| TLS enforced | `EMAIL_USE_TLS=True`, port 587 (STARTTLS) |
+| App Password | Uses Gmail App Password (not account password) via `EMAIL_SECRET` env var |
+| `fail_silently` | Defaults to `False` for single sends (raises on failure); `True` for bulk sends (logs failures) |
+| No PII in logs | Celery tasks log by ID (`student_id=X`) not by name/email/DNI |
+| Template auto-escaping | All email templates use Django's default auto-escaping — `{{ variable }}` is HTML-safe |
+| Inline images | Attached via MIME `Content-ID` headers, not external URLs |
+
+### Data Protection & Input Validation
+
+| Layer | Mechanism |
+|-------|-----------|
+| **Models** | `DecimalField` with `MinValueValidator` for all money fields. `UniqueConstraint` for enrollment/schedule/attendance integrity. `PROTECT` on foreign keys prevents orphaned records. |
+| **Forms** | Django `ModelForm` with `clean_*()` validators. Date fields accept `%Y-%m-%d` and `%d/%m/%Y`. DNI validated for minimum length. |
+| **Views** | `get_object_or_404` for safe lookups. `@require_http_methods` on all AJAX endpoints. `Decimal(str(...))` for safe numeric conversion. `json.JSONDecodeError` caught explicitly. |
+| **Services** | `transaction.atomic()` wraps multi-model writes (enrollment creation, payment completion). `ValueError` raised for missing config. |
+| **GDPR** | `gdpr_signed` field on Student. No student data exposed without authentication. PII removed from log messages. |
+
+### Logging & Monitoring
+
+- Console logging via `StreamHandler` with configurable `LOG_LEVEL` env var.
+- Separate loggers for `django` framework and project modules.
+- `HistoryLog` model tracks user actions (payment completed, student enrolled, config updated) — capped at 1,000 entries with automatic cleanup.
+- Celery tasks log by entity ID, not PII.
+
+### Future Security Improvements
+
+These are not blockers but would strengthen the system for scale or compliance:
+
+| Priority | Improvement | Why |
+|----------|------------|-----|
+| **High** | Rate limiting on login (`django-ratelimit`, 5 attempts/15 min per IP) | Prevents brute force. Currently no protection. |
+| **High** | Content-Security-Policy header | Prevents XSS. Currently absent — Tailwind CDN requires `unsafe-inline` for styles, but scripts can be locked down. |
+| **High** | Referrer-Policy header (`strict-origin-when-cross-origin`) | Prevents referrer leakage to external links. Currently absent. |
+| **Medium** | Session rotation on OAuth login (`request.session.create()`) | Prevents session fixation. Currently session ID persists through OAuth flow. |
+| **Medium** | Inactivity timeout (30 min idle logout) | 24h session is long for sensitive student data. |
+| **Medium** | Security event audit log (failed logins with IP, CSRF failures) | Currently no visibility into attack attempts. |
+| **Medium** | Permissions-Policy header | Disables camera, microphone, geolocation APIs the app doesn't need. |
+| **Medium** | `Argon2` password hasher (if Django User model is ever adopted) | Stronger than default PBKDF2. |
+| **Low** | Request ID tracking (`X-Request-ID` middleware) | Enables log correlation across services. |
+| **Low** | `detect-secrets` pre-commit hook | Prevents accidental secret commits in the future. |
+| **Low** | Migrate to OAuth-only (deprecate password login) | Reduces credential attack surface to zero. |
+| **Low** | Web Application Firewall (WAF) rules at cloud provider level | Blocks common attack patterns before they reach Django. |
 
 ---
 

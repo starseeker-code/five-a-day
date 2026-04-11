@@ -52,20 +52,33 @@ services:
         fromDatabase:
           name: fiveaday-db
           property: password
+      # Set DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL, and
+      # DJANGO_SUPERUSER_PASSWORD in the Render dashboard (not in YAML).
       - key: DJANGO_SUPERUSER_USERNAME
-        value: Mirmo_1997
+        sync: false
       - key: DJANGO_SUPERUSER_EMAIL
-        value: hellofiveaday@fiveaday.com
+        sync: false
       - key: DJANGO_SUPERUSER_PASSWORD
         generateValue: true
       - key: SECURE_SSL_REDIRECT
-        value: "False"
+        value: "True"
       - key: SESSION_COOKIE_SECURE
         value: "True"
+      - key: SESSION_COOKIE_SAMESITE
+        value: "Strict"
       - key: CSRF_COOKIE_SECURE
         value: "True"
+      - key: CSRF_COOKIE_HTTPONLY
+        value: "True"
+      - key: CSRF_COOKIE_SAMESITE
+        value: "Strict"
       - key: CSRF_TRUSTED_ORIGINS
         value: https://fiveaday-web.onrender.com
+      # Set LOGIN_USERNAME and LOGIN_PASSWORD in the Render dashboard (not in YAML).
+      - key: LOGIN_USERNAME
+        sync: false
+      - key: LOGIN_PASSWORD
+        sync: false
       - key: EMAIL_HOST_USER
         sync: false
       - key: EMAIL_SECRET
