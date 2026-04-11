@@ -100,12 +100,11 @@ class HistoryLog(models.Model):
     def log(cls, action, message, icon='history'):
         """Create a history entry, enforcing the 1000-record cap."""
         entry = cls.objects.create(action=action, message=message, icon=icon)
-        count = cls.objects.count()
-        if count > cls.MAX_ENTRIES:
-            oldest_ids = cls.objects.order_by('created_at').values_list(
+        if cls.objects.count() > cls.MAX_ENTRIES:
+            keep_ids = cls.objects.order_by('-created_at').values_list(
                 'id', flat=True
-            )[:count - cls.MAX_ENTRIES]
-            cls.objects.filter(id__in=list(oldest_ids)).delete()
+            )[:cls.MAX_ENTRIES]
+            cls.objects.exclude(id__in=keep_ids).delete()
         return entry
 
     @classmethod

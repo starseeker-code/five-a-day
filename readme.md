@@ -28,18 +28,20 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ### Project Status
 
+| Environment | Version | Status |
+|-------------|---------|--------|
+| **Production** | v0.0.0 | ![undeployed](https://img.shields.io/badge/undeployed-red) |
+| **Testing** | v0.0.0 | ![pending](https://img.shields.io/badge/pending_deployment-yellow) |
+| **Development** | v1.0.0 | ![active](https://img.shields.io/badge/active-brightgreen) |
+
 | | |
 |---|---|
-| **Production URL** | [five-a-day.netlify.app](https://five-a-day.netlify.app) |
 | **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
-| **State** | Pre-production |
-| **Production version** | v1.0.0 |
-| **Development version** | v1.0.0 |
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.1** | 2026-04-10 | Security hardening, 132 tests, gender field, N+1 fixes, GCP config, transaction safety |
-| v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 112 tests, frontend cleanup, full documentation |
+| **v1.0.0** | 2026-04-11 | Security hardening, query optimization (Case/When aggregates, N+1 fixes), GCP config, transaction safety |
+| v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 132 tests, frontend cleanup, full documentation |
 | v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
 | v0.29.0 | 2025-03-01 | Enrollment system with discounts, adult students, email automation |
 
@@ -47,66 +49,84 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ## Table of Contents
 
-- [Version History & Roadmap](#version-history--roadmap)
-  - [v1.0.0 — Architecture Refactor & Test Suite](#v100)
-  - [v0.30.2 — Docker & History System](#v0302)
-  - [v0.29.0 — Enrollment & Email System](#v0290)
-  - [Roadmap: v1.1 through v1.12](#roadmap)
-- [Tech Stack](#tech-stack)
-  - [Backend](#backend)
-  - [Frontend](#frontend)
-  - [Infrastructure & Deployment](#infrastructure--deployment)
-  - [Python Dependencies](#python-dependencies)
-- [Database Schema](#database-schema)
-  - [ER Diagram](#er-diagram)
-  - [Key Constraints](#key-constraints)
-- [Development & Docker](#development--docker)
-  - [Quick Start](#quick-start)
-  - [Make Commands](#make-commands)
-  - [Environment Configuration](#environment-configuration)
-  - [Environment Variables Reference](#environment-variables-reference)
-  - [App Versioning](#app-versioning)
-- [Project Structure & Architecture](#project-structure--architecture)
-  - [Architecture Overview](#architecture-overview)
-  - [App Dependency Flow](#app-dependency-flow)
-  - [Directory Layout](#directory-layout)
-  - [App: core](#app-core)
-  - [App: students](#app-students)
-  - [App: billing](#app-billing)
-  - [App: comms](#app-comms)
-  - [Design Decisions](#design-decisions)
-- [Features by View](#features-by-view)
-  - [Home (Dashboard)](#home-dashboard)
-  - [Students](#students)
-  - [Student Create](#student-create)
-  - [Student Detail & Update](#student-detail--update)
-  - [Payments](#payments)
-  - [Schedule](#schedule)
-  - [Fun Friday](#fun-friday)
-  - [Apps (Email Tools)](#apps-email-tools)
-  - [Management](#management)
-  - [Database (All Info)](#database-all-info)
-  - [Login](#login)
-- [Testing](#testing)
-  - [Overview](#testing-overview)
-  - [Model Tests](#model-tests)
-  - [Service Tests](#service-tests)
-  - [View Tests](#view-tests)
-- [Migrations](#migrations)
-- [Security](#security)
-  - [Authentication](#authentication)
-  - [Session & Cookie Configuration](#session--cookie-configuration)
-  - [CSRF Protection](#csrf-protection)
-  - [Transport Security (HTTPS)](#transport-security-https)
-  - [Security Headers](#security-headers)
-  - [Infrastructure & Deployment](#infrastructure--deployment-1)
-  - [Secrets Management](#secrets-management)
-  - [Email Security](#email-security)
-  - [Data Protection & Input Validation](#data-protection--input-validation)
-  - [Logging & Monitoring](#logging--monitoring)
-  - [Future Security Improvements](#future-security-improvements)
-- [Contributing](#contributing)
-- [License](#license)
+- [Five a Day eVolution](#five-a-day-evolution)
+    - [Project Status](#project-status)
+  - [Table of Contents](#table-of-contents)
+  - [Version History \& Roadmap](#version-history--roadmap)
+    - [Roadmap](#roadmap)
+      - [v1.1 — Waiting List \& Group Capacity](#v11--waiting-list--group-capacity)
+      - [v1.2 — Google Sheets Integration](#v12--google-sheets-integration)
+      - [v1.3 — PDF Invoice Generation](#v13--pdf-invoice-generation)
+      - [v1.4 — Celery + Redis Deployment](#v14--celery--redis-deployment)
+      - [v1.5 — Expense Tracking](#v15--expense-tracking)
+      - [v1.6 — Multi-User Permissions](#v16--multi-user-permissions)
+      - [v1.7 — Advanced Reporting \& Analytics](#v17--advanced-reporting--analytics)
+      - [v1.8 — SMS Notifications (Twilio)](#v18--sms-notifications-twilio)
+      - [v1.9 — Parent Portal](#v19--parent-portal)
+      - [v1.10 — Audit Log \& Security Hardening](#v110--audit-log--security-hardening)
+      - [v1.11 — Stripe Payment Integration](#v111--stripe-payment-integration)
+      - [v1.12 — Mobile Optimization \& PWA](#v112--mobile-optimization--pwa)
+  - [Tech Stack](#tech-stack)
+    - [Backend](#backend)
+    - [Frontend](#frontend)
+    - [Infrastructure \& Deployment](#infrastructure--deployment)
+    - [Python Dependencies](#python-dependencies)
+  - [Database Schema](#database-schema)
+    - [ER Diagram](#er-diagram)
+    - [Key Constraints](#key-constraints)
+  - [Development \& Docker](#development--docker)
+    - [Quick Start](#quick-start)
+    - [Make Commands](#make-commands)
+    - [Environment Configuration](#environment-configuration)
+    - [Environment Variables Reference](#environment-variables-reference)
+    - [App Versioning](#app-versioning)
+  - [Project Structure \& Architecture](#project-structure--architecture)
+    - [Architecture Overview](#architecture-overview)
+    - [App Dependency Flow](#app-dependency-flow)
+    - [Directory Layout](#directory-layout)
+    - [App: core](#app-core)
+    - [App: students](#app-students)
+    - [App: billing](#app-billing)
+    - [App: comms](#app-comms)
+    - [Design Decisions](#design-decisions)
+  - [Features by View](#features-by-view)
+    - [Home (Dashboard)](#home-dashboard)
+    - [Students](#students)
+    - [Student Create](#student-create)
+    - [Student Detail \& Update](#student-detail--update)
+    - [Payments](#payments)
+    - [Schedule](#schedule)
+    - [Fun Friday](#fun-friday)
+    - [Apps (Email Tools)](#apps-email-tools)
+    - [Management](#management)
+    - [Database (All Info)](#database-all-info)
+    - [Login](#login)
+  - [Testing](#testing)
+    - [Testing Overview](#testing-overview)
+    - [Model Tests](#model-tests)
+    - [Service Tests](#service-tests)
+    - [View Tests](#view-tests)
+  - [Migrations](#migrations)
+  - [Security](#security)
+    - [Authentication](#authentication)
+    - [Session \& Cookie Configuration](#session--cookie-configuration)
+    - [CSRF Protection](#csrf-protection)
+    - [Transport Security (HTTPS)](#transport-security-https)
+    - [Security Headers](#security-headers)
+    - [Infrastructure \& Deployment](#infrastructure--deployment-1)
+      - [Docker](#docker)
+      - [Render (render.yaml)](#render-renderyaml)
+      - [Google Cloud Run (gcp-cloudrun.yaml)](#google-cloud-run-gcp-cloudrunyaml)
+    - [Secrets Management](#secrets-management)
+    - [Email Security](#email-security)
+    - [Data Protection \& Input Validation](#data-protection--input-validation)
+    - [Logging \& Monitoring](#logging--monitoring)
+    - [Future Security Improvements](#future-security-improvements)
+  - [Contributing](#contributing)
+    - [Development Workflow](#development-workflow)
+    - [Code Conventions](#code-conventions)
+    - [Adding a Feature](#adding-a-feature)
+  - [License](#license)
 
 ---
 
@@ -128,7 +148,7 @@ Built to centralize student records, automate billing cycles, and streamline par
 - base.html: 610 lines reduced to 305 lines
 
 **Testing**
-- 112 pytest tests: 34 model, 24 service, 54 view tests
+- 132 pytest tests: 41 model, 26 service, 65 view tests
 - Tests run against PostgreSQL (same as production)
 - Found and fixed Payment `active` field bug
 
@@ -673,7 +693,7 @@ five-a-day/
 │   │   ├── urls.py               10 URL patterns
 │   │   └── management/commands/  send_email, test_all_emails
 │   │
-│   ├── tests/                    pytest suite (112 tests)
+│   ├── tests/                    pytest suite (132 tests)
 │   └── conftest.py               Shared fixtures
 │
 ├── Dockerfile                    Multi-stage build
@@ -883,7 +903,7 @@ Standalone page with custom styling (does not extend base.html).
 
 | Metric | Value |
 |--------|-------|
-| **Total tests** | 112 |
+| **Total tests** | 132 |
 | **Test files** | 3 (test_models, test_services, test_views) |
 | **Runtime** | ~2 seconds |
 | **Database** | PostgreSQL (same as production) or SQLite fallback |
@@ -902,45 +922,54 @@ make test-k K=payment  # Run tests matching keyword
 
 ### Model Tests
 
-34 tests in `test_models.py` covering model logic, properties, and database constraints.
+41 tests in `test_models.py` covering model logic, properties, and database constraints.
 
 | Group | Count | Coverage |
 |-------|-------|----------|
 | Academic year helpers | 5 | `current_academic_year()` for both semesters, `academic_year_start_date`, `academic_year_end_date` |
 | SiteConfiguration | 4 | Singleton creation, pk=1 enforcement, delete prevention, default values |
 | Student & Parent | 6 | Properties (`full_name`, `age`), string representation, M2M relationship, DNI uniqueness |
+| Student gender | 2 | Default gender value, gender choices |
 | Teacher & Group | 4 | Properties, FK relationship, name uniqueness |
 | Enrollment | 5 | Properties (`is_paid`, `remaining_amount`), string representation, unique active constraint |
+| Cancelled enrollment | 1 | Cancelled enrollment status |
+| Inactive student | 1 | Inactive student exists |
 | Payment | 4 | `is_overdue` detection (past/future/completed), `clean()` auto-sets payment_date |
 | TodoItem & HistoryLog | 5 | `is_overdue`, log creation, 1000-entry cap, debounced logging |
 | FunFridayAttendance | 1 | Unique (student, date) constraint |
+| ScheduleSlot | 3 | Slot creation, unique (row, day, col) constraint, null group |
 
 ### Service Tests
 
-24 tests in `test_services.py` covering business logic in the service layer.
+26 tests in `test_services.py` covering business logic in the service layer.
 
 | Group | Count | Coverage |
 |-------|-------|----------|
 | PricingService | 7 | Monthly fees by schedule type, enrollment fees by student type, quarterly price calculation |
 | EnrollmentService | 9 | All enrollment plans (monthly full/part, quarterly), all discount types (sibling, language cheque, both), special pricing, adult enrollment, minimum amount floor (0.01) |
+| EnrollmentService errors | 2 | Missing enrollment type validation, payment statistics |
 | PaymentService | 8 | Monthly/quarterly amount calculations with all discount combos, June bonus, payment completion, academic month/quarter validation |
 
 ### View Tests
 
-54 tests in `test_views.py` covering HTTP responses, AJAX APIs, and user flows.
+65 tests in `test_views.py` covering HTTP responses, AJAX APIs, and user flows.
 
 | Group | Count | Coverage |
 |-------|-------|----------|
 | Authentication | 6 | Unauthenticated redirect, login page, health check, valid/invalid login, logout |
-| Page loads | 8 | Dashboard, all_info, student list/detail/create, parent create, payment list/create |
-| Payment operations | 8 | Quick-complete (valid + invalid), statistics, CSV export, student-parent validation |
-| AJAX APIs | 5 | Todo create/complete, history list + pagination |
-| Management | 6 | Config update, teacher create (+ duplicate), group create, teachers API |
-| Email forms | 9 | All 8 form pages load + welcome redirect (parametrized) |
+| Dashboard | 2 | Dashboard, all_info |
+| Student views | 4 | Student list, detail, create page, search API |
+| Parent views | 2 | Parent create page, search API |
+| Payment views | 9 | Payments list, create page, detail, quick-complete (valid + invalid), statistics, CSV export, student-parent validation |
+| Payment CRUD | 5 | Delete, deactivate, update JSON, get details API, search |
+| Todo & History API | 5 | Todo create/complete/empty text, history list + pagination |
+| Management | 6 | Management page, config update, teacher create (+ duplicate), group create, teachers API |
+| Email forms | 10 | Apps page, all 8 form pages load + welcome redirect (parametrized) |
 | Enrollment API | 3 | Modality update (valid + invalid), language cheque endpoint |
 | Error pages | 5 | All 5 error pages render with correct status codes (parametrized) |
 | Schedule | 2 | Schedule page, Fun Friday page |
-| Search | 2 | Student search, parent search with results |
+| Fun Friday | 4 | Toggle (valid + adult rejected), add attendance, remove attendance |
+| Support | 2 | Missing message validation, no email configuration |
 
 ---
 
@@ -948,11 +977,14 @@ make test-k K=payment  # Run tests matching keyword
 
 All migrations were regenerated from scratch during the v1.0.0 multi-app split.
 
-| App | Migration | Models | Depends On |
-|-----|-----------|--------|------------|
+| App | Migration | Changes | Depends On |
+|-----|-----------|---------|------------|
 | `students` | `0001_initial` | Teacher, Group, Parent, Student, StudentParent | — |
+| `students` | `0002` | Student gender field, StudentParent UniqueConstraint | `students.0001` |
 | `billing` | `0001_initial` | SiteConfiguration, EnrollmentType, Enrollment, Payment | `students.0001` |
+| `billing` | `0002` | Enrollment academic_year index | `billing.0001`, `students.0002` |
 | `core` | `0001_initial` | TodoItem, HistoryLog, FunFridayAttendance, ScheduleSlot | `students.0001` |
+| `core` | `0002` | UniqueConstraint for FunFridayAttendance and ScheduleSlot (replaces unique_together) | `core.0001`, `students.0002` |
 | `comms` | — | (no models) | — |
 
 ```bash
@@ -1065,7 +1097,6 @@ All settings are environment-controlled and only activate when `DEBUG=False`.
 | No hardcoded credentials | `auth.py` requires `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars — refuses login if missing |
 | No secrets in YAML | `render.yaml` uses `generateValue` or `sync: false`; `gcp-cloudrun.yaml` uses Secret Manager refs |
 | No secrets in Docker image | `.dockerignore` excludes all `.env*` files |
-| Git history scrubbed | `.env` removed from git history via `git filter-repo` |
 | `.gitignore` coverage | `.env*` pattern excludes all env file variants |
 | Production startup validation | `settings.py` raises `ValueError` if `SECRET_KEY` is the dev default and `DEBUG=False` |
 
@@ -1094,7 +1125,7 @@ All settings are environment-controlled and only activate when `DEBUG=False`.
 
 - Console logging via `StreamHandler` with configurable `LOG_LEVEL` env var.
 - Separate loggers for `django` framework and project modules.
-- `HistoryLog` model tracks user actions (payment completed, student enrolled, config updated) — capped at 1,000 entries with automatic cleanup.
+- `HistoryLog` model tracks user actions (payment completed, student enrolled, config updated) — capped at 1000 entries with automatic cleanup.
 - Celery tasks log by entity ID, not PII.
 
 ### Future Security Improvements
@@ -1122,9 +1153,9 @@ These are not blockers but would strengthen the system for scale or compliance:
 
 ### Development Workflow
 
-1. Create a feature branch from `main`
+1. Create a feature branch from `development`
 2. Make changes following the conventions below
-3. Run `make test-local` — all 112 tests must pass
+3. Run `make test-local` — all 132 tests must pass
 4. Run `make check` — no Django system check issues
 5. Create a pull request with clear description of changes
 

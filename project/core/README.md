@@ -9,7 +9,7 @@ The `core` app is the "everything else" app — it owns the dashboard, authentic
 | **ScheduleSlot** | `schedule_slots` | Weekly schedule grid (row, day, col) with group FK |
 | **FunFridayAttendance** | `fun_friday_attendance` | Tracks student attendance on Fun Fridays |
 | **TodoItem** | `todo_items` | Dashboard task list with due dates |
-| **HistoryLog** | `history_logs` | Audit trail of user actions (auto-capped at 1,000) |
+| **HistoryLog** | `history_logs` | Audit trail of user actions (auto-capped at 1,000 with guarded single-query cleanup) |
 
 ## Views (core/views/)
 
@@ -18,13 +18,13 @@ The monolithic `views.py` was split into 12 focused modules:
 | Module | Views | Description |
 | ------ | ----- | ----------- |
 | `auth.py` | `login_view`, `logout_view`, `google_oauth_redirect`, `google_oauth_callback` | Session-based auth + Google OAuth |
-| `dashboard.py` | `home`, `all_info` | Dashboard with stats, todos, birthdays; database view |
-| `schedule.py` | `schedule_view`, `save_schedule_slot`, `fun_friday_view` | Weekly schedule grid + Fun Friday list |
+| `dashboard.py` | `home`, `all_info` | Dashboard with stats (single `Case/When` aggregate query), todos, birthdays; database view |
+| `schedule.py` | `schedule_view`, `save_schedule_slot`, `fun_friday_view` | Weekly schedule grid + Fun Friday list (single attendance query for both weeks, filters from loaded students) |
 | `fun_friday_attendance.py` | `toggle_fun_friday_this_week`, `add/remove_fun_friday_attendance` | AJAX attendance toggles |
 | `todos.py` | `create_todo`, `complete_todo`, `history_list` | Todo CRUD + history pagination API |
 | `students.py` | `StudentCreateView`, `StudentListView`, etc. | Student/parent CRUD (CBVs + FBVs) |
 | `parents.py` | `ParentCreateView` | Parent creation CBV |
-| `payments.py` | `payments_list`, `create_payment`, `quick_complete_payment`, etc. | Payment CRUD + AJAX APIs |
+| `payments.py` | `payments_list`, `create_payment`, `quick_complete_payment`, etc. | Payment CRUD + AJAX APIs. Stats use single `Case/When` aggregate (1 query instead of 8). |
 | `management.py` | `gestion_view`, `update_site_config`, `create_teacher`, `create_group` | Admin config panel |
 | `app_forms.py` | `fun_friday_form`, `payment_reminder_form`, etc. (10 views) | Email app form views |
 | `support.py` | `submit_support_ticket` | Support ticket email API |

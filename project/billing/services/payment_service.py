@@ -26,21 +26,25 @@ QUARTER_NAMES_ES = {
 class PaymentService:
 
     @staticmethod
-    def calculate_monthly_amount(enrollment, config, month):
-        """Calculate the monthly payment amount for a given enrollment."""
+    def _get_base_monthly_fee(enrollment, config):
+        """Get base monthly fee by schedule type."""
         if enrollment.schedule_type == 'adult_group':
             return config.adult_group_monthly_fee
+        elif enrollment.schedule_type == 'full_time':
+            return config.full_time_monthly_fee
+        return config.part_time_monthly_fee
 
-        if enrollment.schedule_type == 'full_time':
-            base = config.full_time_monthly_fee
-        else:
-            base = config.part_time_monthly_fee
+    @staticmethod
+    def calculate_monthly_amount(enrollment, config, month):
+        """Calculate the monthly payment amount for a given enrollment."""
+        base = PaymentService._get_base_monthly_fee(enrollment, config)
+        if enrollment.schedule_type == 'adult_group':
+            return base
 
         amount = base
 
         if enrollment.is_sibling_discount:
-            discount = amount * (config.sibling_discount / Decimal('100'))
-            amount -= discount
+            amount -= amount * (config.sibling_discount / Decimal('100'))
 
         if enrollment.has_language_cheque:
             amount -= config.language_cheque_discount
@@ -53,17 +57,9 @@ class PaymentService:
     @staticmethod
     def calculate_quarterly_amount(enrollment, config, quarter_due_month):
         """Calculate the quarterly payment amount (3 months * monthly fee - 5%)."""
-        if enrollment.schedule_type == 'adult_group':
-            base = config.adult_group_monthly_fee
-        elif enrollment.schedule_type == 'full_time':
-            base = config.full_time_monthly_fee
-        else:
-            base = config.part_time_monthly_fee
-
+        base = PaymentService._get_base_monthly_fee(enrollment, config)
         total = base * 3
-        discount = total * (config.quarterly_enrollment_discount / Decimal('100'))
-        total -= discount
-
+        total -= total * (config.quarterly_enrollment_discount / Decimal('100'))
         return max(total, Decimal('0.01'))
 
     @staticmethod

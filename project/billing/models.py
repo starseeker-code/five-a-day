@@ -296,6 +296,7 @@ class Enrollment(models.Model):
         indexes = [
             models.Index(fields=['student']),
             models.Index(fields=['status']),
+            models.Index(fields=['academic_year']),
             models.Index(fields=['enrollment_date']),
             models.Index(fields=['enrollment_period_start']),
         ]
@@ -330,27 +331,20 @@ class Enrollment(models.Model):
 
         super().save(*args, **kwargs)
 
-    @property
-    def is_paid(self):
-        """Check if enrollment is fully paid"""
-        total_payments = self.payments.filter(
+    def _total_paid(self):
+        return self.payments.filter(
             payment_status='completed'
         ).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        return total_payments >= self.final_amount
+    @property
+    def is_paid(self):
+        return self._total_paid() >= self.final_amount
 
     @property
     def remaining_amount(self):
-        """Calculate remaining amount to be paid"""
-        total_payments = self.payments.filter(
-            payment_status='completed'
-        ).aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0.00')
-
-        return max(self.final_amount - total_payments, Decimal('0.00'))
+        return max(self.final_amount - self._total_paid(), Decimal('0.00'))
 
 class Payment(models.Model):
     student = models.ForeignKey(
@@ -396,8 +390,8 @@ class Payment(models.Model):
         choices=constants.PAYMENT_STATUS_CHOICES,
         default='pending'
     )
-    due_date = models.DateField()  # When payment is expected
-    payment_date = models.DateField(null=True, blank=True)  # When payment was actually made
+    due_date = models.DateField()
+    payment_date = models.DateField(null=True, blank=True)
 
     concept = models.CharField(max_length=200)
     reference_number = models.CharField(max_length=50, blank=True)  # Bank reference, receipt number, etc.

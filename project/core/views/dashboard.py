@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.core.paginator import Paginator
-from django.db.models import Sum
+from django.db.models import Sum, Case, When, Value, DecimalField
 from django.shortcuts import render
 
 from core.constants import SCHEDULED_APPS
@@ -53,11 +53,11 @@ def home(request):
         key=lambda x: x["display_name"],
     )
 
-    birthday_students = Student.objects.filter(
+    birthday_students = list(Student.objects.filter(
         active=True, birth_date__month=current_month
-    ).order_by("birth_date__day")
+    ).order_by("birth_date__day"))
 
-    birthday_count = birthday_students.count()
+    birthday_count = len(birthday_students)
 
     birthdays_display = [
         {"name": s.first_name, "day": s.birth_date.day} for s in birthday_students[:5]
@@ -83,22 +83,27 @@ def home(request):
     upcoming_events_count = len(upcoming_events)
     next_event = upcoming_events[0] if upcoming_events else None
 
-    expected_payments = Payment.objects.filter(
-        due_date__month=current_month,
-        due_date__year=current_year,
+    _zero = Decimal("0.00")
+    revenue_stats = Payment.objects.aggregate(
+        expected_revenue=Sum(Case(
+            When(due_date__month=current_month, due_date__year=current_year, then='amount'),
+            default=Value(0), output_field=DecimalField(),
+        )),
+        monthly_income_total=Sum(Case(
+            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then='amount'),
+            default=Value(0), output_field=DecimalField(),
+        )),
+        monthly_income_count=Sum(Case(
+            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then=Value(1)),
+            default=Value(0),
+        )),
     )
-    expected_revenue = expected_payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    expected_revenue = revenue_stats["expected_revenue"] or _zero
+    monthly_income_total = revenue_stats["monthly_income_total"] or _zero
+    monthly_income_count = revenue_stats["monthly_income_count"] or 0
 
-    completed_payments = Payment.objects.filter(
-        payment_status="completed",
-        payment_date__month=current_month,
-        payment_date__year=current_year,
-    )
-    monthly_income_count = completed_payments.count()
-    monthly_income_total = completed_payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-
-    todos = TodoItem.objects.filter().order_by("due_date", "created_at")
-    overdue_todos_count = TodoItem.objects.filter(due_date__lt=today).count()
+    todos = list(TodoItem.objects.order_by("due_date", "created_at"))
+    overdue_todos_count = sum(1 for t in todos if t.is_overdue)
 
     today_birthday_students = Student.objects.filter(
         active=True,

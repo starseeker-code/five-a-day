@@ -1,15 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Case, When, Value, DecimalField
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
 import json
 import csv
-from datetime import date, datetime
-
 import logging
+from datetime import date, datetime
 
 from billing.models import Payment, Enrollment
 from students.models import Student, Parent
@@ -63,58 +62,61 @@ def payments_list(request):
             | Q(reference_number__icontains=search_query)
         )
 
-    # Monthly payment totals
+    # Monthly payment totals — single aggregate query with Case/When
     today = date.today()
     current_month = today.month
     current_year = today.year
 
-    # Expected: all payments due this month
-    expected_qs = Payment.objects.filter(
-        due_date__month=current_month,
-        due_date__year=current_year,
+    _zero = Decimal("0.00")
+    stats = Payment.objects.aggregate(
+        expected_total=Sum(Case(
+            When(due_date__month=current_month, due_date__year=current_year, then='amount'),
+            default=Value(0), output_field=DecimalField(),
+        )),
+        expected_count=Sum(Case(
+            When(due_date__month=current_month, due_date__year=current_year, then=Value(1)),
+            default=Value(0),
+        )),
+        completed_total=Sum(Case(
+            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then='amount'),
+            default=Value(0), output_field=DecimalField(),
+        )),
+        completed_count=Sum(Case(
+            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then=Value(1)),
+            default=Value(0),
+        )),
+        pending_total=Sum(Case(
+            When(payment_status="pending", then='amount'),
+            default=Value(0), output_field=DecimalField(),
+        )),
+        pending_count=Sum(Case(
+            When(payment_status="pending", then=Value(1)),
+            default=Value(0),
+        )),
+        overdue_total=Sum(Case(
+            When(payment_status="pending", due_date__lt=today, then='amount'),
+            default=Value(0), output_field=DecimalField(),
+        )),
+        overdue_count=Sum(Case(
+            When(payment_status="pending", due_date__lt=today, then=Value(1)),
+            default=Value(0),
+        )),
     )
-    expected_payments_total = expected_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-    expected_payments_count = expected_qs.count()
 
-    # Completed: payments completed this month
-    completed_qs = Payment.objects.filter(
-        payment_status="completed",
-        payment_date__month=current_month,
-        payment_date__year=current_year,
-    )
-    completed_payments_total = completed_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-    completed_payments_count = completed_qs.count()
-
-    # Pending: not-yet-completed payments
-    pending_qs = Payment.objects.filter(
-        payment_status="pending",
-    )
-    pending_payments_total = pending_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-    pending_payments_count = pending_qs.count()
-
-    # Overdue: pending payments past due date
-    overdue_qs = Payment.objects.filter(
-        payment_status="pending",
-        due_date__lt=today,
-    )
-    overdue_payments_total = overdue_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-    overdue_payments_count = overdue_qs.count()
-
-    # Load up to 1000 payments for frontend filtering/pagination
     all_payments_list = list(payments_queryset[:1000])
 
     context = {
         "payments_list": all_payments_list,
         "total_count": payments_queryset.count(),
         "search_query": search_query,
-        "expected_payments_total": expected_payments_total,
-        "expected_payments_count": expected_payments_count,
-        "completed_payments_total": completed_payments_total,
-        "completed_payments_count": completed_payments_count,
-        "pending_payments_total": pending_payments_total,
-        "pending_payments_count": pending_payments_count,
-        "overdue_payments_total": overdue_payments_total,
-        "overdue_payments_count": overdue_payments_count,
+        "expected_payments_total": stats["expected_total"] or _zero,
+        "expected_payments_count": stats["expected_count"] or 0,
+        "completed_payments_total": stats["completed_total"] or _zero,
+        "completed_payments_count": stats["completed_count"] or 0,
+        "pending_payments_total": stats["pending_total"] or _zero,
+        "pending_payments_count": stats["pending_count"] or 0,
+        "overdue_payments_total": stats["overdue_total"] or _zero,
+        "overdue_payments_count": stats["overdue_count"] or 0,
         "payment_method_choices": constants.PAYMENT_METHOD_CHOICES,
     }
 
@@ -605,8 +607,6 @@ def export_payments(request):
 
 def export_database_excel(request):
     """Export Estudiantes, Matrículas and Pagos as a single .xlsx file."""
-    from datetime import datetime
-    from django.http import HttpResponse
     from billing.exports import build_database_workbook
 
     wb = build_database_workbook()

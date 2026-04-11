@@ -85,12 +85,26 @@ def fun_friday_view(request):
     students = Student.objects.filter(active=True, is_adult=False).select_related('group').order_by('group__group_name', 'first_name')
     this_friday = get_next_friday()
     last_friday = get_last_friday()
-    this_week_ids = get_ff_student_ids(this_friday)
-    last_week_ids = get_ff_student_ids(last_friday)
-    this_week_students = Student.objects.filter(id__in=this_week_ids).order_by('first_name', 'last_name')
-    last_week_students = Student.objects.filter(id__in=last_week_ids).order_by('first_name', 'last_name')
+
+    # Single query for both weeks' attendance
+    attendance = FunFridayAttendance.objects.filter(
+        date__in=[this_friday, last_friday]
+    ).values_list('student_id', 'date')
+    this_week_ids = set()
+    last_week_ids = set()
+    for sid, att_date in attendance:
+        if att_date == this_friday:
+            this_week_ids.add(sid)
+        else:
+            last_week_ids.add(sid)
+
+    # Filter from already-loaded students instead of re-querying
+    students_list = list(students)
+    this_week_students = [s for s in students_list if s.id in this_week_ids]
+    last_week_students = [s for s in students_list if s.id in last_week_ids]
+
     return render(request, "fun_friday.html", {
-        "students": students,
+        "students": students_list,
         "this_week_ids": this_week_ids,
         "last_week_ids": last_week_ids,
         "this_friday": this_friday,
