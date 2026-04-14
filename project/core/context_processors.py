@@ -1,7 +1,9 @@
 from datetime import date
+
 from django.conf import settings
-from .models import TodoItem, HistoryLog
+
 from .constants import SCHEDULED_APPS
+from .models import HistoryLog, TodoItem
 
 
 def today_notifications(request):

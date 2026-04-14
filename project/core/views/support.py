@@ -1,8 +1,9 @@
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.conf import settings
 import json
 from datetime import datetime
+
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 
 @require_http_methods(["POST"])
@@ -74,14 +75,10 @@ Vista actual:   {current_url}
             fail_silently=False,
         )
 
-        return JsonResponse(
-            {"success": True, "message": "Ticket enviado correctamente"}
-        )
+        return JsonResponse({"success": True, "message": "Ticket enviado correctamente"})
 
     except json.JSONDecodeError:
-        return JsonResponse(
-            {"success": False, "message": "Datos inválidos"}, status=400
-        )
+        return JsonResponse({"success": False, "message": "Datos inválidos"}, status=400)
     except Exception as e:
         return JsonResponse(
             {"success": False, "message": f"Error al enviar ticket: {str(e)}"},

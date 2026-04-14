@@ -1,13 +1,21 @@
 from django.urls import path
+
 from core.views import (
     # Parents
     ParentCreateView,
+    StudentCreateView,
+    StudentDetailView,
     # Students
-    StudentListView, StudentCreateView, StudentDetailView, StudentUpdateView,
-    # Fun Friday attendance
-    toggle_fun_friday_this_week, add_fun_friday_attendance, remove_fun_friday_attendance,
+    StudentListView,
+    StudentUpdateView,
+    add_fun_friday_attendance,
+    remove_fun_friday_attendance,
+    search_parents,
     # Search/validation API
-    search_students, search_parents, validate_student_parent,
+    search_students,
+    # Fun Friday attendance
+    toggle_fun_friday_this_week,
+    validate_student_parent,
 )
 
 urlpatterns = [
@@ -20,17 +28,23 @@ urlpatterns = [
     # ============================================================================
     path("students/", StudentListView.as_view(), name="students_list"),
     path("students/create/", StudentCreateView.as_view(), name="student_create"),
-    path(
-        "students/<int:student_id>/", StudentDetailView.as_view(), name="student_detail"
-    ),
+    path("students/<int:student_id>/", StudentDetailView.as_view(), name="student_detail"),
     path(
         "students/<int:student_id>/update/",
         StudentUpdateView.as_view(),
         name="student_update",
     ),
-    path("api/students/<int:student_id>/fun-friday/toggle/", toggle_fun_friday_this_week, name="toggle_fun_friday_this_week"),
+    path(
+        "api/students/<int:student_id>/fun-friday/toggle/",
+        toggle_fun_friday_this_week,
+        name="toggle_fun_friday_this_week",
+    ),
     path("api/students/<int:student_id>/fun-friday/add/", add_fun_friday_attendance, name="add_fun_friday_attendance"),
-    path("api/students/<int:student_id>/fun-friday/remove/", remove_fun_friday_attendance, name="remove_fun_friday_attendance"),
+    path(
+        "api/students/<int:student_id>/fun-friday/remove/",
+        remove_fun_friday_attendance,
+        name="remove_fun_friday_attendance",
+    ),
     # ============================================================================
     # API ENDPOINTS - Search and Validation
     # ============================================================================

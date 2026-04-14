@@ -73,6 +73,17 @@ python manage.py test_all_emails --to admin@test.com
 
 10 URL patterns for the email app form views (`apps/`, `apps/fun-friday/`, `apps/payment-reminder/`, etc.). Views are imported from `core.views.app_forms`.
 
+## Tests
+
+Tests for comms services live in `project/tests/`:
+
+| File | What it tests |
+| ---- | ------------- |
+| `test_email_service.py` | `EmailService` — basic send, multiple recipients, CC/BCC, attachments, fail_silently, bulk sends, bad template handling. Uses `django.core.mail.outbox` (locmem backend). |
+| `test_email_functions.py` | All convenience functions in `email_functions.py` — correct template, subject, context, and fail_silently for each function |
+
+Run with `make test` (requires Docker + PostgreSQL running).
+
 ## Cross-App Communication
 
 - **Depends on**: students (Student, Parent for recipient resolution), billing (Payment for tax certificates)

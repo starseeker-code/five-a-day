@@ -4,27 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0001_initial'),
-        ('students', '0002_alter_studentparent_unique_together_student_gender_and_more'),
+        ("core", "0001_initial"),
+        ("students", "0002_alter_studentparent_unique_together_student_gender_and_more"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='funfridayattendance',
+            name="funfridayattendance",
             unique_together=set(),
         ),
         migrations.AlterUniqueTogether(
-            name='scheduleslot',
+            name="scheduleslot",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='funfridayattendance',
-            constraint=models.UniqueConstraint(fields=('student', 'date'), name='unique_fun_friday_attendance'),
+            model_name="funfridayattendance",
+            constraint=models.UniqueConstraint(fields=("student", "date"), name="unique_fun_friday_attendance"),
         ),
         migrations.AddConstraint(
-            model_name='scheduleslot',
-            constraint=models.UniqueConstraint(fields=('row', 'day', 'col'), name='unique_schedule_slot'),
+            model_name="scheduleslot",
+            constraint=models.UniqueConstraint(fields=("row", "day", "col"), name="unique_schedule_slot"),
         ),
     ]

@@ -1,5 +1,6 @@
 from django.test import Client
-from core.models import Teacher, Group, Parent, Student, Enrollment, EnrollmentType, Payment
+
+from core.models import Enrollment, EnrollmentType, Group, Parent, Payment, Student, Teacher
 
 
 def run():
@@ -102,11 +103,15 @@ def run():
 
     payment_response = client.post("/payments/create/", data=payment_post_data, secure=True)
 
-    payment = Payment.objects.filter(
-        student=student,
-        parent=parent,
-        concept="Pago smoke test",
-    ).order_by("-id").first()
+    payment = (
+        Payment.objects.filter(
+            student=student,
+            parent=parent,
+            concept="Pago smoke test",
+        )
+        .order_by("-id")
+        .first()
+    )
     if not payment:
         raise AssertionError("No se creó el pago en base de datos")
 

@@ -58,6 +58,17 @@ All templates live in `core/templates/`:
 - `js/support.js` — support ticket modal
 - `js/home.js`, `js/students.js`, `js/payments.js`, etc. — per-page modules
 
+## Tests
+
+Tests for core components live in `project/tests/`:
+
+| File | What it tests |
+| ---- | ------------- |
+| `test_context_processors.py` | `today_notifications()` — key presence, todo filtering, scheduled app logic, history count, support email |
+| `test_middleware.py` | `SimpleAuthMiddleware` — public paths (static, health, login, oauth), redirect behavior, authenticated sessions |
+
+Run with `make test` (requires Docker + PostgreSQL running).
+
 ## Cross-App Communication
 
 - Imports `Student`, `Parent`, `Group` from **students**

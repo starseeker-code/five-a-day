@@ -1,13 +1,14 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from decimal import Decimal
 import json
+from decimal import Decimal
 
-from billing.models import SiteConfiguration, Enrollment, current_academic_year
-from students.models import Teacher, Group, Student
-from core.models import HistoryLog
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_http_methods
+
 from billing import constants
+from billing.models import Enrollment, SiteConfiguration, current_academic_year
+from core.models import HistoryLog
+from students.models import Group, Student, Teacher
 
 
 def gestion_view(request):
@@ -16,11 +17,7 @@ def gestion_view(request):
     """
     config = SiteConfiguration.get_config()
     teachers = Teacher.objects.filter(active=True).order_by("first_name", "last_name")
-    groups = (
-        Group.objects.filter(active=True)
-        .select_related("teacher")
-        .order_by("group_name")
-    )
+    groups = Group.objects.filter(active=True).select_related("teacher").order_by("group_name")
 
     context = {
         "config": config,
@@ -38,9 +35,7 @@ def update_site_config(request):
         config = SiteConfiguration.get_config()
 
         if "children_enrollment_fee" in data:
-            config.children_enrollment_fee = Decimal(
-                str(data["children_enrollment_fee"])
-            )
+            config.children_enrollment_fee = Decimal(str(data["children_enrollment_fee"]))
         if "adult_enrollment_fee" in data:
             config.adult_enrollment_fee = Decimal(str(data["adult_enrollment_fee"]))
 
@@ -49,9 +44,7 @@ def update_site_config(request):
         if "part_time_monthly_fee" in data:
             config.part_time_monthly_fee = Decimal(str(data["part_time_monthly_fee"]))
         if "adult_group_monthly_fee" in data:
-            config.adult_group_monthly_fee = Decimal(
-                str(data["adult_group_monthly_fee"])
-            )
+            config.adult_group_monthly_fee = Decimal(str(data["adult_group_monthly_fee"]))
 
         for field in [
             "language_cheque_discount",
@@ -69,11 +62,9 @@ def update_site_config(request):
 
         config.save()
 
-        HistoryLog.log('config_updated', 'Precios o descuentos actualizados', icon='tune')
+        HistoryLog.log("config_updated", "Precios o descuentos actualizados", icon="tune")
 
-        return JsonResponse(
-            {"success": True, "message": "Configuración actualizada correctamente"}
-        )
+        return JsonResponse({"success": True, "message": "Configuración actualizada correctamente"})
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=400)
 
@@ -107,7 +98,7 @@ def create_teacher(request):
             admin=data.get("admin", False),
         )
 
-        HistoryLog.log('teacher_created', f'Profesor creado: {teacher.full_name}', icon='person_add')
+        HistoryLog.log("teacher_created", f"Profesor creado: {teacher.full_name}", icon="person_add")
 
         return JsonResponse(
             {
@@ -137,9 +128,7 @@ def create_group(request):
             )
 
         if not data.get("teacher_id"):
-            return JsonResponse(
-                {"success": False, "message": "El profesor es requerido"}, status=400
-            )
+            return JsonResponse({"success": False, "message": "El profesor es requerido"}, status=400)
 
         if Group.objects.filter(group_name=data["group_name"]).exists():
             return JsonResponse(
@@ -162,7 +151,9 @@ def create_group(request):
             active=True,
         )
 
-        HistoryLog.log('group_created', f'Grupo creado: {group.group_name} (Prof. {teacher.full_name})', icon='group_add')
+        HistoryLog.log(
+            "group_created", f"Grupo creado: {group.group_name} (Prof. {teacher.full_name})", icon="group_add"
+        )
 
         return JsonResponse(
             {
@@ -203,7 +194,7 @@ def update_enrollment_modality(request, student_id):
                 status=400,
             )
 
-        enrollment = student.enrollments.filter(status='active').first()
+        enrollment = student.enrollments.filter(status="active").first()
         if not enrollment:
             return JsonResponse(
                 {"success": False, "error": "No tiene matrícula activa"},
@@ -213,12 +204,14 @@ def update_enrollment_modality(request, student_id):
         enrollment.payment_modality = modality
         enrollment.save()
 
-        return JsonResponse({
-            "success": True,
-            "message": f"Modalidad cambiada a {enrollment.get_payment_modality_display()}.",
-            "payment_modality": modality,
-            "payment_modality_display": enrollment.get_payment_modality_display(),
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"Modalidad cambiada a {enrollment.get_payment_modality_display()}.",
+                "payment_modality": modality,
+                "payment_modality_display": enrollment.get_payment_modality_display(),
+            }
+        )
 
     except Exception as e:
         return JsonResponse(
@@ -233,29 +226,37 @@ def language_cheque_students(request):
     API endpoint to fetch students with active language cheque (cheque idioma).
     """
     academic_year = current_academic_year()
-    enrollments = Enrollment.objects.filter(
-        status='active',
-        academic_year=academic_year,
-        has_language_cheque=True,
-    ).select_related('student', 'student__group').prefetch_related('student__parents')
+    enrollments = (
+        Enrollment.objects.filter(
+            status="active",
+            academic_year=academic_year,
+            has_language_cheque=True,
+        )
+        .select_related("student", "student__group")
+        .prefetch_related("student__parents")
+    )
 
     students_data = []
     for enrollment in enrollments:
         s = enrollment.student
         parent = s.parents.first()
-        students_data.append({
-            'id': s.id,
-            'full_name': s.full_name,
-            'birth_date': s.birth_date.strftime('%Y-%m-%d'),
-            'group': s.group.group_name if s.group else '',
-            'parent_name': parent.full_name if parent else '',
-            'parent_dni': parent.dni if parent else '',
-            'schedule_type': enrollment.get_schedule_type_display(),
-        })
+        students_data.append(
+            {
+                "id": s.id,
+                "full_name": s.full_name,
+                "birth_date": s.birth_date.strftime("%Y-%m-%d"),
+                "group": s.group.group_name if s.group else "",
+                "parent_name": parent.full_name if parent else "",
+                "parent_dni": parent.dni if parent else "",
+                "schedule_type": enrollment.get_schedule_type_display(),
+            }
+        )
 
-    return JsonResponse({
-        'success': True,
-        'academic_year': academic_year,
-        'count': len(students_data),
-        'students': students_data,
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "academic_year": academic_year,
+            "count": len(students_data),
+            "students": students_data,
+        }
+    )

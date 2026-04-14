@@ -2,22 +2,28 @@
 Email app form views — each view handles GET (show form with email preview)
 and POST (send emails to parents).
 """
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import JsonResponse
-from django.template.loader import render_to_string
+
 import os
 from datetime import date, timedelta
 
-from students.models import Parent, Student, Group
-from core.models import HistoryLog
-from comms.services.email_service import email_service
+from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
+
 from comms.services.email_functions import (
-    send_fun_friday_email, send_payment_reminder_email,
-    send_vacation_closure_email, send_all_tax_certificates,
-    send_quarterly_receipt_email, send_monthly_report, send_welcome_email,
+    send_all_tax_certificates,
+    send_fun_friday_email,
+    send_monthly_report,
+    send_payment_reminder_email,
+    send_quarterly_receipt_email,
+    send_vacation_closure_email,
+    send_welcome_email,
 )
+from comms.services.email_service import email_service
 from core.constants import DIAS_ES, MESES_ES
+from core.models import HistoryLog
+from students.models import Group, Parent, Student
 
 
 def apps_view(request):
@@ -59,48 +65,50 @@ Esta semana haremos manualidades creativas con materiales reciclados.
 ¡Os esperamos! 🎨"""
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _event_date_str = request.POST.get('event_date', next_friday.isoformat())
-            _start_time = request.POST.get('start_time', '17:00')
-            _end_time = request.POST.get('end_time', '18:30')
-            _meeting_point = request.POST.get('meeting_point', '')
-            _activity = request.POST.get('activity_description', default_html)
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _event_date_str = request.POST.get("event_date", next_friday.isoformat())
+            _start_time = request.POST.get("start_time", "17:00")
+            _end_time = request.POST.get("end_time", "18:30")
+            _meeting_point = request.POST.get("meeting_point", "")
+            _activity = request.POST.get("activity_description", default_html)
             try:
                 _ed = date.fromisoformat(_event_date_str)
             except (ValueError, TypeError):
                 _ed = next_friday
             try:
-                _min_age = int(request.POST.get('min_age', 5))
-                _max_age = int(request.POST.get('max_age', 12))
+                _min_age = int(request.POST.get("min_age", 5))
+                _max_age = int(request.POST.get("max_age", 12))
             except (ValueError, TypeError):
                 _min_age, _max_age = 5, 12
             _ctx = {
-                'day_name': DIAS_ES[_ed.weekday()],
-                'day_number': _ed.day,
-                'month': MESES_ES[_ed.month - 1],
-                'start_time': _start_time,
-                'end_time': _end_time,
-                'activity_description': _activity,
-                'meeting_point': _meeting_point,
-                'minimum_age': _min_age,
-                'maximum_age': _max_age,
+                "day_name": DIAS_ES[_ed.weekday()],
+                "day_number": _ed.day,
+                "month": MESES_ES[_ed.month - 1],
+                "start_time": _start_time,
+                "end_time": _end_time,
+                "activity_description": _activity,
+                "meeting_point": _meeting_point,
+                "minimum_age": _min_age,
+                "maximum_age": _max_age,
             }
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string('emails/fun_friday.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/fun_friday.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
-                template_name='fun_friday',
+                template_name="fun_friday",
                 recipients=_recipients,
-                subject=f'[TEST] 🎉 Fun Friday - {_ctx["day_name"].capitalize()} {_ctx["day_number"]} de {_ctx["month"]}',
+                subject=f"[TEST] 🎉 Fun Friday - {_ctx['day_name'].capitalize()} {_ctx['day_number']} de {_ctx['month']}",
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         # Obtener datos del formulario
         event_date_str = request.POST.get("event_date")
@@ -111,9 +119,7 @@ Esta semana haremos manualidades creativas con materiales reciclados.
         max_age = request.POST.get("max_age")
         activity_description = request.POST.get("activity_description", "")
 
-        if not all(
-            [event_date_str, start_time, end_time, min_age, max_age, activity_description]
-        ):
+        if not all([event_date_str, start_time, end_time, min_age, max_age, activity_description]):
             messages.error(request, "❌ Todos los campos obligatorios son requeridos")
             return render(
                 request,
@@ -206,27 +212,28 @@ Esta semana haremos manualidades creativas con materiales reciclados.
                 error_count += 1
 
         if success_count > 0:
-            HistoryLog.log('email_sent', f'Fun Friday: {success_count} email(s) enviados', icon='mail')
-            messages.success(
-                request, f"✅ Fun Friday enviado a {success_count} padre(s)"
-            )
+            HistoryLog.log("email_sent", f"Fun Friday: {success_count} email(s) enviados", icon="mail")
+            messages.success(request, f"✅ Fun Friday enviado a {success_count} padre(s)")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
 
         return redirect("home")
 
     # GET - Mostrar formulario con email preview
-    email_html = render_to_string('emails/fun_friday.html', {
-        'day_name': DIAS_ES[next_friday.weekday()],
-        'day_number': next_friday.day,
-        'month': MESES_ES[next_friday.month - 1],
-        'start_time': '17:00',
-        'end_time': '18:30',
-        'activity_description': default_html,
-        'meeting_point': 'En la puerta principal del centro',
-        'minimum_age': 5,
-        'maximum_age': 12,
-    })
+    email_html = render_to_string(
+        "emails/fun_friday.html",
+        {
+            "day_name": DIAS_ES[next_friday.weekday()],
+            "day_number": next_friday.day,
+            "month": MESES_ES[next_friday.month - 1],
+            "start_time": "17:00",
+            "end_time": "18:30",
+            "activity_description": default_html,
+            "meeting_point": "En la puerta principal del centro",
+            "minimum_age": 5,
+            "maximum_age": 12,
+        },
+    )
     return render(
         request,
         "apps/fun_friday_form.html",
@@ -262,44 +269,46 @@ def payment_reminder_form(request):
     current_month = MESES_ES[today.month - 1]
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _start_str = request.POST.get('payment_start_date', default_start.isoformat())
-            _end_str = request.POST.get('payment_end_date', default_end.isoformat())
-            _month = request.POST.get('month', current_month)
-            _iban = request.POST.get('iban_number', 'ES00 0000 0000 0000 0000 0000')
-            _bizum = request.POST.get('telephone_number_bizum', '600 000 000')
-            _cheque = request.POST.get('reduced_price_cheque_idioma', '34€')
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _start_str = request.POST.get("payment_start_date", default_start.isoformat())
+            _end_str = request.POST.get("payment_end_date", default_end.isoformat())
+            _month = request.POST.get("month", current_month)
+            _iban = request.POST.get("iban_number", "ES00 0000 0000 0000 0000 0000")
+            _bizum = request.POST.get("telephone_number_bizum", "600 000 000")
+            _cheque = request.POST.get("reduced_price_cheque_idioma", "34€")
             try:
                 _sd = date.fromisoformat(_start_str)
                 _ed = date.fromisoformat(_end_str)
             except (ValueError, TypeError):
                 _sd, _ed = default_start, default_end
             _ctx = {
-                'payment_start_day_name': DIAS_ES[_sd.weekday()],
-                'payment_start_day_number': _sd.day,
-                'payment_end_day_name': DIAS_ES[_ed.weekday()],
-                'payment_end_day_number': _ed.day,
-                'month': _month,
-                'iban_number': _iban,
-                'reduced_price_cheque_idioma': _cheque,
-                'telephone_number_bizum': _bizum,
+                "payment_start_day_name": DIAS_ES[_sd.weekday()],
+                "payment_start_day_number": _sd.day,
+                "payment_end_day_name": DIAS_ES[_ed.weekday()],
+                "payment_end_day_number": _ed.day,
+                "month": _month,
+                "iban_number": _iban,
+                "reduced_price_cheque_idioma": _cheque,
+                "telephone_number_bizum": _bizum,
             }
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string('emails/payment_reminder.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/payment_reminder.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
-                template_name='payment_reminder',
+                template_name="payment_reminder",
                 recipients=_recipients,
-                subject=f'[TEST] 💰 Recordatorio de Pago - {_month.title()}',
+                subject=f"[TEST] 💰 Recordatorio de Pago - {_month.title()}",
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         payment_start_date_str = request.POST.get("payment_start_date")
         payment_end_date_str = request.POST.get("payment_end_date")
@@ -348,33 +357,40 @@ def payment_reminder_form(request):
                     error_count += 1
 
             if success_count > 0:
-                HistoryLog.log('email_sent', f'Recordatorio de pago: {success_count} email(s) enviados', icon='mail')
+                HistoryLog.log("email_sent", f"Recordatorio de pago: {success_count} email(s) enviados", icon="mail")
                 messages.success(request, f"✅ Recordatorio enviado a {success_count} padre(s)")
             if error_count > 0:
                 messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
             return redirect("apps")
 
-    email_html = render_to_string('emails/payment_reminder.html', {
-        'payment_start_day_name': DIAS_ES[default_start.weekday()],
-        'payment_start_day_number': default_start.day,
-        'payment_end_day_name': DIAS_ES[default_end.weekday()],
-        'payment_end_day_number': default_end.day,
-        'month': current_month,
-        'iban_number': 'ES00 0000 0000 0000 0000 0000',
-        'reduced_price_cheque_idioma': '34€',
-        'telephone_number_bizum': '600 000 000',
-    })
-    return render(request, "apps/payment_reminder_form.html", {
-        "parent_count": parent_count,
-        "default_start_date": default_start.isoformat(),
-        "default_end_date": default_end.isoformat(),
-        "months": MESES_ES,
-        "current_month": current_month,
-        "default_iban": "",
-        "default_bizum": "",
-        "default_cheque_price": "34€",
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/payment_reminder.html",
+        {
+            "payment_start_day_name": DIAS_ES[default_start.weekday()],
+            "payment_start_day_number": default_start.day,
+            "payment_end_day_name": DIAS_ES[default_end.weekday()],
+            "payment_end_day_number": default_end.day,
+            "month": current_month,
+            "iban_number": "ES00 0000 0000 0000 0000 0000",
+            "reduced_price_cheque_idioma": "34€",
+            "telephone_number_bizum": "600 000 000",
+        },
+    )
+    return render(
+        request,
+        "apps/payment_reminder_form.html",
+        {
+            "parent_count": parent_count,
+            "default_start_date": default_start.isoformat(),
+            "default_end_date": default_end.isoformat(),
+            "months": MESES_ES,
+            "current_month": current_month,
+            "default_iban": "",
+            "default_bizum": "",
+            "default_cheque_price": "34€",
+            "email_html": email_html,
+        },
+    )
 
 
 # ============================================================================
@@ -391,12 +407,12 @@ def vacation_closure_form(request):
     parent_count = Parent.objects.filter(children__active=True).distinct().count()
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _cs_str = request.POST.get('closure_start_date', '')
-            _ce_str = request.POST.get('closure_end_date', '')
-            _r_str = request.POST.get('reopening_date', '')
-            _reason = request.POST.get('closure_reason', 'Vacaciones')
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _cs_str = request.POST.get("closure_start_date", "")
+            _ce_str = request.POST.get("closure_end_date", "")
+            _r_str = request.POST.get("reopening_date", "")
+            _reason = request.POST.get("closure_reason", "Vacaciones")
             try:
                 _cs = date.fromisoformat(_cs_str)
                 _ce = date.fromisoformat(_ce_str)
@@ -406,31 +422,33 @@ def vacation_closure_form(request):
                 _ce = _cs + timedelta(days=7)
                 _ro = _ce + timedelta(days=3)
             _ctx = {
-                'start_closure_day_name': DIAS_ES[_cs.weekday()],
-                'start_closure_day_number': _cs.day,
-                'end_closure_day_name': DIAS_ES[_ce.weekday()],
-                'end_closure_day_number': _ce.day,
-                'month_closure': MESES_ES[_cs.month - 1],
-                'closure_reason': _reason,
-                'reopening_day_name': DIAS_ES[_ro.weekday()],
-                'reopening_day_number': _ro.day,
-                'month_reopening': MESES_ES[_ro.month - 1],
+                "start_closure_day_name": DIAS_ES[_cs.weekday()],
+                "start_closure_day_number": _cs.day,
+                "end_closure_day_name": DIAS_ES[_ce.weekday()],
+                "end_closure_day_number": _ce.day,
+                "month_closure": MESES_ES[_cs.month - 1],
+                "closure_reason": _reason,
+                "reopening_day_name": DIAS_ES[_ro.weekday()],
+                "reopening_day_number": _ro.day,
+                "month_reopening": MESES_ES[_ro.month - 1],
             }
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string('emails/vacation_closure.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/vacation_closure.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
-                template_name='vacation_closure',
+                template_name="vacation_closure",
                 recipients=_recipients,
-                subject=f'[TEST] 🏖️ Cierre por {_reason} - Five a Day',
+                subject=f"[TEST] 🏖️ Cierre por {_reason} - Five a Day",
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         closure_start_str = request.POST.get("closure_start_date")
         closure_end_str = request.POST.get("closure_end_date")
@@ -479,27 +497,34 @@ def vacation_closure_form(request):
                     error_count += 1
 
             if success_count > 0:
-                HistoryLog.log('email_sent', f'Cierre por vacaciones: {success_count} email(s) enviados', icon='mail')
+                HistoryLog.log("email_sent", f"Cierre por vacaciones: {success_count} email(s) enviados", icon="mail")
                 messages.success(request, f"✅ Aviso de cierre enviado a {success_count} padre(s)")
             if error_count > 0:
                 messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
             return redirect("apps")
 
-    email_html = render_to_string('emails/vacation_closure.html', {
-        'start_closure_day_name': 'lunes',
-        'start_closure_day_number': 23,
-        'end_closure_day_name': 'viernes',
-        'end_closure_day_number': 3,
-        'month_closure': 'diciembre',
-        'closure_reason': 'Navidad',
-        'reopening_day_name': 'lunes',
-        'reopening_day_number': 8,
-        'month_reopening': 'enero',
-    })
-    return render(request, "apps/vacation_closure_form.html", {
-        "parent_count": parent_count,
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/vacation_closure.html",
+        {
+            "start_closure_day_name": "lunes",
+            "start_closure_day_number": 23,
+            "end_closure_day_name": "viernes",
+            "end_closure_day_number": 3,
+            "month_closure": "diciembre",
+            "closure_reason": "Navidad",
+            "reopening_day_name": "lunes",
+            "reopening_day_number": 8,
+            "month_reopening": "enero",
+        },
+    )
+    return render(
+        request,
+        "apps/vacation_closure_form.html",
+        {
+            "parent_count": parent_count,
+            "email_html": email_html,
+        },
+    )
 
 
 # ============================================================================
@@ -513,58 +538,67 @@ def tax_certificate_form(request):
     GET: Muestra formulario con año por defecto
     POST: Genera y envía certificados a todos los padres con pagos
     """
-    from billing.models import Payment
 
     today = date.today()
     default_year = today.year - 1
 
-    parents_with_payments = Parent.objects.filter(
-        payments__payment_status='completed',
-        payments__payment_date__year=default_year
-    ).distinct().count()
+    parents_with_payments = (
+        Parent.objects.filter(payments__payment_status="completed", payments__payment_date__year=default_year)
+        .distinct()
+        .count()
+    )
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _year = int(request.POST.get('year', default_year))
-            _ctx = {'year': _year, 'parent_name': 'Nombre del padre'}
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string('emails/tax_certificate.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _year = int(request.POST.get("year", default_year))
+            _ctx = {"year": _year, "parent_name": "Nombre del padre"}
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/tax_certificate.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
-                template_name='tax_certificate',
+                template_name="tax_certificate",
                 recipients=_recipients,
-                subject=f'[TEST] 📋 Certificado de Renta {_year} - Five a Day',
+                subject=f"[TEST] 📋 Certificado de Renta {_year} - Five a Day",
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         year = int(request.POST.get("year", default_year))
         results = send_all_tax_certificates(year)
 
-        if results['sent'] > 0:
-            HistoryLog.log('email_sent', f'Certificado de renta: {results["sent"]} email(s) enviados', icon='mail')
+        if results["sent"] > 0:
+            HistoryLog.log("email_sent", f"Certificado de renta: {results['sent']} email(s) enviados", icon="mail")
             messages.success(request, f"✅ Certificados enviados a {results['sent']} padre(s)")
-        if results.get('skipped', 0) > 0:
+        if results.get("skipped", 0) > 0:
             messages.info(request, f"ℹ️ {results['skipped']} padre(s) omitidos (sin email)")
-        if results.get('failed', 0) > 0:
+        if results.get("failed", 0) > 0:
             messages.warning(request, f"⚠️ {results['failed']} certificado(s) fallaron")
         return redirect("apps")
 
-    email_html = render_to_string('emails/tax_certificate.html', {
-        'year': default_year,
-        'parent_name': 'Nombre del padre',
-    })
-    return render(request, "apps/tax_certificate_form.html", {
-        "default_year": default_year,
-        "parents_with_payments": parents_with_payments,
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/tax_certificate.html",
+        {
+            "year": default_year,
+            "parent_name": "Nombre del padre",
+        },
+    )
+    return render(
+        request,
+        "apps/tax_certificate_form.html",
+        {
+            "default_year": default_year,
+            "parents_with_payments": parents_with_payments,
+            "email_html": email_html,
+        },
+    )
 
 
 # ============================================================================
@@ -585,42 +619,42 @@ def monthly_report_form(request):
     total_groups = Group.objects.filter(active=True).count()
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _month = request.POST.get('month', current_month)
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _month = request.POST.get("month", current_month)
             try:
-                _year = int(request.POST.get('year', today.year))
+                _year = int(request.POST.get("year", today.year))
             except (ValueError, TypeError):
                 _year = today.year
             _ctx = {
-                'month': _month,
-                'year': _year,
-                'parent_name': 'Nombre del padre',
-                'students': [{'name': 'Alumno Ejemplo', 'group': 'Grupo A'}],
-                'total_students': 1,
+                "month": _month,
+                "year": _year,
+                "parent_name": "Nombre del padre",
+                "students": [{"name": "Alumno Ejemplo", "group": "Grupo A"}],
+                "total_students": 1,
             }
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string('emails/monthly_report.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/monthly_report.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
-                template_name='monthly_report',
+                template_name="monthly_report",
                 recipients=_recipients,
-                subject=f'[TEST] 📊 Informe Mensual - {_month.title()} {_year}',
+                subject=f"[TEST] 📊 Informe Mensual - {_month.title()} {_year}",
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         month = request.POST.get("month", current_month)
         year = int(request.POST.get("year", today.year))
 
-        parents = Parent.objects.filter(
-            children__active=True
-        ).distinct().prefetch_related('children__group')
+        parents = Parent.objects.filter(children__active=True).distinct().prefetch_related("children__group")
 
         success_count = 0
         error_count = 0
@@ -628,19 +662,19 @@ def monthly_report_form(request):
             if not parent.email:
                 continue
             students_data = [
-                {'name': s.full_name, 'group': s.group.group_name if s.group else 'Sin grupo'}
+                {"name": s.full_name, "group": s.group.group_name if s.group else "Sin grupo"}
                 for s in parent.children.filter(active=True)
             ]
             try:
                 result = send_monthly_report(
                     recipient=parent.email,
                     report_data={
-                        'month': month,
-                        'year': year,
-                        'parent_name': parent.full_name,
-                        'students': students_data,
-                        'total_students': len(students_data),
-                    }
+                        "month": month,
+                        "year": year,
+                        "parent_name": parent.full_name,
+                        "students": students_data,
+                        "total_students": len(students_data),
+                    },
                 )
                 if result:
                     success_count += 1
@@ -650,28 +684,35 @@ def monthly_report_form(request):
                 error_count += 1
 
         if success_count > 0:
-            HistoryLog.log('email_sent', f'Informe mensual: {success_count} email(s) enviados', icon='mail')
+            HistoryLog.log("email_sent", f"Informe mensual: {success_count} email(s) enviados", icon="mail")
             messages.success(request, f"✅ Informes enviados a {success_count} padre(s)")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} informe(s) no pudieron enviarse")
         return redirect("apps")
 
-    email_html = render_to_string('emails/monthly_report.html', {
-        'month': current_month,
-        'year': today.year,
-        'parent_name': 'Nombre del padre',
-        'students': [{'name': 'Alumno Ejemplo', 'group': 'Grupo A'}],
-        'total_students': 1,
-    })
-    return render(request, "apps/monthly_report_form.html", {
-        "months": MESES_ES,
-        "current_month": current_month,
-        "current_year": today.year,
-        "parent_count": parent_count,
-        "total_students": total_students,
-        "total_groups": total_groups,
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/monthly_report.html",
+        {
+            "month": current_month,
+            "year": today.year,
+            "parent_name": "Nombre del padre",
+            "students": [{"name": "Alumno Ejemplo", "group": "Grupo A"}],
+            "total_students": 1,
+        },
+    )
+    return render(
+        request,
+        "apps/monthly_report_form.html",
+        {
+            "months": MESES_ES,
+            "current_month": current_month,
+            "current_year": today.year,
+            "parent_count": parent_count,
+            "total_students": total_students,
+            "total_groups": total_groups,
+            "email_html": email_html,
+        },
+    )
 
 
 # ============================================================================
@@ -697,36 +738,37 @@ def birthday_form(request):
     """
     today = date.today()
     birthday_students = Student.objects.filter(
-        birth_date__month=today.month,
-        birth_date__day=today.day,
-        active=True
-    ).select_related('group')
+        birth_date__month=today.month, birth_date__day=today.day, active=True
+    ).select_related("group")
 
-    month_birthdays = Student.objects.filter(
-        birth_date__month=today.month,
-        active=True
-    ).select_related('group').order_by('birth_date__day')
+    month_birthdays = (
+        Student.objects.filter(birth_date__month=today.month, active=True)
+        .select_related("group")
+        .order_by("birth_date__day")
+    )
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _name = birthday_students.first().first_name if birthday_students.exists() else 'Alumno Ejemplo'
-            _ctx = {'name': _name}
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string('emails/happy_birthday.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _name = birthday_students.first().first_name if birthday_students.exists() else "Alumno Ejemplo"
+            _ctx = {"name": _name}
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/happy_birthday.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
-                template_name='happy_birthday',
+                template_name="happy_birthday",
                 recipients=_recipients,
-                subject=f'[TEST] 🎉 ¡Feliz Cumpleaños {_name}!',
+                subject=f"[TEST] 🎉 ¡Feliz Cumpleaños {_name}!",
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         if not birthday_students.exists():
             messages.info(request, "ℹ️ No hay cumpleaños hoy")
@@ -735,15 +777,15 @@ def birthday_form(request):
         success_count = 0
         error_count = 0
         for student in birthday_students:
-            parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+            parent = student.parents.exclude(email="").exclude(email__isnull=True).first()
             if not parent:
                 continue
             try:
                 result = email_service.send_email(
-                    template_name='happy_birthday',
+                    template_name="happy_birthday",
                     recipients=parent.email,
-                    subject=f'🎉 ¡Feliz Cumpleaños {student.first_name}!',
-                    context={'name': student.first_name}
+                    subject=f"🎉 ¡Feliz Cumpleaños {student.first_name}!",
+                    context={"name": student.first_name},
                 )
                 if result:
                     success_count += 1
@@ -753,21 +795,28 @@ def birthday_form(request):
                 error_count += 1
 
         if success_count > 0:
-            HistoryLog.log('email_sent', f'Cumpleaños: {success_count} email(s) enviados', icon='mail')
+            HistoryLog.log("email_sent", f"Cumpleaños: {success_count} email(s) enviados", icon="mail")
             messages.success(request, f"✅ Email de cumpleaños enviado a {success_count} estudiante(s)")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
         return redirect("birthday_form")
 
-    email_html = render_to_string('emails/happy_birthday.html', {
-        'name': 'Alumno',
-    })
-    return render(request, "apps/birthday_form.html", {
-        "today": today.strftime('%d/%m/%Y'),
-        "birthday_students": birthday_students,
-        "month_birthdays": month_birthdays,
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/happy_birthday.html",
+        {
+            "name": "Alumno",
+        },
+    )
+    return render(
+        request,
+        "apps/birthday_form.html",
+        {
+            "today": today.strftime("%d/%m/%Y"),
+            "birthday_students": birthday_students,
+            "month_birthdays": month_birthdays,
+            "email_html": email_html,
+        },
+    )
 
 
 # ============================================================================
@@ -790,27 +839,27 @@ def receipts_form(request):
     quarter_months = [MESES_ES[quarter_start], MESES_ES[quarter_start + 1], MESES_ES[quarter_start + 2]]
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        if action in ('preview', 'test_send'):
-            _rtype = request.POST.get('receipt_type', 'quarterly_child')
-            if _rtype == 'quarterly_child':
-                _m1 = request.POST.get('month_1', quarter_months[0])
-                _m2 = request.POST.get('month_2', quarter_months[1])
-                _m3 = request.POST.get('month_3', quarter_months[2])
-                _template = 'receipt_quarterly_child'
-                _ctx = {'student_name': 'Alumno Ejemplo', 'month_1': _m1, 'month_2': _m2, 'month_3': _m3}
-                _subject = f'[TEST] 🧾 Recibo Trimestral - {_m1.title()}/{_m2.title()}/{_m3.title()}'
+        action = request.POST.get("action", "")
+        if action in ("preview", "test_send"):
+            _rtype = request.POST.get("receipt_type", "quarterly_child")
+            if _rtype == "quarterly_child":
+                _m1 = request.POST.get("month_1", quarter_months[0])
+                _m2 = request.POST.get("month_2", quarter_months[1])
+                _m3 = request.POST.get("month_3", quarter_months[2])
+                _template = "receipt_quarterly_child"
+                _ctx = {"student_name": "Alumno Ejemplo", "month_1": _m1, "month_2": _m2, "month_3": _m3}
+                _subject = f"[TEST] 🧾 Recibo Trimestral - {_m1.title()}/{_m2.title()}/{_m3.title()}"
             else:
-                _adm = request.POST.get('adult_month', current_month)
-                _template = 'receipt_adult'
-                _ctx = {'month': _adm}
-                _subject = f'[TEST] 🧾 Recibo Mensual - {_adm.title()}'
-            if action == 'preview':
-                return JsonResponse({'html': render_to_string(f'emails/{_template}.html', _ctx)})
-            _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+                _adm = request.POST.get("adult_month", current_month)
+                _template = "receipt_adult"
+                _ctx = {"month": _adm}
+                _subject = f"[TEST] 🧾 Recibo Mensual - {_adm.title()}"
+            if action == "preview":
+                return JsonResponse({"html": render_to_string(f"emails/{_template}.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
             _recipients = [r for r in [_t1, _t2] if r]
             if not _recipients:
-                return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
             _ok = email_service.send_email(
                 template_name=_template,
                 recipients=_recipients,
@@ -818,8 +867,10 @@ def receipts_form(request):
                 context=_ctx,
             )
             if _ok:
-                return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-            return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         receipt_type = request.POST.get("receipt_type", "quarterly_child")
 
@@ -828,9 +879,7 @@ def receipts_form(request):
             month_2 = request.POST.get("month_2", quarter_months[1])
             month_3 = request.POST.get("month_3", quarter_months[2])
 
-            parents = Parent.objects.filter(
-                children__active=True
-            ).distinct().prefetch_related('children')
+            parents = Parent.objects.filter(children__active=True).distinct().prefetch_related("children")
 
             success_count = 0
             error_count = 0
@@ -854,9 +903,7 @@ def receipts_form(request):
                         error_count += 1
         else:
             adult_month = request.POST.get("adult_month", current_month)
-            parents = Parent.objects.filter(
-                children__active=True
-            ).distinct()
+            parents = Parent.objects.filter(children__active=True).distinct()
 
             success_count = 0
             error_count = 0
@@ -865,10 +912,10 @@ def receipts_form(request):
                     continue
                 try:
                     result = email_service.send_email(
-                        template_name='receipt_adult',
+                        template_name="receipt_adult",
                         recipients=parent.email,
-                        subject=f'🧾 Recibo Mensual - {adult_month.title()}',
-                        context={'month': adult_month},
+                        subject=f"🧾 Recibo Mensual - {adult_month.title()}",
+                        context={"month": adult_month},
                     )
                     if result:
                         success_count += 1
@@ -878,25 +925,32 @@ def receipts_form(request):
                     error_count += 1
 
         if success_count > 0:
-            HistoryLog.log('email_sent', f'Recibos: {success_count} email(s) enviados', icon='mail')
+            HistoryLog.log("email_sent", f"Recibos: {success_count} email(s) enviados", icon="mail")
             messages.success(request, f"✅ Recibos enviados: {success_count}")
         if error_count > 0:
             messages.warning(request, f"⚠️ {error_count} recibo(s) no pudieron enviarse")
         return redirect("apps")
 
-    email_html = render_to_string('emails/receipt_quarterly_child.html', {
-        'student_name': 'Alumno Ejemplo',
-        'month_1': quarter_months[0],
-        'month_2': quarter_months[1],
-        'month_3': quarter_months[2],
-    })
-    return render(request, "apps/receipts_form.html", {
-        "months": MESES_ES,
-        "current_month": current_month,
-        "quarter_months": quarter_months,
-        "parent_count": parent_count,
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/receipt_quarterly_child.html",
+        {
+            "student_name": "Alumno Ejemplo",
+            "month_1": quarter_months[0],
+            "month_2": quarter_months[1],
+            "month_3": quarter_months[2],
+        },
+    )
+    return render(
+        request,
+        "apps/receipts_form.html",
+        {
+            "months": MESES_ES,
+            "current_month": current_month,
+            "quarter_months": quarter_months,
+            "parent_count": parent_count,
+            "email_html": email_html,
+        },
+    )
 
 
 # ============================================================================
@@ -912,7 +966,7 @@ def enrollment_form(request):
     """
     today = date.today()
     current_month = MESES_ES[today.month - 1]
-    students = Student.objects.filter(active=True).select_related('group').order_by('last_name', 'first_name')
+    students = Student.objects.filter(active=True).select_related("group").order_by("last_name", "first_name")
 
     if today.month >= 9:
         default_academic_year = f"{today.year}-{today.year + 1}"
@@ -920,83 +974,87 @@ def enrollment_form(request):
         default_academic_year = f"{today.year - 1}-{today.year}"
 
     if request.method == "POST":
-        action = request.POST.get('action', '')
-        email_type = request.POST.get('email_type', 'enrollment')
+        action = request.POST.get("action", "")
+        email_type = request.POST.get("email_type", "enrollment")
 
-        if action in ('preview', 'test_send'):
-            _student_id = request.POST.get('student_id')
-            if email_type == 'welcome':
+        if action in ("preview", "test_send"):
+            _student_id = request.POST.get("student_id")
+            if email_type == "welcome":
                 _ctx = {
-                    'parent_name': 'Nombre del padre',
-                    'student_name': 'Nombre del alumno',
-                    'group_name': 'Grupo A',
-                    'enrollment_type': 'Mensual',
-                    'schedule_type': 'Jornada completa',
-                    'start_date': '01/09/2025',
+                    "parent_name": "Nombre del padre",
+                    "student_name": "Nombre del alumno",
+                    "group_name": "Grupo A",
+                    "enrollment_type": "Mensual",
+                    "schedule_type": "Jornada completa",
+                    "start_date": "01/09/2025",
                 }
                 if _student_id:
                     try:
-                        _s = Student.objects.select_related('group').get(id=_student_id)
-                        _p = _s.parents.exclude(email='').exclude(email__isnull=True).first()
-                        _ctx['student_name'] = _s.full_name
+                        _s = Student.objects.select_related("group").get(id=_student_id)
+                        _p = _s.parents.exclude(email="").exclude(email__isnull=True).first()
+                        _ctx["student_name"] = _s.full_name
                         if _p:
-                            _ctx['parent_name'] = _p.full_name
+                            _ctx["parent_name"] = _p.full_name
                         if _s.group:
-                            _ctx['group_name'] = _s.group.group_name
+                            _ctx["group_name"] = _s.group.group_name
                     except Exception:
                         pass
-                if action == 'preview':
-                    return JsonResponse({'html': render_to_string('emails/welcome_student.html', _ctx)})
-                _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+                if action == "preview":
+                    return JsonResponse({"html": render_to_string("emails/welcome_student.html", _ctx)})
+                _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
                 _recipients = [r for r in [_t1, _t2] if r]
                 if not _recipients:
-                    return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                    return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
                 _ok = email_service.send_email(
-                    template_name='welcome_student',
+                    template_name="welcome_student",
                     recipients=_recipients,
-                    subject=f'[TEST] 🎉 Bienvenida a Five a Day - {_ctx["student_name"]}',
+                    subject=f"[TEST] 🎉 Bienvenida a Five a Day - {_ctx['student_name']}",
                     context=_ctx,
                 )
                 if _ok:
-                    return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-                return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                    return JsonResponse(
+                        {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                    )
+                return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
             else:
-                _etype = request.POST.get('enrollment_type', 'child')
-                _gender = request.POST.get('gender', 'm')
-                _ay = request.POST.get('academic_year', default_academic_year)
-                _month = request.POST.get('month', current_month)
-                _student_name = 'Alumno Ejemplo'
+                _etype = request.POST.get("enrollment_type", "child")
+                _gender = request.POST.get("gender", "m")
+                _ay = request.POST.get("academic_year", default_academic_year)
+                _month = request.POST.get("month", current_month)
+                _student_name = "Alumno Ejemplo"
                 if _student_id:
                     try:
                         _s = Student.objects.get(id=_student_id)
                         _student_name = _s.full_name
                     except Exception:
                         pass
-                _template = 'enrollment_child' if _etype == 'child' else 'enrollment_adult'
-                _ctx = {'student': _student_name, 'genero': _gender, 'academic_year': _ay, 'month': _month}
-                if action == 'preview':
-                    return JsonResponse({'html': render_to_string(f'emails/{_template}.html', _ctx)})
-                _t1, _t2 = os.getenv('EMAIL_TEST_1', ''), os.getenv('EMAIL_TEST_2', '')
+                _template = "enrollment_child" if _etype == "child" else "enrollment_adult"
+                _ctx = {"student": _student_name, "genero": _gender, "academic_year": _ay, "month": _month}
+                if action == "preview":
+                    return JsonResponse({"html": render_to_string(f"emails/{_template}.html", _ctx)})
+                _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
                 _recipients = [r for r in [_t1, _t2] if r]
                 if not _recipients:
-                    return JsonResponse({'success': False, 'message': '❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados'})
+                    return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
                 _ok = email_service.send_email(
                     template_name=_template,
                     recipients=_recipients,
-                    subject=f'[TEST] 🎉 Confirmación de Matrícula - {_student_name}',
+                    subject=f"[TEST] 🎉 Confirmación de Matrícula - {_student_name}",
                     context=_ctx,
                 )
                 if _ok:
-                    return JsonResponse({'success': True, 'message': f'✅ Email de prueba enviado a {", ".join(_recipients)}'})
-                return JsonResponse({'success': False, 'message': '❌ Error al enviar el email de prueba'})
+                    return JsonResponse(
+                        {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                    )
+                return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
         student_id = request.POST.get("student_id")
         if not student_id:
             messages.error(request, "❌ Selecciona un estudiante")
-        elif email_type == 'welcome':
+        elif email_type == "welcome":
             try:
-                student = Student.objects.select_related('group').prefetch_related('parents').get(id=student_id)
-                parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+                student = Student.objects.select_related("group").prefetch_related("parents").get(id=student_id)
+                parent = student.parents.exclude(email="").exclude(email__isnull=True).first()
                 if not parent:
                     messages.error(request, f"❌ {student.full_name} no tiene padre con email registrado")
                 else:
@@ -1007,7 +1065,7 @@ def enrollment_form(request):
                         group_name=student.group.group_name if student.group else None,
                     )
                     if result:
-                        HistoryLog.log('email_sent', f'Bienvenida: 1 email enviado ({student.full_name})', icon='mail')
+                        HistoryLog.log("email_sent", f"Bienvenida: 1 email enviado ({student.full_name})", icon="mail")
                         messages.success(request, f"✅ Email de bienvenida enviado a {parent.email}")
                     else:
                         messages.error(request, "❌ Error al enviar el email")
@@ -1019,25 +1077,27 @@ def enrollment_form(request):
             academic_year = request.POST.get("academic_year", default_academic_year)
             month = request.POST.get("month", current_month)
             try:
-                student = Student.objects.prefetch_related('parents').get(id=student_id)
-                parent = student.parents.exclude(email='').exclude(email__isnull=True).first()
+                student = Student.objects.prefetch_related("parents").get(id=student_id)
+                parent = student.parents.exclude(email="").exclude(email__isnull=True).first()
                 if not parent:
                     messages.error(request, f"❌ {student.full_name} no tiene padre con email registrado")
                 else:
-                    template = 'enrollment_child' if enrollment_type == 'child' else 'enrollment_adult'
+                    template = "enrollment_child" if enrollment_type == "child" else "enrollment_adult"
                     result = email_service.send_email(
                         template_name=template,
                         recipients=parent.email,
-                        subject=f'🎉 Confirmación de Matrícula - {student.full_name}',
+                        subject=f"🎉 Confirmación de Matrícula - {student.full_name}",
                         context={
-                            'student': student.full_name,
-                            'genero': gender,
-                            'academic_year': academic_year,
-                            'month': month,
+                            "student": student.full_name,
+                            "genero": gender,
+                            "academic_year": academic_year,
+                            "month": month,
                         },
                     )
                     if result:
-                        HistoryLog.log('email_sent', f'Confirmación matrícula: 1 email enviado ({student.full_name})', icon='mail')
+                        HistoryLog.log(
+                            "email_sent", f"Confirmación matrícula: 1 email enviado ({student.full_name})", icon="mail"
+                        )
                         messages.success(request, f"✅ Confirmación de matrícula enviada a {parent.email}")
                     else:
                         messages.error(request, "❌ Error al enviar el email")
@@ -1045,18 +1105,25 @@ def enrollment_form(request):
                 messages.error(request, "❌ Estudiante no encontrado")
         return redirect("enrollment_form")
 
-    email_html = render_to_string('emails/welcome_student.html', {
-        'parent_name': 'Nombre del padre',
-        'student_name': 'Nombre del alumno',
-        'group_name': 'Grupo A',
-        'enrollment_type': 'Mensual',
-        'schedule_type': 'Jornada completa',
-        'start_date': '01/09/2025',
-    })
-    return render(request, "apps/enrollment_form.html", {
-        "students": students,
-        "months": MESES_ES,
-        "current_month": current_month,
-        "default_academic_year": default_academic_year,
-        "email_html": email_html,
-    })
+    email_html = render_to_string(
+        "emails/welcome_student.html",
+        {
+            "parent_name": "Nombre del padre",
+            "student_name": "Nombre del alumno",
+            "group_name": "Grupo A",
+            "enrollment_type": "Mensual",
+            "schedule_type": "Jornada completa",
+            "start_date": "01/09/2025",
+        },
+    )
+    return render(
+        request,
+        "apps/enrollment_form.html",
+        {
+            "students": students,
+            "months": MESES_ES,
+            "current_month": current_month,
+            "default_academic_year": default_academic_year,
+            "email_html": email_html,
+        },
+    )

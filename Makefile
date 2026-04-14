@@ -9,7 +9,9 @@
         test-verbose test-coverage test-models test-services test-views \
         clean clean-all health url send-test-email generate-payments \
         testing-up testing-down testing-logs testing-seed testing-reset \
-        testing-rebuild testing-shell testing-health
+        testing-rebuild testing-shell testing-health \
+        sync lint lint-fix format format-check pre-commit-install pre-commit-run \
+        mypy bandit audit coverage-badge
 
 # ============================================================================
 # HELP
@@ -87,6 +89,19 @@ help:
 	@echo "    make testing-reset    Wipe QA database and re-seed"
 	@echo "    make testing-shell    Django shell in QA container"
 	@echo "    make testing-health   Health check for QA environment"
+	@echo ""
+	@echo "  Developer Tooling:"
+	@echo "    make sync             Install all deps (including dev) via uv"
+	@echo "    make lint             Run Ruff linter"
+	@echo "    make lint-fix         Run Ruff linter with auto-fix"
+	@echo "    make format           Format code with Ruff"
+	@echo "    make format-check     Check formatting (no changes)"
+	@echo "    make mypy             Run mypy type checker"
+	@echo "    make bandit           Run bandit security linter"
+	@echo "    make audit            Audit dependencies for vulnerabilities"
+	@echo "    make coverage-badge   Generate coverage.svg badge from last test run"
+	@echo "    make pre-commit-install  Install pre-commit hooks"
+	@echo "    make pre-commit-run   Run pre-commit on all files"
 	@echo ""
 	@echo "  Cleanup:"
 	@echo "    make clean            Remove stopped containers + prune"
@@ -249,7 +264,8 @@ reset-db:
 
 # Run all tests inside Docker (uses the container's PostgreSQL)
 test:
-	docker compose exec web python -m pytest project/tests/ -v --tb=short
+	docker compose exec web uv sync --frozen --no-install-project --quiet
+	docker compose exec -e DJANGO_SETTINGS_MODULE=project.settings_test -e TEST_DB_HOST=db web python -m pytest project/tests/ -v --tb=short -n auto --cov=core --cov=students --cov=billing --cov=comms --cov-report=term-missing
 
 # Run tests locally against the Docker PostgreSQL (default)
 test-local:
@@ -382,6 +398,46 @@ testing-health:
 	@echo ""
 	@echo "=== Health endpoint ==="
 	@curl -sf http://localhost:8000/health/ 2>/dev/null || echo "(not reachable)"
+
+# ============================================================================
+# DEVELOPER TOOLING (UV, Ruff, pre-commit)
+# ============================================================================
+sync:
+	uv sync --no-install-project
+
+lint:
+	uv run --no-project ruff check project/
+
+lint-fix:
+	uv run --no-project ruff check --fix project/
+
+format:
+	uv run --no-project ruff format project/
+
+format-check:
+	uv run --no-project ruff format --check project/
+
+mypy:
+	uv run mypy project/
+
+bandit:
+	PYTHONUTF8=1 uv run bandit -r project/ -c pyproject.toml
+
+audit:
+	uv run pip-audit
+
+coverage-badge:
+	@echo "Copying .coverage from Docker container..."
+	docker compose cp web:/app/.coverage .coverage
+	uv run coverage-badge -o coverage.svg -f
+	@rm -f .coverage
+	@echo "coverage.svg updated — commit it to the repo"
+
+pre-commit-install:
+	uv run --no-project pre-commit install
+
+pre-commit-run:
+	uv run --no-project pre-commit run --all-files
 
 # ============================================================================
 # PRODUCTION

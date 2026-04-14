@@ -13,6 +13,7 @@
   <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
   <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
+  <img src="coverage.svg" alt="Coverage">
 </p>
 
 ---
@@ -36,7 +37,7 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 | | |
 |---|---|
-| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [HTTPS.md](HTTPS.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
+| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [HTTPS.md](docs/HTTPS.md), [UV.md](docs/UV.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
 
 | Version | Date | Description |
 |---------|------|-------------|
@@ -340,6 +341,20 @@ Progressive Web App support: installable on mobile, offline-capable dashboard, p
 | `python-dotenv` | Environment variable loading from .env |
 | `markdown` | Markdown rendering |
 | `pytest` + `pytest-django` | Testing framework |
+| `pytest-xdist` | Parallel test execution (`-n auto`) |
+| `pytest-randomly` | Randomized test ordering (catches order-dependent bugs) |
+| `pytest-cov` + `coverage-badge` | Coverage reporting + SVG badge generation |
+
+### Developer Tooling
+
+| Tool | Purpose |
+|------|---------|
+| [UV](https://docs.astral.sh/uv/) | Dependency management (replaces Poetry). PEP 621, `uv.lock`. See `docs/UV.md` |
+| [Ruff](https://docs.astral.sh/ruff/) | Linting + formatting (replaces flake8, black, isort). Config in `pyproject.toml` |
+| [mypy](https://mypy-lang.org/) + `django-stubs` | Static type checking with Django ORM support |
+| [bandit](https://bandit.readthedocs.io/) | Security linter (hardcoded secrets, SQL injection, etc.) |
+| [pip-audit](https://github.com/pypa/pip-audit) | Dependency vulnerability scanning against PyPI CVE database |
+| [pre-commit](https://pre-commit.com/) | Git hooks: ruff, ruff-format, mypy, bandit |
 
 ---
 
@@ -731,7 +746,7 @@ five-a-day/
 │   │   ├── urls.py               10 URL patterns
 │   │   └── management/commands/  send_email, test_all_emails
 │   │
-│   ├── tests/                    pytest suite (132 tests)
+│   ├── tests/                    pytest suite (174 tests)
 │   └── conftest.py               Shared fixtures
 │
 ├── Dockerfile                    Multi-stage build
@@ -941,16 +956,21 @@ Standalone page with custom styling (does not extend base.html).
 
 | Metric | Value |
 |--------|-------|
-| **Total tests** | 132 |
-| **Test files** | 3 (test_models, test_services, test_views) |
-| **Runtime** | ~2 seconds |
-| **Database** | PostgreSQL (same as production) or SQLite fallback |
-| **Framework** | pytest 8.4 + pytest-django 4.11 |
+| **Total tests** | 294 |
+| **Test files** | 17 |
+| **Coverage** | 70% (with `--cov-report=term-missing` on every run) |
+| **Runtime** | ~30 seconds (8 parallel workers via pytest-xdist) |
+| **Database** | PostgreSQL (same as production) — **always use `make test`** |
+| **Framework** | pytest 9 + pytest-django + pytest-cov + pytest-xdist + pytest-randomly |
+| **Type checking** | mypy + django-stubs (pre-commit hook) |
+| **Security** | bandit security linter (pre-commit hook) |
+| **Dependency audit** | pip-audit for CVE scanning |
+| **Linting** | Ruff (check + format) via pre-commit hooks |
 | **Settings** | `project/settings_test.py` |
 | **Fixtures** | `conftest.py` — 15 shared fixtures |
 
 ```bash
-make test              # Inside Docker (PostgreSQL)
+make test              # Inside Docker (PostgreSQL, parallel, with coverage)
 make test-local        # Local against Docker PostgreSQL
 make test-sqlite       # Local with SQLite (no Docker)
 make test-coverage     # Generate HTML coverage report
@@ -1008,6 +1028,27 @@ make test-k K=payment  # Run tests matching keyword
 | Schedule | 2 | Schedule page, Fun Friday page |
 | Fun Friday | 4 | Toggle (valid + adult rejected), add attendance, remove attendance |
 | Support | 2 | Missing message validation, no email configuration |
+
+### Additional Test Files (v1.0.0+)
+
+| File | Count | Coverage |
+|------|-------|----------|
+| `test_constants.py` | 9 | Pure functions: `calculate_discount`, `get_monthly_fee_by_schedule`, `get_enrollment_fee` |
+| `test_transactions.py` | 10 | Query helpers: `get_active_students`, `get_payments_for_last_two_school_years`, `get_all_payments_unrestricted` |
+| `test_forms.py` | 9 | `EnrollmentForm` validation + `create_enrollment()` delegation to service layer |
+| `test_exports.py` | 7 | Excel workbook generation: students, enrollments, payments sheets + combined workbook |
+| `test_schedule_views.py` | 8 | Schedule page, save slot (assign + clear + reject GET), Fun Friday (loads, excludes adults) |
+| `test_auth_views.py` | 8 | Login (render, redirect, valid/invalid creds, missing env), logout, OAuth redirect |
+| `test_student_views.py` | 12 | Student list (search, exclude inactive), detail, create (form, success, adult mode, full POST), search |
+| `test_payment_views.py` | 9 | `parse_date_value` (6 formats), payments list, search, quick complete |
+| `test_app_form_views.py` | 27 | All email form GET pages, POST preview (JSON), POST send, test_send without env vars |
+| `test_parent_views.py` | 4 | ParentCreateView: GET, POST (new + existing DNI + invalid) |
+| `test_create_payment_views.py` | 7 | Create payment (form + invalid parent), payment detail, update payment, Excel export |
+| `test_student_forms.py` | 7 | StudentForm + ParentForm validation: dates, DNI, required fields |
+| `test_context_processors.py` | 11 | Context keys, todo filtering, scheduled apps, history count, support email |
+| `test_middleware.py` | 9 | Public/protected paths, session handling |
+| `test_email_service.py` | 12 | EmailService: send, recipients, CC/BCC, attachments, fail_silently, bulk |
+| `test_email_functions.py` | 10 | All convenience email functions: template, subject, context, fail_silently |
 
 ---
 
@@ -1261,7 +1302,7 @@ The testing environment mirrors production:
 | `DJANGO_ENV` | `testing` | Like production (collectstatic, Gunicorn, secure cookies) but enables the `/testing/` dashboard |
 | Server | Gunicorn (2 workers) | Same as production (not Django's development server) |
 | HTTPS cookies | `Secure=True`, `SameSite=Strict` | Same cookie policy as production |
-| HTTPS | Via Nginx reverse proxy (local) or Cloud Run (GCP) | See [HTTPS.md](HTTPS.md) for full setup guide |
+| HTTPS | Via Nginx reverse proxy (local) or Cloud Run (GCP) | See [HTTPS.md](docs/HTTPS.md) for full setup guide |
 | `SECURE_PROXY_SSL_HEADER` | Trusts `X-Forwarded-Proto` from reverse proxy | Enables Django to detect HTTPS behind Nginx/Cloud Run |
 | Database | PostgreSQL 16 (separate volume) | Isolated from the development database |
 | Login | Credentials in `.env.testing` | Dedicated QA credentials, never committed to git |
@@ -1396,11 +1437,38 @@ After deployment, Cloud Run provides a URL like `https://fiveaday-testing-xxxxx.
 
 ### Development Workflow
 
+```bash
+# First-time setup
+uv sync --no-install-project   # Install all dependencies (UV — see docs/UV.md)
+make pre-commit-install        # Install pre-commit hooks (Ruff + mypy + bandit)
+make up                        # Start Docker (PostgreSQL + Django)
+```
+
 1. Create a feature branch from `development`
 2. Make changes following the conventions below
-3. Run `make test-local` — all 132 tests must pass
-4. Run `make check` — no Django system check issues
-5. Create a pull request with clear description of changes
+3. Run `make lint` — Ruff linting must pass
+4. Run `make mypy` — mypy type checking must pass
+5. Run `make test` — all 294 tests must pass (PostgreSQL via Docker, parallel, with coverage)
+6. Run `make check` — no Django system check issues
+7. Create a pull request with clear description of changes
+
+Pre-commit hooks run **Ruff** (lint + format), **mypy** (type checking), and **bandit** (security) automatically on every commit.
+
+### Make Commands (Developer Tooling)
+
+| Tool | Purpose | Command |
+|------|---------|---------|
+| **UV** | Dependency management | `uv sync`, `uv add`, `uv lock` |
+| **Ruff** | Lint + format | `make lint`, `make format` |
+| **mypy** | Type checking | `make mypy` |
+| **bandit** | Security linting | `make bandit` |
+| **pip-audit** | Dependency CVE scanning | `make audit` |
+| **pytest-xdist** | Parallel test execution | Built into `make test` (`-n auto`) |
+| **pytest-randomly** | Randomized test ordering | Built into `make test` (seed printed) |
+| **pytest-cov** | Coverage reporting + badge | `make test`, `make coverage-badge` |
+| **pre-commit** | Git hooks: ruff, mypy, bandit | `make pre-commit-install` |
+
+All tools are configured in `pyproject.toml` and installed as dev dependencies via `uv sync`.
 
 ### Code Conventions
 

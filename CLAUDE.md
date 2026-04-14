@@ -37,13 +37,30 @@ comms ← core/views (student creation triggers welcome email)
 ## How to run
 
 ```bash
-cd project
-uv sync
-python manage.py migrate
-python manage.py runserver
+uv sync --no-install-project   # Install all dependencies
+make up                        # Start Docker (PostgreSQL + Django)
+make test                      # Run tests (PostgreSQL)
 ```
 
-Tests: `python -m pytest tests/ -v` (uses PostgreSQL via `project/settings_test.py`, or `TEST_DB_ENGINE=sqlite` for SQLite fallback)
+### Testing — IMPORTANT
+
+**Always use `make test`** (runs inside Docker against PostgreSQL — same database as production). Never use SQLite for testing unless explicitly asked. The `make test` command requires Docker containers to be running (`make up` first).
+
+**IMPORTANT for AI agents:** Do NOT use `TEST_DB_ENGINE=sqlite` or run pytest directly with `python -m pytest`. Always use `make test` which runs against the Docker PostgreSQL container. If `make test` fails with connection errors, run `make up` first.
+
+### Developer tooling
+
+```bash
+make lint              # Ruff linter
+make format            # Ruff formatter
+make pre-commit-run    # Run all pre-commit hooks
+make test              # Run 294 tests (PostgreSQL via Docker, parallel, 70% coverage)
+```
+
+- **UV** for dependency management (see [docs/UV.md](docs/UV.md))
+- **Ruff** for linting and formatting (`pyproject.toml [tool.ruff]`)
+- **pre-commit** hooks run Ruff on every commit (`.pre-commit-config.yaml`)
+- **pytest-cov** for coverage reports (`make test-coverage`)
 
 ## Important files
 

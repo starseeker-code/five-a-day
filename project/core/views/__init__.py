@@ -3,25 +3,60 @@ Core views package — re-exports all views for URL routing compatibility.
 """
 
 # Auth
+# App forms (email tools)
+from core.views.app_forms import (
+    apps_view,
+    birthday_form,
+    enrollment_form,
+    fun_friday_form,
+    monthly_report_form,
+    payment_reminder_form,
+    receipts_form,
+    tax_certificate_form,
+    vacation_closure_form,
+    welcome_form,
+)
 from core.views.auth import (
-    login_view, logout_view, google_oauth_redirect, google_oauth_callback,
+    google_oauth_callback,
+    google_oauth_redirect,
+    login_view,
+    logout_view,
 )
 
 # Dashboard
-from core.views.dashboard import home, all_info
+from core.views.dashboard import all_info, home
 
 # Errors & health
 from core.views.errors import (
-    handler400, handler403, handler404, handler405, handler500,
-    test_error_400, test_error_403, test_error_404, test_error_405, test_error_500,
+    handler400,
+    handler403,
+    handler404,
+    handler405,
+    handler500,
     health_check,
+    test_error_400,
+    test_error_403,
+    test_error_404,
+    test_error_405,
+    test_error_500,
 )
 
-# Students
-from core.views.students import (
-    StudentCreateView, StudentListView, StudentUpdateView,
-    StudentDetailView, search_students, handle_student_form, student_detail,
-    update_student, get_next_friday, get_last_friday, get_ff_student_ids,
+# Fun Friday attendance
+from core.views.fun_friday_attendance import (
+    add_fun_friday_attendance,
+    remove_fun_friday_attendance,
+    toggle_fun_friday_this_week,
+)
+
+# Management & enrollment API
+from core.views.management import (
+    api_get_teachers,
+    create_group,
+    create_teacher,
+    gestion_view,
+    language_cheque_students,
+    update_enrollment_modality,
+    update_site_config,
 )
 
 # Parents
@@ -29,43 +64,53 @@ from core.views.parents import ParentCreateView
 
 # Payments
 from core.views.payments import (
-    payments_list, create_payment, payment_detail, payment_detail_view,
-    update_payment, delete_payment, deactivate_payment, quick_complete_payment,
-    get_payment_details, payment_statistics, search_payments, search_parents,
-    validate_student_parent, export_payments, export_database_excel,
+    create_payment,
+    deactivate_payment,
+    delete_payment,
+    export_database_excel,
+    export_payments,
+    get_payment_details,
     parse_date_value,
-)
-
-# Fun Friday attendance
-from core.views.fun_friday_attendance import (
-    toggle_fun_friday_this_week, add_fun_friday_attendance,
-    remove_fun_friday_attendance,
-)
-
-# Management & enrollment API
-from core.views.management import (
-    gestion_view, update_site_config, create_teacher, create_group,
-    api_get_teachers, update_enrollment_modality, language_cheque_students,
-)
-
-# App forms (email tools)
-from core.views.app_forms import (
-    apps_view, fun_friday_form, payment_reminder_form, vacation_closure_form,
-    tax_certificate_form, monthly_report_form, welcome_form, birthday_form,
-    receipts_form, enrollment_form,
+    payment_detail,
+    payment_detail_view,
+    payment_statistics,
+    payments_list,
+    quick_complete_payment,
+    search_parents,
+    search_payments,
+    update_payment,
+    validate_student_parent,
 )
 
 # Schedule
-from core.views.schedule import schedule_view, save_schedule_slot, fun_friday_view
+from core.views.schedule import fun_friday_view, save_schedule_slot, schedule_view
 
-# Todos & history
-from core.views.todos import create_todo, complete_todo, history_list
+# Students
+from core.views.students import (
+    StudentCreateView,
+    StudentDetailView,
+    StudentListView,
+    StudentUpdateView,
+    get_ff_student_ids,
+    get_last_friday,
+    get_next_friday,
+    handle_student_form,
+    search_students,
+    student_detail,
+    update_student,
+)
 
 # Support
 from core.views.support import submit_support_ticket
 
 # Testing tools (QA)
 from core.views.testing_tools import (
-    testing_tools_view, api_seed_database, api_create_backlog_task,
-    api_update_backlog_task, api_toggle_error_email,
+    api_create_backlog_task,
+    api_seed_database,
+    api_toggle_error_email,
+    api_update_backlog_task,
+    testing_tools_view,
 )
+
+# Todos & history
+from core.views.todos import complete_todo, create_todo, history_list
