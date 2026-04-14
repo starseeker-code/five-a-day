@@ -54,7 +54,7 @@ make test                      # Run tests (PostgreSQL)
 make lint              # Ruff linter
 make format            # Ruff formatter
 make pre-commit-run    # Run all pre-commit hooks
-make test              # Run 174 tests (PostgreSQL via Docker)
+make test              # Run 294 tests (PostgreSQL via Docker, parallel, 70% coverage)
 ```
 
 - **UV** for dependency management (see [docs/UV.md](docs/UV.md))
