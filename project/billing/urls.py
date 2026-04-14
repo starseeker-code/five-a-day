@@ -1,15 +1,29 @@
 from django.urls import path
+
 from core.views import (
-    # Payments
-    payments_list, create_payment, payment_detail_view, update_payment,
-    delete_payment, deactivate_payment, quick_complete_payment,
-    # Enrollment API
-    update_enrollment_modality, language_cheque_students,
-    # Search/API
-    search_payments, get_payment_details, payment_statistics,
-    export_payments, export_database_excel,
+    api_get_teachers,
+    create_group,
+    create_payment,
+    create_teacher,
+    deactivate_payment,
+    delete_payment,
+    export_database_excel,
+    export_payments,
     # Management
-    gestion_view, update_site_config, api_get_teachers, create_teacher, create_group,
+    gestion_view,
+    get_payment_details,
+    language_cheque_students,
+    payment_detail_view,
+    payment_statistics,
+    # Payments
+    payments_list,
+    quick_complete_payment,
+    # Search/API
+    search_payments,
+    # Enrollment API
+    update_enrollment_modality,
+    update_payment,
+    update_site_config,
 )
 
 urlpatterns = [

@@ -4,23 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('students', '0001_initial'),
+        ("students", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='studentparent',
+            name="studentparent",
             unique_together=set(),
         ),
         migrations.AddField(
-            model_name='student',
-            name='gender',
-            field=models.CharField(choices=[('m', 'Masculino'), ('f', 'Femenino')], default='m', max_length=1, verbose_name='Género'),
+            model_name="student",
+            name="gender",
+            field=models.CharField(
+                choices=[("m", "Masculino"), ("f", "Femenino")], default="m", max_length=1, verbose_name="Género"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='studentparent',
-            constraint=models.UniqueConstraint(fields=('student', 'parent'), name='unique_student_parent'),
+            model_name="studentparent",
+            constraint=models.UniqueConstraint(fields=("student", "parent"), name="unique_student_parent"),
         ),
     ]

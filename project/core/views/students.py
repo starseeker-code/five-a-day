@@ -1,21 +1,19 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.views.generic import DetailView, ListView, UpdateView, CreateView
-from django.http import HttpResponseRedirect, JsonResponse
-from django.db import models, transaction
-from django.core.exceptions import ValidationError
-from django.db.models import Q
-from django.urls import reverse_lazy, reverse
 from datetime import date
-import json
 
-from students.models import Student, Parent, Group
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Q
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
+
+from billing.forms import EnrollmentForm
 from billing.models import Enrollment, Payment, SiteConfiguration, current_academic_year
 from core.models import FunFridayAttendance, HistoryLog
-from students.forms import StudentForm, ParentForm
-from billing.forms import EnrollmentForm
-from billing import constants
-
+from students.forms import StudentForm
+from students.models import Group, Parent, Student
 
 # ============================================================================
 # PARENT AND STUDENT MANAGEMENT - Parent-First Flow
@@ -33,8 +31,6 @@ class StudentCreateView(CreateView):
     template_name = "student_create.html"
 
     def get_context_data(self, **kwargs):
-        from billing.models import SiteConfiguration
-
         context = super().get_context_data(**kwargs)
 
         # Success state from redirect
@@ -82,17 +78,17 @@ class StudentCreateView(CreateView):
         context["sibling_discount"] = str(config.sibling_discount)
 
         # Students for sibling search (active, current year)
-        context["all_students_for_sibling"] = Student.objects.filter(
-            active=True
-        ).select_related("group").order_by("first_name", "last_name")[:200]
+        context["all_students_for_sibling"] = (
+            Student.objects.filter(active=True).select_related("group").order_by("first_name", "last_name")[:200]
+        )
 
         return context
 
     def form_valid(self, form):
-        from comms.tasks import send_welcome_email_task
-        from billing.models import SiteConfiguration
-        from core.models import HistoryLog
         import calendar
+
+        from comms.tasks import send_welcome_email_task
+        from core.models import HistoryLog
 
         enrollment_form = EnrollmentForm(self.request.POST)
 
@@ -115,9 +111,7 @@ class StudentCreateView(CreateView):
                 parent_id = None
 
                 if not is_adult_mode:
-                    parent_id = self.request.POST.get("parent_id") or self.request.GET.get(
-                        "parent_id"
-                    )
+                    parent_id = self.request.POST.get("parent_id") or self.request.GET.get("parent_id")
                     if not parent_id:
                         messages.error(self.request, "Debe especificar un padre para el estudiante")
                         student.delete()
@@ -139,28 +133,25 @@ class StudentCreateView(CreateView):
                 last_day = calendar.monthrange(today.year, today.month)[1]
                 due_date = date(today.year, today.month, last_day)
 
-                enrollment_fee = (
-                    config.adult_enrollment_fee if is_adult_mode
-                    else config.children_enrollment_fee
-                )
+                enrollment_fee = config.adult_enrollment_fee if is_adult_mode else config.children_enrollment_fee
 
                 Payment.objects.create(
                     student=student,
                     parent=parent,
                     enrollment=enrollment,
-                    payment_type='enrollment',
-                    payment_method='transfer',
+                    payment_type="enrollment",
+                    payment_method="transfer",
                     amount=enrollment_fee,
-                    currency='EUR',
-                    payment_status='pending',
+                    currency="EUR",
+                    payment_status="pending",
                     due_date=due_date,
                     concept=f"Matrícula {enrollment.academic_year} — {student.full_name}",
                 )
 
                 HistoryLog.log(
-                    'student_enrolled',
-                    f'Alumno matriculado: {student.full_name} — {enrollment.get_schedule_type_display()}',
-                    icon='school'
+                    "student_enrolled",
+                    f"Alumno matriculado: {student.full_name} — {enrollment.get_schedule_type_display()}",
+                    icon="school",
                 )
 
                 # Enqueue welcome email
@@ -175,11 +166,16 @@ class StudentCreateView(CreateView):
 
                 # Redirect to success page with student info
                 from urllib.parse import quote
+
                 return HttpResponseRedirect(
                     reverse("student_create")
                     + f"?success=1&student_name={quote(student.full_name)}&student_id={student.id}"
                     + f"&fee={enrollment_fee}"
-                    + (f"&parent_id={parent_id}&create_sibling=1" if "create_sibling" in self.request.POST and parent_id else "")
+                    + (
+                        f"&parent_id={parent_id}&create_sibling=1"
+                        if "create_sibling" in self.request.POST and parent_id
+                        else ""
+                    )
                 )
 
         except Exception as e:
@@ -204,8 +200,6 @@ class StudentListView(ListView):
     context_object_name = "students"
 
     def get_queryset(self):
-        from billing.models import current_academic_year
-
         academic_year = current_academic_year()
         queryset = (
             Student.objects.filter(
@@ -219,17 +213,11 @@ class StudentListView(ListView):
 
         search_query = self.request.GET.get("search", "").strip()
         if search_query:
-            queryset = queryset.filter(
-                Q(first_name__icontains=search_query)
-                | Q(last_name__icontains=search_query)
-            )
+            queryset = queryset.filter(Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query))
 
         return queryset.order_by("-created_at")
 
     def get_context_data(self, **kwargs):
-        from datetime import date, timedelta
-        from billing.models import current_academic_year
-
         context = super().get_context_data(**kwargs)
         context["search_query"] = self.request.GET.get("search", "")
         context["groups"] = Group.objects.filter(active=True)
@@ -269,9 +257,7 @@ class StudentUpdateView(UpdateView):
 
         # Obtener la matrícula activa
         try:
-            enrollment = self.object.enrollments.filter(status="active").latest(
-                "created_at"
-            )
+            enrollment = self.object.enrollments.filter(status="active").latest("created_at")
         except Enrollment.DoesNotExist:
             enrollment = None
 
@@ -280,18 +266,16 @@ class StudentUpdateView(UpdateView):
             initial = {}
             if enrollment:
                 # Map back to plan choice
-                if enrollment.payment_modality == 'quarterly':
-                    initial['enrollment_plan'] = 'quarterly'
-                elif enrollment.schedule_type == 'part_time':
-                    initial['enrollment_plan'] = 'monthly_part'
+                if enrollment.payment_modality == "quarterly":
+                    initial["enrollment_plan"] = "quarterly"
+                elif enrollment.schedule_type == "part_time":
+                    initial["enrollment_plan"] = "monthly_part"
                 else:
-                    initial['enrollment_plan'] = 'monthly_full'
-                initial['discount'] = str(int(enrollment.discount_percentage))
-                initial['has_language_cheque'] = enrollment.has_language_cheque
-                initial['is_sibling_discount'] = enrollment.is_sibling_discount
-            context["enrollment_form"] = EnrollmentForm(
-                self.request.POST or None, initial=initial
-            )
+                    initial["enrollment_plan"] = "monthly_full"
+                initial["discount"] = str(int(enrollment.discount_percentage))
+                initial["has_language_cheque"] = enrollment.has_language_cheque
+                initial["is_sibling_discount"] = enrollment.is_sibling_discount
+            context["enrollment_form"] = EnrollmentForm(self.request.POST or None, initial=initial)
 
         context["parents"] = self.object.parents.all()
         context["groups"] = Group.objects.filter(active=True)
@@ -343,9 +327,7 @@ class StudentDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context["parents"] = self.object.parents.all()
         context["enrollments"] = self.object.enrollments.all().order_by("-created_at")
-        context["payments"] = Payment.objects.filter(student=self.object).order_by(
-            "-payment_date"
-        )
+        context["payments"] = Payment.objects.filter(student=self.object).order_by("-payment_date")
         context["fun_friday_dates"] = self.object.fun_friday_dates.all()
         return context
 
@@ -354,9 +336,12 @@ class StudentDetailView(DetailView):
 # FUN FRIDAY DATE HELPERS  (reusable across views)
 # ============================================================================
 
+
 def get_next_friday(from_date=None):
     """Return this week's Friday (today if today is Friday, else next Friday)."""
-    from datetime import date as _date, timedelta
+    from datetime import date as _date
+    from datetime import timedelta
+
     if from_date is None:
         from_date = _date.today()
     days_ahead = (4 - from_date.weekday()) % 7
@@ -366,14 +351,13 @@ def get_next_friday(from_date=None):
 def get_last_friday(from_date=None):
     """Return last week's Friday (7 days before get_next_friday)."""
     from datetime import timedelta
+
     return get_next_friday(from_date) - timedelta(days=7)
 
 
 def get_ff_student_ids(friday_date):
     """Return a set of student IDs registered for the given Friday."""
-    return set(
-        FunFridayAttendance.objects.filter(date=friday_date).values_list('student_id', flat=True)
-    )
+    return set(FunFridayAttendance.objects.filter(date=friday_date).values_list("student_id", flat=True))
 
 
 # ============================================================================
@@ -382,13 +366,8 @@ def get_ff_student_ids(friday_date):
 
 
 def search_students(request):
-
     # Get all students with related data
-    students = (
-        Student.objects.select_related("group", "group__teacher")
-        .prefetch_related("parents")
-        .filter(active=True)
-    )
+    students = Student.objects.select_related("group", "group__teacher").prefetch_related("parents").filter(active=True)
 
     # Get all groups and parents for the form
     groups = Group.objects.filter(active=True).select_related("teacher")
@@ -407,7 +386,6 @@ def handle_student_form(request):
     """
     Handle student creation and updates
     """
-    from core.models import HistoryLog
 
     try:
         # Get form data
@@ -459,7 +437,7 @@ def handle_student_form(request):
 
             if student_id:  # Update existing student
                 try:
-                    student = Student.objects.select_related('group').get(id=student_id)
+                    student = Student.objects.select_related("group").get(id=student_id)
                     old_group = student.group
 
                     # Update student fields
@@ -478,9 +456,9 @@ def handle_student_form(request):
 
                     if old_group != group:
                         HistoryLog.log(
-                            'group_updated',
-                            f'Grupo cambiado: {student.full_name} — {old_group.group_name} → {group.group_name}',
-                            icon='swap_horiz'
+                            "group_updated",
+                            f"Grupo cambiado: {student.full_name} — {old_group.group_name} → {group.group_name}",
+                            icon="swap_horiz",
                         )
 
                     # Update parent relationships
@@ -515,9 +493,7 @@ def handle_student_form(request):
                 # Add parent relationships
                 student.parents.set(parents)
 
-                messages.success(
-                    request, f"Estudiante {student.full_name} creado correctamente."
-                )
+                messages.success(request, f"Estudiante {student.full_name} creado correctamente.")
 
         return redirect("students_list")
 

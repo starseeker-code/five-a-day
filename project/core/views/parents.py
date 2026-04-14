@@ -1,11 +1,10 @@
-from django.shortcuts import redirect
 from django.contrib import messages
-from django.views.generic import CreateView
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from django.views.generic import CreateView
 
-from students.models import Parent
 from students.forms import ParentForm
+from students.models import Parent
 
 
 class ParentCreateView(CreateView):
@@ -24,8 +23,7 @@ class ParentCreateView(CreateView):
             if existing_parent:
                 messages.info(
                     self.request,
-                    f"El padre/tutor {existing_parent.full_name} ya existe. "
-                    f"Serás redirigido para crear un estudiante.",
+                    f"El padre/tutor {existing_parent.full_name} ya existe. Serás redirigido para crear un estudiante.",
                 )
                 self.object = existing_parent
                 return HttpResponseRedirect(self.get_success_url())
@@ -33,8 +31,7 @@ class ParentCreateView(CreateView):
             self.object = form.save()
             messages.success(
                 self.request,
-                f"Padre/tutor {self.object.full_name} creado exitosamente. "
-                f"Ahora crea un estudiante para este padre.",
+                f"Padre/tutor {self.object.full_name} creado exitosamente. Ahora crea un estudiante para este padre.",
             )
             return HttpResponseRedirect(self.get_success_url())
 

@@ -6,69 +6,101 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('students', '0001_initial'),
+        ("students", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TodoItem',
+            name="TodoItem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(max_length=500)),
-                ('due_date', models.DateField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("text", models.CharField(max_length=500)),
+                ("due_date", models.DateField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'todo_items',
-                'ordering': ['due_date', 'created_at'],
+                "db_table": "todo_items",
+                "ordering": ["due_date", "created_at"],
             },
         ),
         migrations.CreateModel(
-            name='HistoryLog',
+            name="HistoryLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('todo_completed', 'Tarea completada'), ('payment_completed', 'Pago completado'), ('student_enrolled', 'Alumno matriculado'), ('teacher_created', 'Profesor creado'), ('group_created', 'Grupo creado'), ('group_updated', 'Grupo actualizado'), ('config_updated', 'Configuración actualizada'), ('payment_created', 'Pago creado'), ('email_sent', 'Email enviado'), ('schedule_updated', 'Horario actualizado')], max_length=30)),
-                ('message', models.CharField(max_length=300)),
-                ('icon', models.CharField(default='history', max_length=40)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("todo_completed", "Tarea completada"),
+                            ("payment_completed", "Pago completado"),
+                            ("student_enrolled", "Alumno matriculado"),
+                            ("teacher_created", "Profesor creado"),
+                            ("group_created", "Grupo creado"),
+                            ("group_updated", "Grupo actualizado"),
+                            ("config_updated", "Configuración actualizada"),
+                            ("payment_created", "Pago creado"),
+                            ("email_sent", "Email enviado"),
+                            ("schedule_updated", "Horario actualizado"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("message", models.CharField(max_length=300)),
+                ("icon", models.CharField(default="history", max_length=40)),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
             ],
             options={
-                'db_table': 'history_logs',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['-created_at'], name='history_log_created_bc72c4_idx')],
+                "db_table": "history_logs",
+                "ordering": ["-created_at"],
+                "indexes": [models.Index(fields=["-created_at"], name="history_log_created_bc72c4_idx")],
             },
         ),
         migrations.CreateModel(
-            name='FunFridayAttendance',
+            name="FunFridayAttendance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fun_friday_dates', to='students.student')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("date", models.DateField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fun_friday_dates",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'fun_friday_attendance',
-                'ordering': ['-date'],
-                'unique_together': {('student', 'date')},
+                "db_table": "fun_friday_attendance",
+                "ordering": ["-date"],
+                "unique_together": {("student", "date")},
             },
         ),
         migrations.CreateModel(
-            name='ScheduleSlot',
+            name="ScheduleSlot",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('row', models.IntegerField()),
-                ('day', models.IntegerField()),
-                ('col', models.IntegerField()),
-                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='schedule_slots', to='students.group')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("row", models.IntegerField()),
+                ("day", models.IntegerField()),
+                ("col", models.IntegerField()),
+                (
+                    "group",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="schedule_slots",
+                        to="students.group",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'schedule_slots',
-                'ordering': ['row', 'day', 'col'],
-                'unique_together': {('row', 'day', 'col')},
+                "db_table": "schedule_slots",
+                "ordering": ["row", "day", "col"],
+                "unique_together": {("row", "day", "col")},
             },
         ),
     ]

@@ -1,14 +1,15 @@
 """Tests for views — HTTP endpoints, auth, AJAX APIs."""
-import pytest
-import json
-from decimal import Decimal
-from datetime import date
 
+import json
+from datetime import date
+from decimal import Decimal
+
+import pytest
 from django.urls import reverse
 
-from students.models import Student, Parent, Teacher, Group
-from billing.models import Payment, Enrollment, SiteConfiguration
-from core.models import TodoItem, HistoryLog
+from billing.models import Payment
+from core.models import HistoryLog, TodoItem
+from students.models import Group, Teacher
 
 # All view tests need DB access
 pytestmark = pytest.mark.django_db
@@ -35,6 +36,7 @@ class TestAuthMiddleware:
 
     def test_login_with_valid_credentials(self, client, settings):
         import os
+
         os.environ["LOGIN_USERNAME"] = "testuser"
         os.environ["LOGIN_PASSWORD"] = "testpass"
         response = client.post(
@@ -81,9 +83,7 @@ class TestStudentViews:
         assert response.status_code == 200
 
     def test_student_detail(self, authenticated_client, student):
-        response = authenticated_client.get(
-            reverse("student_detail", kwargs={"student_id": student.id})
-        )
+        response = authenticated_client.get(reverse("student_detail", kwargs={"student_id": student.id}))
         assert response.status_code == 200
 
     def test_student_create_page(self, authenticated_client, group):
@@ -91,9 +91,7 @@ class TestStudentViews:
         assert response.status_code == 200
 
     def test_search_students_api(self, authenticated_client, student):
-        response = authenticated_client.get(
-            reverse("search_students") + "?q=Lucas"
-        )
+        response = authenticated_client.get(reverse("search_students") + "?q=Lucas")
         assert response.status_code == 200
 
 
@@ -106,9 +104,7 @@ class TestParentViews:
         assert response.status_code == 200
 
     def test_search_parents_api(self, authenticated_client, parent):
-        response = authenticated_client.get(
-            reverse("search_parents") + "?q=María"
-        )
+        response = authenticated_client.get(reverse("search_parents") + "?q=María")
         assert response.status_code == 200
         data = response.json()
         assert len(data["results"]) >= 1
@@ -127,9 +123,7 @@ class TestPaymentViews:
         assert response.status_code == 200
 
     def test_payment_detail(self, authenticated_client, pending_payment):
-        response = authenticated_client.get(
-            reverse("payment_detail_view", kwargs={"payment_id": pending_payment.id})
-        )
+        response = authenticated_client.get(reverse("payment_detail_view", kwargs={"payment_id": pending_payment.id}))
         assert response.status_code == 200
 
     def test_quick_complete_payment(self, authenticated_client, pending_payment):
@@ -163,29 +157,29 @@ class TestPaymentViews:
         assert response.status_code == 200
         assert response["Content-Type"] == "text/csv"
 
-    def test_validate_student_parent_valid(
-        self, authenticated_client, student_with_parent, parent
-    ):
+    def test_validate_student_parent_valid(self, authenticated_client, student_with_parent, parent):
         response = authenticated_client.post(
             reverse("validate_student_parent"),
-            data=json.dumps({
-                "student_id": student_with_parent.id,
-                "parent_id": parent.id,
-            }),
+            data=json.dumps(
+                {
+                    "student_id": student_with_parent.id,
+                    "parent_id": parent.id,
+                }
+            ),
             content_type="application/json",
         )
         data = response.json()
         assert data["valid"] is True
 
-    def test_validate_student_parent_invalid(
-        self, authenticated_client, student, second_parent
-    ):
+    def test_validate_student_parent_invalid(self, authenticated_client, student, second_parent):
         response = authenticated_client.post(
             reverse("validate_student_parent"),
-            data=json.dumps({
-                "student_id": student.id,
-                "parent_id": second_parent.id,
-            }),
+            data=json.dumps(
+                {
+                    "student_id": student.id,
+                    "parent_id": second_parent.id,
+                }
+            ),
             content_type="application/json",
         )
         data = response.json()
@@ -218,9 +212,7 @@ class TestTodoAPI:
 
     def test_complete_todo(self, authenticated_client, db):
         todo = TodoItem.objects.create(text="To complete", due_date=date(2025, 10, 15))
-        response = authenticated_client.post(
-            reverse("complete_todo", kwargs={"todo_id": todo.id})
-        )
+        response = authenticated_client.post(reverse("complete_todo", kwargs={"todo_id": todo.id}))
         assert response.status_code == 200
         assert not TodoItem.objects.filter(id=todo.id).exists()
         assert HistoryLog.objects.filter(action="todo_completed").exists()
@@ -272,11 +264,13 @@ class TestManagementViews:
     def test_create_teacher(self, authenticated_client, db):
         response = authenticated_client.post(
             reverse("create_teacher"),
-            data=json.dumps({
-                "first_name": "John",
-                "last_name": "Smith",
-                "email": "john@fiveaday.test",
-            }),
+            data=json.dumps(
+                {
+                    "first_name": "John",
+                    "last_name": "Smith",
+                    "email": "john@fiveaday.test",
+                }
+            ),
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -285,11 +279,13 @@ class TestManagementViews:
     def test_create_teacher_duplicate_email(self, authenticated_client, teacher):
         response = authenticated_client.post(
             reverse("create_teacher"),
-            data=json.dumps({
-                "first_name": "Duplicate",
-                "last_name": "Teacher",
-                "email": teacher.email,
-            }),
+            data=json.dumps(
+                {
+                    "first_name": "Duplicate",
+                    "last_name": "Teacher",
+                    "email": teacher.email,
+                }
+            ),
             content_type="application/json",
         )
         assert response.status_code == 400
@@ -297,11 +293,13 @@ class TestManagementViews:
     def test_create_group(self, authenticated_client, teacher):
         response = authenticated_client.post(
             reverse("create_group"),
-            data=json.dumps({
-                "group_name": "Group B",
-                "teacher_id": teacher.id,
-                "color": "#ef4444",
-            }),
+            data=json.dumps(
+                {
+                    "group_name": "Group B",
+                    "teacher_id": teacher.id,
+                    "color": "#ef4444",
+                }
+            ),
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -335,16 +333,19 @@ class TestAppFormViews:
         response = authenticated_client.get(reverse("apps"))
         assert response.status_code == 200
 
-    @pytest.mark.parametrize("url_name", [
-        "fun_friday_form",
-        "payment_reminder_form",
-        "vacation_closure_form",
-        "tax_certificate_form",
-        "monthly_report_form",
-        "birthday_form",
-        "receipts_form",
-        "enrollment_form",
-    ])
+    @pytest.mark.parametrize(
+        "url_name",
+        [
+            "fun_friday_form",
+            "payment_reminder_form",
+            "vacation_closure_form",
+            "tax_certificate_form",
+            "monthly_report_form",
+            "birthday_form",
+            "receipts_form",
+            "enrollment_form",
+        ],
+    )
     def test_app_form_pages_load(self, authenticated_client, url_name):
         response = authenticated_client.get(reverse(url_name))
         assert response.status_code == 200
@@ -389,13 +390,16 @@ class TestEnrollmentAPI:
 
 
 class TestErrorPages:
-    @pytest.mark.parametrize("url_name,status", [
-        ("test_error_400", 400),
-        ("test_error_403", 403),
-        ("test_error_404", 404),
-        ("test_error_405", 405),
-        ("test_error_500", 500),
-    ])
+    @pytest.mark.parametrize(
+        "url_name,status",
+        [
+            ("test_error_400", 400),
+            ("test_error_403", 403),
+            ("test_error_404", 404),
+            ("test_error_405", 405),
+            ("test_error_500", 500),
+        ],
+    )
     def test_error_pages_render(self, authenticated_client, url_name, status):
         response = authenticated_client.get(reverse(url_name))
         assert response.status_code == status
@@ -493,6 +497,7 @@ class TestFunFridayViews:
 
     def test_remove_fun_friday_attendance(self, authenticated_client, student):
         from core.models import FunFridayAttendance
+
         FunFridayAttendance.objects.create(student=student, date=date(2025, 10, 3))
         response = authenticated_client.post(
             reverse("remove_fun_friday_attendance", kwargs={"student_id": student.id}),
@@ -521,11 +526,13 @@ class TestSupportViews:
         settings.SUPPORT_EMAIL = None
         response = authenticated_client.post(
             reverse("submit_support_ticket"),
-            data=json.dumps({
-                "category": "bug",
-                "message": "This is a longer message for testing purposes.",
-                "current_url": "/home/",
-            }),
+            data=json.dumps(
+                {
+                    "category": "bug",
+                    "message": "This is a longer message for testing purposes.",
+                    "current_url": "/home/",
+                }
+            ),
             content_type="application/json",
         )
         assert response.status_code == 500

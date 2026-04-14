@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('billing', '0001_initial'),
-        ('students', '0002_alter_studentparent_unique_together_student_gender_and_more'),
+        ("billing", "0001_initial"),
+        ("students", "0002_alter_studentparent_unique_together_student_gender_and_more"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='enrollment',
-            index=models.Index(fields=['academic_year'], name='enrollments_academi_615a2d_idx'),
+            model_name="enrollment",
+            index=models.Index(fields=["academic_year"], name="enrollments_academi_615a2d_idx"),
         ),
     ]

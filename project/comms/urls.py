@@ -4,11 +4,20 @@ Handles app form views for email/communication tools.
 
 Views are still in core.views for now -- only the URL routing moves here.
 """
+
 from django.urls import path
+
 from core.views import (
-    apps_view, fun_friday_form, payment_reminder_form, vacation_closure_form,
-    tax_certificate_form, monthly_report_form, welcome_form, birthday_form,
-    receipts_form, enrollment_form,
+    apps_view,
+    birthday_form,
+    enrollment_form,
+    fun_friday_form,
+    monthly_report_form,
+    payment_reminder_form,
+    receipts_form,
+    tax_certificate_form,
+    vacation_closure_form,
+    welcome_form,
 )
 
 urlpatterns = [

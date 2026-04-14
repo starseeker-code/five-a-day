@@ -3,12 +3,12 @@ from datetime import date
 from decimal import Decimal
 
 from django.core.paginator import Paginator
-from django.db.models import Sum, Case, When, Value, DecimalField
+from django.db.models import Case, DecimalField, Sum, Value, When
 from django.shortcuts import render
 
+from billing.models import Payment
 from core.constants import SCHEDULED_APPS
 from core.models import TodoItem
-from billing.models import Payment
 from students.models import Student
 
 
@@ -53,15 +53,13 @@ def home(request):
         key=lambda x: x["display_name"],
     )
 
-    birthday_students = list(Student.objects.filter(
-        active=True, birth_date__month=current_month
-    ).order_by("birth_date__day"))
+    birthday_students = list(
+        Student.objects.filter(active=True, birth_date__month=current_month).order_by("birth_date__day")
+    )
 
     birthday_count = len(birthday_students)
 
-    birthdays_display = [
-        {"name": s.first_name, "day": s.birth_date.day} for s in birthday_students[:5]
-    ]
+    birthdays_display = [{"name": s.first_name, "day": s.birth_date.day} for s in birthday_students[:5]]
     has_more_birthdays = birthday_count > 5
 
     days_in_month = cal_module.monthrange(current_year, current_month)[1]
@@ -73,7 +71,14 @@ def home(request):
             for day in range(today.day, days_in_month + 1):
                 d = date(current_year, current_month, day)
                 if d.weekday() == 4:
-                    upcoming_events.append({"name": app["name"], "date": d, "url_name": app["url_name"], "is_fun_friday": app["name"] == "Fun Friday"})
+                    upcoming_events.append(
+                        {
+                            "name": app["name"],
+                            "date": d,
+                            "url_name": app["url_name"],
+                            "is_fun_friday": app["name"] == "Fun Friday",
+                        }
+                    )
         elif app["frequency"] == "monthly_day_1":
             d = date(current_year, current_month, 1)
             if d >= today:
@@ -85,18 +90,36 @@ def home(request):
 
     _zero = Decimal("0.00")
     revenue_stats = Payment.objects.aggregate(
-        expected_revenue=Sum(Case(
-            When(due_date__month=current_month, due_date__year=current_year, then='amount'),
-            default=Value(0), output_field=DecimalField(),
-        )),
-        monthly_income_total=Sum(Case(
-            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then='amount'),
-            default=Value(0), output_field=DecimalField(),
-        )),
-        monthly_income_count=Sum(Case(
-            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then=Value(1)),
-            default=Value(0),
-        )),
+        expected_revenue=Sum(
+            Case(
+                When(due_date__month=current_month, due_date__year=current_year, then="amount"),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        ),
+        monthly_income_total=Sum(
+            Case(
+                When(
+                    payment_status="completed",
+                    payment_date__month=current_month,
+                    payment_date__year=current_year,
+                    then="amount",
+                ),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        ),
+        monthly_income_count=Sum(
+            Case(
+                When(
+                    payment_status="completed",
+                    payment_date__month=current_month,
+                    payment_date__year=current_year,
+                    then=Value(1),
+                ),
+                default=Value(0),
+            )
+        ),
     )
     expected_revenue = revenue_stats["expected_revenue"] or _zero
     monthly_income_total = revenue_stats["monthly_income_total"] or _zero

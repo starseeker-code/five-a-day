@@ -1,19 +1,20 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.db.models import Q, Sum, Case, When, Value, DecimalField
-from django.views.decorators.http import require_http_methods
-from django.core.exceptions import ValidationError
-from decimal import Decimal, InvalidOperation
-import json
 import csv
+import json
 import logging
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 
-from billing.models import Payment, Enrollment
-from students.models import Student, Parent
-from core.models import HistoryLog
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db.models import Case, DecimalField, Q, Sum, Value, When
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods
+
 from billing import constants
+from billing.models import Payment
+from core.models import HistoryLog
+from students.models import Parent, Student
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,7 @@ def parse_date_value(date_value):
         except ValueError:
             continue
 
-    raise ValidationError(
-        f"Formato de fecha inválido: '{raw_value}'. Usa dd/mm/yyyy."
-    )
+    raise ValidationError(f"Formato de fecha inválido: '{raw_value}'. Usa dd/mm/yyyy.")
 
 
 def payments_list(request):
@@ -69,38 +68,68 @@ def payments_list(request):
 
     _zero = Decimal("0.00")
     stats = Payment.objects.aggregate(
-        expected_total=Sum(Case(
-            When(due_date__month=current_month, due_date__year=current_year, then='amount'),
-            default=Value(0), output_field=DecimalField(),
-        )),
-        expected_count=Sum(Case(
-            When(due_date__month=current_month, due_date__year=current_year, then=Value(1)),
-            default=Value(0),
-        )),
-        completed_total=Sum(Case(
-            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then='amount'),
-            default=Value(0), output_field=DecimalField(),
-        )),
-        completed_count=Sum(Case(
-            When(payment_status="completed", payment_date__month=current_month, payment_date__year=current_year, then=Value(1)),
-            default=Value(0),
-        )),
-        pending_total=Sum(Case(
-            When(payment_status="pending", then='amount'),
-            default=Value(0), output_field=DecimalField(),
-        )),
-        pending_count=Sum(Case(
-            When(payment_status="pending", then=Value(1)),
-            default=Value(0),
-        )),
-        overdue_total=Sum(Case(
-            When(payment_status="pending", due_date__lt=today, then='amount'),
-            default=Value(0), output_field=DecimalField(),
-        )),
-        overdue_count=Sum(Case(
-            When(payment_status="pending", due_date__lt=today, then=Value(1)),
-            default=Value(0),
-        )),
+        expected_total=Sum(
+            Case(
+                When(due_date__month=current_month, due_date__year=current_year, then="amount"),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        ),
+        expected_count=Sum(
+            Case(
+                When(due_date__month=current_month, due_date__year=current_year, then=Value(1)),
+                default=Value(0),
+            )
+        ),
+        completed_total=Sum(
+            Case(
+                When(
+                    payment_status="completed",
+                    payment_date__month=current_month,
+                    payment_date__year=current_year,
+                    then="amount",
+                ),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        ),
+        completed_count=Sum(
+            Case(
+                When(
+                    payment_status="completed",
+                    payment_date__month=current_month,
+                    payment_date__year=current_year,
+                    then=Value(1),
+                ),
+                default=Value(0),
+            )
+        ),
+        pending_total=Sum(
+            Case(
+                When(payment_status="pending", then="amount"),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        ),
+        pending_count=Sum(
+            Case(
+                When(payment_status="pending", then=Value(1)),
+                default=Value(0),
+            )
+        ),
+        overdue_total=Sum(
+            Case(
+                When(payment_status="pending", due_date__lt=today, then="amount"),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        ),
+        overdue_count=Sum(
+            Case(
+                When(payment_status="pending", due_date__lt=today, then=Value(1)),
+                default=Value(0),
+            )
+        ),
     )
 
     all_payments_list = list(payments_queryset[:1000])
@@ -128,7 +157,6 @@ def create_payment(request):
     """
     Create new payment
     """
-    from core.models import HistoryLog
 
     if request.method == "POST":
         try:
@@ -168,13 +196,11 @@ def create_payment(request):
                 observations=request.POST.get("observations", ""),
             )
             HistoryLog.log(
-                'payment_created',
-                f'Pago creado: {student.full_name} — €{payment.amount} ({payment.get_payment_type_display()})',
-                icon='add_card'
+                "payment_created",
+                f"Pago creado: {student.full_name} — €{payment.amount} ({payment.get_payment_type_display()})",
+                icon="add_card",
             )
-            messages.success(
-                request, f"Pago creado exitosamente para {student.full_name}."
-            )
+            messages.success(request, f"Pago creado exitosamente para {student.full_name}.")
             return redirect("payments_list")
 
         except Exception as e:
@@ -205,11 +231,7 @@ def payment_detail(request, payment_id):
         "enrollment": (
             {
                 "id": payment.enrollment.id if payment.enrollment else None,
-                "enrollment_type": (
-                    payment.enrollment.enrollment_type.display_name
-                    if payment.enrollment
-                    else None
-                ),
+                "enrollment_type": (payment.enrollment.enrollment_type.display_name if payment.enrollment else None),
             }
             if payment.enrollment
             else None
@@ -220,9 +242,7 @@ def payment_detail(request, payment_id):
         "currency": payment.currency,
         "payment_status": payment.payment_status,
         "due_date": payment.due_date.isoformat() if payment.due_date else None,
-        "payment_date": (
-            payment.payment_date.isoformat() if payment.payment_date else None
-        ),
+        "payment_date": (payment.payment_date.isoformat() if payment.payment_date else None),
         "concept": payment.concept,
         "reference_number": payment.reference_number,
         "observations": payment.observations,
@@ -267,12 +287,12 @@ def update_payment(request, payment_id):
         if "parent_id" in data:
             parent = get_object_or_404(Parent, id=data["parent_id"])
             payment.parent = parent
-        if payment.student_id and payment.parent_id and not payment.student.parents.filter(
-            id=payment.parent_id
-        ).exists():
-            raise ValidationError(
-                "El padre/tutor seleccionado no está asociado con este estudiante."
-            )
+        if (
+            payment.student_id
+            and payment.parent_id
+            and not payment.student.parents.filter(id=payment.parent_id).exists()
+        ):
+            raise ValidationError("El padre/tutor seleccionado no está asociado con este estudiante.")
         if "payment_type" in data:
             payment.payment_type = data["payment_type"]
         if "payment_method" in data:
@@ -365,12 +385,10 @@ def deactivate_payment(request, payment_id):
     """
     try:
         payment = get_object_or_404(Payment, id=payment_id)
-        payment.payment_status = 'cancelled'
+        payment.payment_status = "cancelled"
         payment.save()
 
-        return JsonResponse(
-            {"success": True, "message": f"Pago desactivado exitosamente."}
-        )
+        return JsonResponse({"success": True, "message": "Pago desactivado exitosamente."})
 
     except Exception as e:
         return JsonResponse(
@@ -385,7 +403,6 @@ def quick_complete_payment(request, payment_id):
     AJAX endpoint to quickly complete a payment by setting its payment method.
     Expects JSON body: {"payment_method": "cash"|"transfer"|"credit_card"}
     """
-    from core.models import HistoryLog
 
     try:
         payment = get_object_or_404(Payment, id=payment_id)
@@ -404,15 +421,17 @@ def quick_complete_payment(request, payment_id):
         payment.save()
 
         HistoryLog.log(
-            'payment_completed',
-            f'Pago completado: {payment.student.full_name} — {payment.get_payment_method_display()} (€{payment.amount})',
-            icon='paid'
+            "payment_completed",
+            f"Pago completado: {payment.student.full_name} — {payment.get_payment_method_display()} (€{payment.amount})",
+            icon="paid",
         )
 
-        return JsonResponse({
-            "success": True,
-            "message": f"Pago de {payment.student.full_name} completado ({payment.get_payment_method_display()}).",
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"Pago de {payment.student.full_name} completado ({payment.get_payment_method_display()}).",
+            }
+        )
 
     except Exception as e:
         return JsonResponse(
@@ -438,24 +457,14 @@ def get_payment_details(request, payment_id):
                     "student_name": payment.student.full_name,
                     "parent_id": payment.parent.id if payment.parent else None,
                     "parent_name": payment.parent.full_name if payment.parent else "",
-                    "enrollment_id": (
-                        payment.enrollment.id if payment.enrollment else None
-                    ),
+                    "enrollment_id": (payment.enrollment.id if payment.enrollment else None),
                     "payment_type": payment.payment_type,
                     "payment_method": payment.payment_method,
                     "amount": str(payment.amount),
                     "currency": payment.currency,
                     "payment_status": payment.payment_status,
-                    "due_date": (
-                        payment.due_date.strftime("%Y-%m-%d")
-                        if payment.due_date
-                        else ""
-                    ),
-                    "payment_date": (
-                        payment.payment_date.strftime("%Y-%m-%d")
-                        if payment.payment_date
-                        else ""
-                    ),
+                    "due_date": (payment.due_date.strftime("%Y-%m-%d") if payment.due_date else ""),
+                    "payment_date": (payment.payment_date.strftime("%Y-%m-%d") if payment.payment_date else ""),
                     "concept": payment.concept,
                     "reference_number": payment.reference_number,
                     "observations": payment.observations,
@@ -482,22 +491,14 @@ def payment_statistics(request):
 
     stats = {
         "total_payments": Payment.objects.count(),
-        "completed_payments": Payment.objects.filter(
-            payment_status="completed"
-        ).count(),
-        "pending_payments": Payment.objects.filter(
-            payment_status="pending"
-        ).count(),
-        "overdue_payments": Payment.objects.filter(
-            payment_status="pending", due_date__lt=today
-        ).count(),
-        "total_amount_pending": Payment.objects.filter(
-            payment_status="pending"
-        ).aggregate(total=Sum("amount"))["total"]
+        "completed_payments": Payment.objects.filter(payment_status="completed").count(),
+        "pending_payments": Payment.objects.filter(payment_status="pending").count(),
+        "overdue_payments": Payment.objects.filter(payment_status="pending", due_date__lt=today).count(),
+        "total_amount_pending": Payment.objects.filter(payment_status="pending").aggregate(total=Sum("amount"))["total"]
         or Decimal("0.00"),
-        "total_amount_completed": Payment.objects.filter(
-            payment_status="completed"
-        ).aggregate(total=Sum("amount"))["total"]
+        "total_amount_completed": Payment.objects.filter(payment_status="completed").aggregate(total=Sum("amount"))[
+            "total"
+        ]
         or Decimal("0.00"),
     }
 
@@ -537,14 +538,8 @@ def search_payments(request):
                 "currency": payment.currency,
                 "payment_type": payment.get_payment_type_display(),
                 "payment_status": payment.get_payment_status_display(),
-                "due_date": (
-                    payment.due_date.strftime("%Y-%m-%d") if payment.due_date else ""
-                ),
-                "payment_date": (
-                    payment.payment_date.strftime("%Y-%m-%d")
-                    if payment.payment_date
-                    else ""
-                ),
+                "due_date": (payment.due_date.strftime("%Y-%m-%d") if payment.due_date else ""),
+                "payment_date": (payment.payment_date.strftime("%Y-%m-%d") if payment.payment_date else ""),
                 "concept": payment.concept,
                 "reference_number": payment.reference_number,
             }
@@ -576,11 +571,7 @@ def export_payments(request):
         ]
     )
 
-    payments = (
-        Payment.objects.all()
-        .select_related("student", "parent")
-        .order_by("-created_at")
-    )
+    payments = Payment.objects.all().select_related("student", "parent").order_by("-created_at")
 
     for payment in payments:
         writer.writerow(
@@ -593,11 +584,7 @@ def export_payments(request):
                 payment.get_payment_method_display(),
                 payment.get_payment_status_display(),
                 payment.due_date.strftime("%d/%m/%Y") if payment.due_date else "",
-                (
-                    payment.payment_date.strftime("%d/%m/%Y")
-                    if payment.payment_date
-                    else ""
-                ),
+                (payment.payment_date.strftime("%d/%m/%Y") if payment.payment_date else ""),
                 payment.created_at.strftime("%d/%m/%Y %H:%M"),
             ]
         )
@@ -611,9 +598,7 @@ def export_database_excel(request):
 
     wb = build_database_workbook()
     today = datetime.now().strftime("%Y%m%d")
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename="five_a_day_{today}.xlsx"'
     wb.save(response)
     return response
@@ -627,9 +612,7 @@ def search_parents(request):
         return JsonResponse({"results": []})
 
     parents = Parent.objects.filter(
-        Q(first_name__icontains=query)
-        | Q(last_name__icontains=query)
-        | Q(email__icontains=query)
+        Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query)
     )[:10]
 
     results = []
@@ -655,12 +638,10 @@ def validate_student_parent(request):
         parent_id = data.get("parent_id")
 
         if not student_id or not parent_id:
-            return JsonResponse(
-                {"valid": False, "message": "Missing student or parent ID"}
-            )
+            return JsonResponse({"valid": False, "message": "Missing student or parent ID"})
 
         student = get_object_or_404(Student, id=student_id)
-        parent = get_object_or_404(Parent, id=parent_id)
+        get_object_or_404(Parent, id=parent_id)  # validates parent exists
 
         is_valid = student.parents.filter(id=parent_id).exists()
 
@@ -683,8 +664,6 @@ def validate_student_parent(request):
         return JsonResponse(response_data)
 
     except json.JSONDecodeError:
-        return JsonResponse(
-            {"valid": False, "message": "Invalid JSON data"}, status=400
-        )
+        return JsonResponse({"valid": False, "message": "Invalid JSON data"}, status=400)
     except Exception as e:
         return JsonResponse({"valid": False, "message": str(e)}, status=400)

@@ -6,8 +6,10 @@ Requires the Docker PostgreSQL container to be running: `make up`
 
 If PostgreSQL is not available, falls back to SQLite for CI or quick local runs.
 """
-from project.settings import *  # noqa: F401, F403
+
 import os
+
+from project.settings import *  # noqa: F401, F403
 
 # Try to use PostgreSQL (matches production). Fall back to SQLite if unavailable.
 _test_db_engine = os.getenv("TEST_DB_ENGINE", "postgresql")
@@ -16,7 +18,7 @@ if _test_db_engine == "sqlite":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "test_db.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",  # noqa: F405
         }
     }
 else:
@@ -52,3 +54,6 @@ PASSWORD_HASHERS = [
 # Disable Celery in tests
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+# Use in-memory email backend (enables django.core.mail.outbox for assertions)
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

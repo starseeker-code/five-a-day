@@ -1,10 +1,10 @@
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
-from students.models import Teacher, Group, Parent, Student, StudentParent
-from billing.models import SiteConfiguration, EnrollmentType, Enrollment, Payment
-from core.models import TodoItem, HistoryLog
+import pytest
+
+from billing.models import Enrollment, EnrollmentType, Payment, SiteConfiguration
+from students.models import Group, Parent, Student, StudentParent, Teacher
 
 
 @pytest.fixture
