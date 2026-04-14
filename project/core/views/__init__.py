@@ -63,3 +63,9 @@ from core.views.todos import create_todo, complete_todo, history_list
 
 # Support
 from core.views.support import submit_support_ticket
+
+# Testing tools (QA)
+from core.views.testing_tools import (
+    testing_tools_view, api_seed_database, api_create_backlog_task,
+    api_update_backlog_task, api_toggle_error_email,
+)

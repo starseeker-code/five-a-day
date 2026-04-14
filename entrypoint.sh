@@ -75,8 +75,8 @@ python project/manage.py migrate --noinput
 # Collect Static Files
 # ============================================================================
 # On Render: Always (production with WhiteNoise)
-# On Docker: Only if DJANGO_ENV=production
-if [ "$IS_RENDER" = true ] || [ "$DJANGO_ENV" = "production" ]; then
+# On Docker: Only if DJANGO_ENV=production or DJANGO_ENV=testing
+if [ "$IS_RENDER" = true ] || [ "$DJANGO_ENV" = "production" ] || [ "$DJANGO_ENV" = "testing" ]; then
     echo "📁 Collecting static files..."
     python project/manage.py collectstatic --noinput --clear
 fi

@@ -115,3 +115,56 @@ class HistoryLog(models.Model):
         if cls.objects.filter(action=action, created_at__gte=cutoff).exists():
             return None
         return cls.log(action, message, icon=icon)
+
+
+class BacklogTask(models.Model):
+    """QA backlog tasks — created by testers, optionally emailed to support."""
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('done', 'Done'),
+    ]
+
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='open')
+    created_by = models.CharField(max_length=100, default='anonymous')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'backlog_tasks'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.get_priority_display()}] {self.title}"
+
+
+class QAConfiguration(models.Model):
+    """Singleton storing QA-specific toggles (error email reporting, etc.)."""
+    error_email_enabled = models.BooleanField(
+        default=False,
+        verbose_name='Send error reports via email',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'qa_configuration'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def get_config(cls):
+        config, _ = cls.objects.get_or_create(pk=1)
+        return config

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.0.0-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.0.1t-brightgreen?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
   <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
@@ -31,16 +31,17 @@ Built to centralize student records, automate billing cycles, and streamline par
 | Environment | Version | Status |
 |-------------|---------|--------|
 | **Production** | v0.0.0 | ![undeployed](https://img.shields.io/badge/undeployed-red) |
-| **Testing** | v0.0.0 | ![pending](https://img.shields.io/badge/pending_deployment-yellow) |
+| **Testing (QA)** | v1.0.1t | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
 | **Development** | v1.0.0 | ![active](https://img.shields.io/badge/active-brightgreen) |
 
 | | |
 |---|---|
-| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
+| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [HTTPS.md](HTTPS.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.0** | 2026-04-11 | Security hardening, query optimization (Case/When aggregates, N+1 fixes), GCP config, transaction safety |
+| **v1.0.1t** | 2026-04-14 | QA/testing environment: `/testing/` dashboard, database seeding, backlog with email, error reporting, HTTPS guide, access control via `QA_TESTING_USERNAME` |
+| v1.0.0 | 2026-04-11 | Security hardening, query optimization (Case/When aggregates, N+1 fixes), GCP config, transaction safety |
 | v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 132 tests, frontend cleanup, full documentation |
 | v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
 | v0.29.0 | 2025-03-01 | Enrollment system with discounts, adult students, email automation |
@@ -122,6 +123,15 @@ Built to centralize student records, automate billing cycles, and streamline par
     - [Data Protection \& Input Validation](#data-protection--input-validation)
     - [Logging \& Monitoring](#logging--monitoring)
     - [Future Security Improvements](#future-security-improvements)
+  - [Testing Environment (QA)](#testing-environment-qa)
+    - [What is the testing environment?](#what-is-the-testing-environment)
+    - [How to access it](#how-to-access-it)
+    - [What you can test](#what-you-can-test)
+    - [How to report a problem](#how-to-report-a-problem)
+    - [Error pages you might see](#error-pages-you-might-see)
+    - [For developers: how the QA environment works](#for-developers-how-the-qa-environment-works)
+      - [Access control for /testing/](#access-control-for-testing)
+    - [GCP deployment plan](#gcp-deployment-plan)
   - [Contributing](#contributing)
     - [Development Workflow](#development-workflow)
     - [Code Conventions](#code-conventions)
@@ -132,8 +142,36 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ## Version History & Roadmap
 
+<details id="v101t" open>
+<summary><strong>v1.0.1t — QA Testing Environment (current, testing branch)</strong></summary>
+
+**Testing infrastructure**
+- QA Docker Compose overlay (`docker-compose.testing.yml`) — Gunicorn, `DEBUG=False`, separate DB volume
+- `.env.testing` with dedicated credentials and `DJANGO_ENV=testing`
+- Database seeding command (`seed_testdata`) — 15+ students, parents, enrollments, payments
+- HTTPS documentation (`HTTPS.md`) — local Docker (Nginx + self-signed cert) and GCP Cloud Run
+
+**Testing dashboard (`/testing/`)**
+- Project info card — version, environment, last commit (branch, hash, author, date)
+- Error reporting toggle — sends unhandled exceptions to SUPPORT_EMAIL with full traceback
+- Database seeding UI — seed or wipe-and-reseed via AJAX
+- Backlog — create tasks with priority, each emailed to support automatically
+
+**Access control**
+- `qa_access_required` decorator in `core/decorators.py`
+- Gated by `DJANGO_ENV=testing` + `DEBUG=False` + session username matches `QA_TESTING_USERNAME`
+- Returns 404 (not 403) for unauthorized users — page appears not to exist
+- Sidebar icon hidden for all non-QA users via context processor
+
+**Bug fixes**
+- Added `STATICFILES_DIRS` for `project/static/` — email CSS was missing from collectstatic manifest
+- Added `SECURE_PROXY_SSL_HEADER` for HTTPS behind reverse proxies
+- `QAErrorEmailMiddleware` for automated error reporting to support email
+
+</details>
+
 <details id="v100">
-<summary><strong>v1.0.0 — Architecture Refactor & Test Suite (current)</strong></summary>
+<summary><strong>v1.0.0 — Architecture Refactor & Test Suite</strong></summary>
 
 **Architecture**
 - Split monolithic `core` app into 4 apps: `students`, `billing`, `comms`, `core`
@@ -1146,6 +1184,211 @@ These are not blockers but would strengthen the system for scale or compliance:
 | **Low** | `detect-secrets` pre-commit hook | Prevents accidental secret commits in the future. |
 | **Low** | Migrate to OAuth-only (deprecate password login) | Reduces credential attack surface to zero. |
 | **Low** | Web Application Firewall (WAF) rules at cloud provider level | Blocks common attack patterns before they reach Django. |
+
+---
+
+## Testing Environment (QA)
+
+> **This section is for testers, teachers, and anyone helping us try out the application before it goes live.**
+> You do not need to be a programmer to use the testing environment. If something looks wrong or confusing, that is exactly the kind of feedback we need.
+
+### What is the testing environment?
+
+The testing environment is a copy of the real application that runs on the internet, just like the final version will. It looks and works exactly the same, but it uses **fake data** — fake students, fake parents, fake payments. Nothing you do here affects real people or real money.
+
+Think of it as a **rehearsal stage**: you can click anything, try any feature, and even break things. We can always reset it.
+
+### How to access it
+
+| | |
+|---|---|
+| **Web address** | *(will be provided once deployed on GCP)* |
+| **Username** | See `.env.testing` → `LOGIN_USERNAME` |
+| **Password** | See `.env.testing` → `LOGIN_PASSWORD` |
+
+The login credentials are stored in the `.env.testing` file and are **never committed to the repository**. Ask the development team if you need them.
+
+1. Open the web address in your browser (Chrome, Firefox, Safari, or Edge all work).
+2. You will see a login page. Type the username and password you were given.
+3. After logging in you will see the **Dashboard** — the home screen with today's tasks, pending payments, and birthdays.
+
+### What you can test
+
+Here is a quick checklist of things to try. If anything does not work, take note of what happened and tell the development team.
+
+- **Dashboard** — Does it load? Do the numbers make sense?
+- **Students** — Can you see the list of students? Open a student's profile? Search by name?
+- **Create a student** — Fill in the form and save. Does the new student appear in the list?
+- **Payments** — Open the payments page. Try marking a payment as completed. Try filtering by status.
+- **Schedule** — Open the weekly schedule. Can you see groups assigned to time slots?
+- **Fun Friday** — Toggle a student's attendance on or off.
+- **Email forms** (Apps section) — Open each email form. You do not need to send real emails; just verify the forms load correctly.
+- **Management** — Can you update the site configuration (pricing)? Create a teacher or group?
+- **General navigation** — Does the sidebar work? Do all links go to the right page? Is the text readable?
+- **Testing Tools** (the blue "info" icon at the bottom of the sidebar) — This is your QA control panel:
+  - **Project Info** — shows the current software version, last commit, server status
+  - **Error Reporting toggle** — turn this ON so every server error is automatically emailed to the development team with full details
+  - **Database Seeding** — click to populate the database with test data, or wipe and start fresh
+  - **QA Backlog** — report bugs and suggestions directly from this page; each new task is emailed to the development team
+
+### How to report a problem
+
+When something goes wrong, please note:
+
+1. **What page you were on** — copy the web address from your browser's address bar, or describe the page ("I was on the payments list").
+2. **What you did** — "I clicked the green Complete button on a payment" or "I searched for a student named Sofia".
+3. **What happened** — "The page showed an error" or "Nothing happened" or "It showed the wrong information".
+4. **Screenshot** — If possible, take a screenshot (press the Print Screen key or use the Snipping Tool on Windows).
+
+Send this information to the development team. Even a short message like "The payments page shows an error when I click Export" is helpful.
+
+### Error pages you might see
+
+| Page | What it means |
+|------|--------------|
+| **Login page** (you are sent back to login) | Your session expired. Just log in again. |
+| **Page not found (404)** | You followed a link that does not exist. Go back to the Dashboard. |
+| **Server error (500)** | Something broke inside the application. This is a bug — please report it. |
+| **Forbidden (403)** | The application blocked your action for security reasons. Try logging in again. |
+
+### For developers: how the QA environment works
+
+The testing environment mirrors production:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `DEBUG` | `False` | Hides technical details from error pages, same as production |
+| `DJANGO_ENV` | `testing` | Like production (collectstatic, Gunicorn, secure cookies) but enables the `/testing/` dashboard |
+| Server | Gunicorn (2 workers) | Same as production (not Django's development server) |
+| HTTPS cookies | `Secure=True`, `SameSite=Strict` | Same cookie policy as production |
+| HTTPS | Via Nginx reverse proxy (local) or Cloud Run (GCP) | See [HTTPS.md](HTTPS.md) for full setup guide |
+| `SECURE_PROXY_SSL_HEADER` | Trusts `X-Forwarded-Proto` from reverse proxy | Enables Django to detect HTTPS behind Nginx/Cloud Run |
+| Database | PostgreSQL 16 (separate volume) | Isolated from the development database |
+| Login | Credentials in `.env.testing` | Dedicated QA credentials, never committed to git |
+| Admin panel | `/admin/` — credentials in `.env.testing` | Django admin for inspecting raw data |
+
+**Configuration files:**
+
+| File | Purpose |
+|------|---------|
+| `.env.testing` | All environment variables for QA (credentials, database, security flags) |
+| `docker-compose.testing.yml` | Docker override that switches to Gunicorn and uses a separate database volume |
+| `seed_testdata` command | Populates the database with realistic fake data |
+| `HTTPS.md` | Full guide for HTTPS setup with Docker (Nginx + self-signed cert) and GCP Cloud Run |
+| `/testing/` | In-app QA dashboard with project info, seeding, backlog, and error reporting toggle |
+| `core/decorators.py` | `qa_access_required` decorator — reusable access gate for QA-only views |
+
+#### Access control for `/testing/`
+
+The testing dashboard and all its API endpoints are protected by three conditions that must **all** be true:
+
+| Condition | Setting | Where it's checked |
+|---|---|---|
+| Environment is `testing` | `DJANGO_ENV=testing` | `settings.IS_TESTING_ENV` |
+| Debug is off | `DJANGO_DEBUG=False` | `settings.IS_TESTING_ENV` |
+| User matches QA username | `QA_TESTING_USERNAME` in `.env.testing` | `core/decorators.py` via session |
+
+If any condition fails, the page returns **404 Not Found** (not 403) so the URL appears not to exist. The sidebar icon is also hidden — controlled by the `show_testing_tools` context variable injected by `core/context_processors.py`.
+
+This means:
+- In **development** (`DEBUG=True`): the page doesn't exist, no sidebar icon.
+- In **production** (`DJANGO_ENV=production`): the page doesn't exist, no sidebar icon.
+- In **testing** with a **non-QA user**: the page doesn't exist, no sidebar icon.
+- In **testing** with the **QA user** (`manitas`): full access, sidebar icon visible.
+
+The QA username is configured in `.env.testing` (never hardcoded) via `QA_TESTING_USERNAME`. To grant another user access, change the value in the env file.
+
+**Running locally (for developers):**
+
+```bash
+# Start the QA environment
+make testing-up
+
+# Populate with test data (students, parents, payments, etc.)
+make testing-seed
+
+# Wipe everything and re-seed from scratch
+make testing-reset
+
+# View logs
+make testing-logs
+
+# Stop the environment
+make testing-down
+
+# Full rebuild (after code changes)
+make testing-rebuild
+```
+
+The `seed_testdata` command creates:
+- 3 teachers, 5 groups
+- 6 parents, 12 child students, 3 adult students, 1 inactive student
+- Active enrollments with monthly and quarterly payment plans
+- Payments in various states (completed, pending, overdue)
+- Schedule slots, todo items, and history log entries
+
+Use `--reset` to wipe and re-seed, or `--small` for a minimal dataset (6 children only).
+
+### GCP deployment plan
+
+The QA environment will be deployed on Google Cloud Platform, optimized for minimal cost:
+
+#### Recommended setup: Cloud Run + Cloud SQL
+
+| Component | GCP Service | Spec | Estimated cost |
+|-----------|-------------|------|----------------|
+| Application | Cloud Run | 1 vCPU, 512 MB, scales 0–2 | Free tier covers ~2M requests/month |
+| Database | Cloud SQL (PostgreSQL 16) | `db-f1-micro`, 10 GB SSD | ~$8/month |
+| Container images | Artifact Registry | Standard repo | Free tier (0.5 GB) |
+| HTTPS | Cloud Run managed | Automatic TLS certificate | Free |
+| DNS (optional) | Cloud DNS | 1 managed zone | ~$0.20/month |
+
+**Total estimated cost: ~$8–10/month**
+
+Cloud Run scales to zero when nobody is using it (no cost for idle time) and GCP provides automatic HTTPS with a `*.run.app` domain at no extra cost. The `db-f1-micro` Cloud SQL instance is the smallest available and more than enough for a QA team of 3–10 people.
+
+#### Why Cloud Run instead of a VM or Kubernetes
+
+- Kubernetes (GKE) has a management fee (~$70/month) that makes no sense for a small QA environment.
+- A Compute Engine VM would cost ~$5/month but requires manual updates, SSL certificate management, and doesn't scale to zero.
+- Cloud Run gives production-grade infrastructure (load balancing, HTTPS, health checks, rolling deploys) with almost no operational overhead.
+
+#### Deployment steps (run once during initial setup)
+
+```bash
+# 1. Build and push the Docker image
+gcloud builds submit --tag gcr.io/PROJECT_ID/fiveaday-testing
+
+# 2. Create the Cloud SQL instance
+gcloud sql instances create fiveaday-testing \
+  --tier=db-f1-micro \
+  --region=europe-southwest1 \
+  --database-version=POSTGRES_16
+
+# 3. Create the database and user
+gcloud sql databases create fiveaday_testing --instance=fiveaday-testing
+gcloud sql users create fiveaday_tester --instance=fiveaday-testing --password=SECURE_PASSWORD
+
+# 4. Store secrets
+echo -n "value" | gcloud secrets create SECRET_NAME --data-file=-
+
+# 5. Deploy to Cloud Run
+gcloud run deploy fiveaday-testing \
+  --image gcr.io/PROJECT_ID/fiveaday-testing \
+  --region europe-southwest1 \
+  --allow-unauthenticated \
+  --set-env-vars "DJANGO_ENV=production,DJANGO_DEBUG=False" \
+  --set-secrets "DJANGO_SECRET_KEY=django-secret-key:latest"
+
+# 6. Seed the database (one-time, via Cloud Run job or exec)
+gcloud run jobs create seed-testdata \
+  --image gcr.io/PROJECT_ID/fiveaday-testing \
+  --command "python" \
+  --args "project/manage.py,seed_testdata" \
+  --region europe-southwest1
+```
+
+After deployment, Cloud Run provides a URL like `https://fiveaday-testing-xxxxx.europe-southwest1.run.app` with HTTPS enabled automatically.
 
 ---
 

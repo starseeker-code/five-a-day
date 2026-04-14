@@ -217,6 +217,7 @@ __marimo__/
 
 # Mantener el ejemplo
 !.env.example
+!.env.testing.example
 
 # Volúmenes de Docker
 postgres_data/

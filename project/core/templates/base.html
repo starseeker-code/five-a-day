@@ -87,6 +87,12 @@
                         <span class="material-symbols-outlined mx-auto sidebar-icon">help</span>
                         <span class="hidden sidebar-text">¿Necesitas ayuda?</span>
                     </a>
+                    {% if show_testing_tools %}
+                    <a href="{% url 'testing_tools' %}" class="sidebar-link w-full flex items-center gap-3 px-2 py-3 rounded-md {% if request.resolver_match.url_name == 'testing_tools' %}active-sidebar-link bg-cyan-200 text-cyan-700{% else %}text-neutral-600{% endif %} font-medium hover:bg-cyan-100 hover:text-cyan-700 transition-all duration-200">
+                        <span class="material-symbols-outlined mx-auto sidebar-icon">info</span>
+                        <span class="hidden sidebar-text">Testing</span>
+                    </a>
+                    {% endif %}
                 </nav>
             </div>
             {% if request.session.username %}

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "five-a-day"
-version = "1.0.0"
+version = "1.0.1"
 description = "Five a Day management software"
 authors = ["Joaquin Hernandez Martinez <proyecto_noether@outlook.com>"]
 readme = "README.md"

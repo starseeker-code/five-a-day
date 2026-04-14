@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # NOTA: Al cambiar la versión, actualizar también en:
 #   - readme.md (badge y texto)
 #   - pyproject.toml (campo version)
-APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
+APP_VERSION = os.getenv("APP_VERSION", "1.0.1t")
 
 # ============================================================================
 # SECURITY SETTINGS
@@ -54,6 +54,9 @@ if not DEBUG:
     )
     X_FRAME_OPTIONS = os.getenv("X_FRAME_OPTIONS", "DENY")
 
+    # Trust the X-Forwarded-Proto header from reverse proxies (Nginx, Cloud Run LB)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
     # CSRF Trusted Origins (para producción)
     csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
     if csrf_origins:
@@ -72,6 +75,10 @@ if not DEBUG:
 #   - entrypoint.sh: Verifica si debe crear superuser automático o collectstatic
 #   - settings.py: Define configuraciones según el entorno (actualmente solo lo almacena)
 ENVIRONMENT = os.getenv("DJANGO_ENV", "development")
+
+# QA testing tools — only enabled when DJANGO_ENV=testing and a QA user is configured
+IS_TESTING_ENV = ENVIRONMENT == "testing" and not DEBUG
+QA_TESTING_USERNAME = os.getenv("QA_TESTING_USERNAME", "")
 
 # ============================================================================
 # SESSION CONFIGURATION
@@ -128,6 +135,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.QAErrorEmailMiddleware",  # QA: email errors to support
     "core.middleware.SimpleAuthMiddleware",  # Middleware de autenticación simple
 ]
 
@@ -279,6 +287,7 @@ LOGGING = {
 # ============================================================================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR.parent / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Configuración de WhiteNoise para producción
 STORAGES = {

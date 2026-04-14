@@ -7,7 +7,9 @@
         logs-db ps stats shell bash migrate makemigrations createsuperuser \
         collectstatic check dbshell backup restore reset-db test test-local \
         test-verbose test-coverage test-models test-services test-views \
-        clean clean-all health url send-test-email generate-payments
+        clean clean-all health url send-test-email generate-payments \
+        testing-up testing-down testing-logs testing-seed testing-reset \
+        testing-rebuild testing-shell testing-health
 
 # ============================================================================
 # HELP
@@ -75,6 +77,16 @@ help:
 	@echo "  Payments:"
 	@echo "    make generate-payments          Generate current month"
 	@echo "    make generate-payments-dry      Preview without creating"
+	@echo ""
+	@echo "  Testing / QA Environment:"
+	@echo "    make testing-up       Start QA environment (production-like)"
+	@echo "    make testing-down     Stop QA environment"
+	@echo "    make testing-rebuild  Full rebuild of QA environment"
+	@echo "    make testing-logs     Tail QA logs"
+	@echo "    make testing-seed     Populate QA database with test data"
+	@echo "    make testing-reset    Wipe QA database and re-seed"
+	@echo "    make testing-shell    Django shell in QA container"
+	@echo "    make testing-health   Health check for QA environment"
 	@echo ""
 	@echo "  Cleanup:"
 	@echo "    make clean            Remove stopped containers + prune"
@@ -329,6 +341,47 @@ version:
 	@echo "Version updated to $(V) in:"
 	@echo "  - pyproject.toml"
 	@echo "  - project/settings.py"
+
+# ============================================================================
+# TESTING / QA ENVIRONMENT
+# ============================================================================
+# These targets use docker-compose.testing.yml on top of the base file.
+# The QA environment mimics production: DEBUG=False, Gunicorn, HTTPS cookies.
+
+TESTING_COMPOSE = docker compose -f docker-compose.yml -f docker-compose.testing.yml
+
+testing-up:
+	$(TESTING_COMPOSE) up -d --remove-orphans
+	@echo "QA environment started: http://localhost:8000"
+	@echo "Login with credentials from .env.testing (LOGIN_USERNAME / LOGIN_PASSWORD)"
+
+testing-down:
+	$(TESTING_COMPOSE) down
+
+testing-rebuild:
+	$(TESTING_COMPOSE) down
+	$(TESTING_COMPOSE) build --no-cache
+	$(TESTING_COMPOSE) up -d
+	@echo "QA environment rebuilt: http://localhost:8000"
+
+testing-logs:
+	$(TESTING_COMPOSE) logs -f web
+
+testing-seed:
+	$(TESTING_COMPOSE) exec web python project/manage.py seed_testdata
+
+testing-reset:
+	$(TESTING_COMPOSE) exec web python project/manage.py seed_testdata --reset
+
+testing-shell:
+	$(TESTING_COMPOSE) exec web python project/manage.py shell
+
+testing-health:
+	@echo "=== QA Services ==="
+	@$(TESTING_COMPOSE) ps
+	@echo ""
+	@echo "=== Health endpoint ==="
+	@curl -sf http://localhost:8000/health/ 2>/dev/null || echo "(not reachable)"
 
 # ============================================================================
 # PRODUCTION
