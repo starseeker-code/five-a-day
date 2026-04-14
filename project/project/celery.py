@@ -24,10 +24,16 @@ app.autodiscover_tasks()
 # CELERY BEAT SCHEDULE - Tareas programadas
 # ============================================================================
 app.conf.beat_schedule = {
-    # Enviar emails de cumpleaños todos los días a las 8:00 AM
+    # Birthday emails — daily at 8:00 AM (Europe/Madrid)
     "send-birthday-emails-daily": {
-        "task": "core.tasks.send_birthday_emails_task",
+        "task": "comms.tasks.send_birthday_emails_task",
         "schedule": crontab(hour=8, minute=0),
+        "options": {"queue": "emails"},
+    },
+    # Payment reminders — every Monday at 9:00 AM
+    "send-payment-reminders-weekly": {
+        "task": "comms.tasks.send_payment_reminders",
+        "schedule": crontab(hour=9, minute=0, day_of_week=1),
         "options": {"queue": "emails"},
     },
 }

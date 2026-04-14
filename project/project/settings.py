@@ -330,7 +330,7 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 
 # Configuración de colas
 CELERY_TASK_ROUTES = {
-    "core.tasks.send_*": {"queue": "emails"},
+    "comms.tasks.send_*": {"queue": "emails"},
 }
 
 # Modo eager cuando no hay broker (plan free)

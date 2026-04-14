@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from comms.services.email_functions import (
     send_all_tax_certificates,
@@ -271,12 +272,19 @@ def payment_reminder_form(request):
     if request.method == "POST":
         action = request.POST.get("action", "")
         if action in ("preview", "test_send"):
+            from billing.models import SiteConfiguration
+
+            _config = SiteConfiguration.get_config()
             _start_str = request.POST.get("payment_start_date", default_start.isoformat())
             _end_str = request.POST.get("payment_end_date", default_end.isoformat())
             _month = request.POST.get("month", current_month)
-            _iban = request.POST.get("iban_number", "ES00 0000 0000 0000 0000 0000")
-            _bizum = request.POST.get("telephone_number_bizum", "600 000 000")
-            _cheque = request.POST.get("reduced_price_cheque_idioma", "34€")
+            _iban = request.POST.get("iban_number", os.getenv("ACADEMY_IBAN", ""))
+            _iban_holder = request.POST.get("iban_holder", os.getenv("ACADEMY_IBAN_HOLDER", ""))
+            _bizum = request.POST.get("telephone_number_bizum", os.getenv("ACADEMY_PHONE", ""))
+            _cheque = request.POST.get(
+                "reduced_price_cheque_idioma",
+                f"{_config.full_time_monthly_fee - _config.language_cheque_discount:.0f}€",
+            )
             try:
                 _sd = date.fromisoformat(_start_str)
                 _ed = date.fromisoformat(_end_str)
@@ -289,8 +297,12 @@ def payment_reminder_form(request):
                 "payment_end_day_number": _ed.day,
                 "month": _month,
                 "iban_number": _iban,
+                "iban_holder": _iban_holder,
                 "reduced_price_cheque_idioma": _cheque,
                 "telephone_number_bizum": _bizum,
+                "full_time_fee": int(_config.full_time_monthly_fee),
+                "part_time_fee": int(_config.part_time_monthly_fee),
+                "adult_fee": int(_config.adult_group_monthly_fee),
             }
             if action == "preview":
                 return JsonResponse({"html": render_to_string("emails/payment_reminder.html", _ctx)})
@@ -310,10 +322,14 @@ def payment_reminder_form(request):
                 )
             return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
 
+        from billing.models import SiteConfiguration
+
+        _config = SiteConfiguration.get_config()
         payment_start_date_str = request.POST.get("payment_start_date")
         payment_end_date_str = request.POST.get("payment_end_date")
         month = request.POST.get("month", current_month)
         iban_number = request.POST.get("iban_number", "")
+        iban_holder = request.POST.get("iban_holder", os.getenv("ACADEMY_IBAN_HOLDER", ""))
         telephone_number_bizum = request.POST.get("telephone_number_bizum", "")
         reduced_price_cheque_idioma = request.POST.get("reduced_price_cheque_idioma", "34€")
 
@@ -346,8 +362,12 @@ def payment_reminder_form(request):
                         payment_end_day_number=end_date.day,
                         month=month,
                         iban_number=iban_number,
+                        iban_holder=iban_holder,
                         reduced_price_cheque_idioma=reduced_price_cheque_idioma,
                         telephone_number_bizum=telephone_number_bizum,
+                        full_time_fee=int(_config.full_time_monthly_fee),
+                        part_time_fee=int(_config.part_time_monthly_fee),
+                        adult_fee=int(_config.adult_group_monthly_fee),
                     )
                     if result:
                         success_count += 1
@@ -363,6 +383,14 @@ def payment_reminder_form(request):
                 messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
             return redirect("apps")
 
+    default_iban = os.getenv("ACADEMY_IBAN", "")
+    default_bizum = os.getenv("ACADEMY_PHONE", "")
+
+    from billing.models import SiteConfiguration
+
+    config = SiteConfiguration.get_config()
+    cheque_price = f"{config.full_time_monthly_fee - config.language_cheque_discount:.0f}€"
+
     email_html = render_to_string(
         "emails/payment_reminder.html",
         {
@@ -371,9 +399,13 @@ def payment_reminder_form(request):
             "payment_end_day_name": DIAS_ES[default_end.weekday()],
             "payment_end_day_number": default_end.day,
             "month": current_month,
-            "iban_number": "ES00 0000 0000 0000 0000 0000",
-            "reduced_price_cheque_idioma": "34€",
-            "telephone_number_bizum": "600 000 000",
+            "iban_number": default_iban,
+            "iban_holder": os.getenv("ACADEMY_IBAN_HOLDER", ""),
+            "reduced_price_cheque_idioma": cheque_price,
+            "telephone_number_bizum": default_bizum,
+            "full_time_fee": int(config.full_time_monthly_fee),
+            "part_time_fee": int(config.part_time_monthly_fee),
+            "adult_fee": int(config.adult_group_monthly_fee),
         },
     )
     return render(
@@ -385,9 +417,9 @@ def payment_reminder_form(request):
             "default_end_date": default_end.isoformat(),
             "months": MESES_ES,
             "current_month": current_month,
-            "default_iban": "",
-            "default_bizum": "",
-            "default_cheque_price": "34€",
+            "default_iban": default_iban,
+            "default_bizum": default_bizum,
+            "default_cheque_price": cheque_price,
             "email_html": email_html,
         },
     )
@@ -849,6 +881,13 @@ def receipts_form(request):
                 _template = "receipt_quarterly_child"
                 _ctx = {"student_name": "Alumno Ejemplo", "month_1": _m1, "month_2": _m2, "month_3": _m3}
                 _subject = f"[TEST] 🧾 Recibo Trimestral - {_m1.title()}/{_m2.title()}/{_m3.title()}"
+            elif _rtype == "enrollment":
+                from billing.models import current_academic_year
+
+                _ay = current_academic_year()
+                _template = "receipt_enrollment"
+                _ctx = {"student_name": "Alumno Ejemplo", "academic_year": _ay}
+                _subject = f"[TEST] 🧾 Recibo Matrícula - {_ay}"
             else:
                 _adm = request.POST.get("adult_month", current_month)
                 _template = "receipt_adult"
@@ -894,6 +933,31 @@ def receipts_form(request):
                             month_1=month_1,
                             month_2=month_2,
                             month_3=month_3,
+                        )
+                        if result:
+                            success_count += 1
+                        else:
+                            error_count += 1
+                    except Exception:
+                        error_count += 1
+        elif receipt_type == "enrollment":
+            from billing.models import current_academic_year
+
+            academic_year = current_academic_year()
+            parents = Parent.objects.filter(children__active=True).distinct().prefetch_related("children")
+
+            success_count = 0
+            error_count = 0
+            for parent in parents:
+                if not parent.email:
+                    continue
+                for student in parent.children.filter(active=True):
+                    try:
+                        result = email_service.send_email(
+                            template_name="receipt_enrollment",
+                            recipients=parent.email,
+                            subject=f"🧾 Recibo Matrícula {academic_year} — {student.full_name}",
+                            context={"student_name": student.full_name, "academic_year": academic_year},
                         )
                         if result:
                             success_count += 1
@@ -947,6 +1011,114 @@ def receipts_form(request):
             "months": MESES_ES,
             "current_month": current_month,
             "quarter_months": quarter_months,
+            "parent_count": parent_count,
+            "email_html": email_html,
+        },
+    )
+
+
+# ============================================================================
+# NEWSLETTER - Boletín informativo por grupo
+# ============================================================================
+
+
+def newsletter_form(request):
+    """
+    Vista para enviar newsletters por grupo.
+    GET: Muestra formulario con selector de grupo
+    POST: Envía newsletter a todos los padres con estudiantes activos
+    """
+    parent_count = Parent.objects.filter(children__active=True).distinct().count()
+    groups = Group.objects.filter(active=True).order_by("group_name")
+
+    if request.method == "POST":
+        action = request.POST.get("action", "")
+        group_name = request.POST.get("group_name", "")
+        newsletter_link = request.POST.get("newsletter_link", "")
+        message_text = strip_tags(request.POST.get("message", ""))
+
+        if action in ("preview", "test_send"):
+            _ctx = {
+                "group_name": group_name,
+                "newsletter_link": newsletter_link,
+                "message": message_text,
+            }
+            if action == "preview":
+                return JsonResponse({"html": render_to_string("emails/newsletter.html", _ctx)})
+            _t1, _t2 = os.getenv("EMAIL_TEST_1", ""), os.getenv("EMAIL_TEST_2", "")
+            _recipients = [r for r in [_t1, _t2] if r]
+            if not _recipients:
+                return JsonResponse({"success": False, "message": "❌ EMAIL_TEST_1/EMAIL_TEST_2 no configurados"})
+            _ok = email_service.send_email(
+                template_name="newsletter",
+                recipients=_recipients,
+                subject=f"[TEST] 📰 Newsletter {group_name} - Five a Day",
+                context=_ctx,
+            )
+            if _ok:
+                return JsonResponse(
+                    {"success": True, "message": f"✅ Email de prueba enviado a {', '.join(_recipients)}"}
+                )
+            return JsonResponse({"success": False, "message": "❌ Error al enviar el email de prueba"})
+
+        if not group_name:
+            messages.error(request, "❌ Debes seleccionar un grupo")
+            return redirect("newsletter_form")
+
+        # Send to parents with students in the selected group
+        group_obj = Group.objects.filter(group_name=group_name, active=True).first()
+        if group_obj:
+            parents = Parent.objects.filter(children__group=group_obj, children__active=True).distinct()
+        else:
+            parents = Parent.objects.filter(children__active=True).distinct()
+
+        parent_emails = [p.email for p in parents if p.email]
+
+        if not parent_emails:
+            messages.warning(request, "⚠️ No hay padres con email en este grupo")
+            return redirect("apps")
+
+        success_count = 0
+        error_count = 0
+        for email_addr in parent_emails:
+            try:
+                result = email_service.send_email(
+                    template_name="newsletter",
+                    recipients=email_addr,
+                    subject=f"📰 Newsletter {group_name} - Five a Day",
+                    context={
+                        "group_name": group_name,
+                        "newsletter_link": newsletter_link,
+                        "message": message_text,
+                    },
+                )
+                if result:
+                    success_count += 1
+                else:
+                    error_count += 1
+            except Exception:
+                error_count += 1
+
+        if success_count > 0:
+            HistoryLog.log("email_sent", f"Newsletter {group_name}: {success_count} email(s) enviados", icon="mail")
+            messages.success(request, f"✅ Newsletter enviada a {success_count} padre(s) del grupo {group_name}")
+        if error_count > 0:
+            messages.warning(request, f"⚠️ {error_count} email(s) no pudieron enviarse")
+        return redirect("apps")
+
+    email_html = render_to_string(
+        "emails/newsletter.html",
+        {
+            "group_name": "Grupo Ejemplo",
+            "newsletter_link": "https://canva.com/...",
+            "message": "",
+        },
+    )
+    return render(
+        request,
+        "apps/newsletter_form.html",
+        {
+            "groups": groups,
             "parent_count": parent_count,
             "email_html": email_html,
         },

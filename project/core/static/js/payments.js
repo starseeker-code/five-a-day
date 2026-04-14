@@ -294,11 +294,10 @@
 // ============================================================
 (function initPaymentCreate() {
     const studentSearch = document.getElementById('student_search');
-    const parentSearch = document.getElementById('parent_search');
-    if (!studentSearch || !parentSearch) return;
+    if (!studentSearch) return;
 
     const studentSuggestions = document.getElementById('student_suggestions');
-    const parentSuggestions = document.getElementById('parent_suggestions');
+    const parentDisplay = document.getElementById('parent_display');
     const validationMessage = document.getElementById('validation_message');
     const form = document.getElementById('paymentForm');
 
@@ -346,19 +345,7 @@
         }, 300);
     });
 
-    // Parent search
-    let parentTimeout;
-    parentSearch.addEventListener('input', function() {
-        clearTimeout(parentTimeout);
-        const query = this.value.trim();
-        if (query.length < 2) { parentSuggestions.classList.add('hidden'); return; }
-        parentTimeout = setTimeout(() => {
-            fetch(`/api/search/parents/?q=${encodeURIComponent(query)}`)
-                .then(r => r.json())
-                .then(data => displayParentSuggestions(data.results))
-                .catch(e => console.error(e));
-        }, 300);
-    });
+    // Parent is auto-populated from student selection
 
     function displayStudentSuggestions(students) {
         if (!students.length) { studentSuggestions.classList.add('hidden'); return; }
@@ -372,32 +359,40 @@
         studentSuggestions.classList.remove('hidden');
     }
 
-    function displayParentSuggestions(parents) {
-        if (!parents.length) { parentSuggestions.classList.add('hidden'); return; }
-        parentSuggestions.innerHTML = parents.map(p => `
-            <div class="p-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100"
-                 onclick="window._paymentSelectParent(${p.id}, '${p.full_name.replace(/'/g, "\\'")}', '${p.email.replace(/'/g, "\\'")}')">
-                <div class="font-medium text-neutral-800">${p.full_name}</div>
-                <div class="text-sm text-neutral-500">${p.email}</div>
-            </div>
-        `).join('');
-        parentSuggestions.classList.remove('hidden');
-    }
+
 
     function selectStudent(id, name, school) {
         selectedStudent = { id, name };
         studentSearch.value = name;
         document.getElementById('student_id').value = id;
         studentSuggestions.classList.add('hidden');
-        validateRelation();
+
+        // Auto-fetch first parent for this student
+        fetch(`/api/validate/student-parent/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+            body: JSON.stringify({ student_id: id, parent_id: 0 })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.parents && data.parents.length > 0) {
+                const p = data.parents[0];
+                selectedParent = { id: p.id, name: p.full_name };
+                document.getElementById('parent_id').value = p.id;
+                if (parentDisplay) parentDisplay.value = p.full_name;
+            } else {
+                selectedParent = null;
+                document.getElementById('parent_id').value = '';
+                if (parentDisplay) parentDisplay.value = 'Sin padre/tutor (estudiante adulto)';
+            }
+        })
+        .catch(() => {});
     }
 
     function selectParent(id, name, email) {
         selectedParent = { id, name };
-        parentSearch.value = name;
+        if (parentDisplay) parentDisplay.value = name;
         document.getElementById('parent_id').value = id;
-        parentSuggestions.classList.add('hidden');
-        validateRelation();
     }
 
     // Expose for inline onclick handlers in dynamic HTML

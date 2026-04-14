@@ -7,17 +7,26 @@
 <br>
 <p>Nos ponemos en contacto con vosotros para recordaros que se debe realizar el pago de este mes entre el <mark>{{ payment_start_day_name }} {{ payment_start_day_number }} y {{ payment_end_day_name }} {{ payment_end_day_number }} de {{ month }}</mark>.</p>
 <br>
-<p>Adjuntamos el documento de las distintas tarifas para cualquier consulta y las instrucciones para pago por transferencia en el caso de que prefiráis esta forma de pago. ¡¡IMPORTANTE!! El IBAN lo hemos cambiado. Las transferencias serán a esta cuenta: <mark>{{ iban_number }}</mark></p>
+<p>A continuación indicamos las distintas tarifas para cualquier consulta. ¡¡IMPORTANTE!! El IBAN es el siguiente: <strong>{{ iban_number }}</strong> a nombre de <strong>{{ iban_holder }}</strong></p>
+<br>
+<p>También podéis hacernos <mark>bizum</mark> al móvil de la academia: <a href="https://wa.me/34{{ telephone_number_bizum|cut:' ' }}" style="color: inherit;">{{ telephone_number_bizum }}</a></p>
+<br>
+<p><strong>Tarifas:</strong></p>
+<ul>
+  <li>Cuota trimestral: consultar en la academia</li>
+  <li>Cuota 2 sesiones semanales: {{ full_time_fee }} euros</li>
+  <li>Cuota 2 sesiones semanales descuento hermano: consultar en la academia</li>
+  <li>Cuota 1 sesión semanal: {{ part_time_fee }} euros</li>
+  <li>Cuota adultos: {{ adult_fee }} euros</li>
+</ul>
 <br>
 <p><span style="color: red;">Si os beneficiáis del Cheque Idioma, la cuota sería de {{ reduced_price_cheque_idioma }} euros y tenéis que venir a la academia a <mark>firmar</mark> el recibo.</span></p>
-<br>
-<p>También podéis hacernos <mark>bizum</mark> al móvil de la academia: {{ telephone_number_bizum }}</p>
 <br>
 <p>El horario de atención al público es:</p>
 <br>
 <ul>
-  <li>De lunes a jueves de 11:00 a 13:30 y de 16:00 a 20:30</li>
-  <li>Viernes de 11:30 a 14:00 y de 16:00 a 18:30</li>
+  <li>De lunes a jueves de 11:30 a 13:30 y de 16:00 a 20:30</li>
+  <li>Viernes de 12:00 a 14:00 y de 16:00 a 18:30</li>
 </ul>
 <br>
 <p>Muchas gracias y buen día.</p>

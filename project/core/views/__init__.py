@@ -10,6 +10,7 @@ from core.views.app_forms import (
     enrollment_form,
     fun_friday_form,
     monthly_report_form,
+    newsletter_form,
     payment_reminder_form,
     receipts_form,
     tax_certificate_form,

@@ -637,10 +637,16 @@ def validate_student_parent(request):
         student_id = data.get("student_id")
         parent_id = data.get("parent_id")
 
-        if not student_id or not parent_id:
-            return JsonResponse({"valid": False, "message": "Missing student or parent ID"})
+        if not student_id:
+            return JsonResponse({"valid": False, "message": "Missing student ID"})
 
         student = get_object_or_404(Student, id=student_id)
+
+        # If parent_id is 0 or missing, return the student's parents list
+        if not parent_id:
+            parents_list = [{"id": p.id, "full_name": p.full_name, "email": p.email} for p in student.parents.all()]
+            return JsonResponse({"valid": False, "parents": parents_list})
+
         get_object_or_404(Parent, id=parent_id)  # validates parent exists
 
         is_valid = student.parents.filter(id=parent_id).exists()

@@ -66,32 +66,51 @@ if [ "$IS_RENDER" = false ] && [ "$DATABASE" = "postgres" ]; then
 fi
 
 # ============================================================================
-# Run Django Migrations
+# Run Django Migrations (skip for Celery containers)
 # ============================================================================
-echo "📦 Applying database migrations..."
-python project/manage.py migrate --noinput
+# Check if the command is a Celery command — workers/beat should not run migrations
+FIRST_ARG="$1"
+case "$FIRST_ARG" in
+    celery)
+        echo "⏭️  Skipping migrations (Celery container)"
+        ;;
+    *)
+        echo "📦 Applying database migrations..."
+        python project/manage.py migrate --noinput
+        ;;
+esac
 
 # ============================================================================
-# Collect Static Files
+# Collect Static Files (skip for Celery containers)
 # ============================================================================
 # On Render: Always (production with WhiteNoise)
 # On Docker: Only if DJANGO_ENV=production or DJANGO_ENV=testing
-if [ "$IS_RENDER" = true ] || [ "$DJANGO_ENV" = "production" ] || [ "$DJANGO_ENV" = "testing" ]; then
-    echo "📁 Collecting static files..."
-    python project/manage.py collectstatic --noinput --clear
-fi
+case "$FIRST_ARG" in
+    celery) ;;  # skip
+    *)
+        if [ "$IS_RENDER" = true ] || [ "$DJANGO_ENV" = "production" ] || [ "$DJANGO_ENV" = "testing" ]; then
+            echo "📁 Collecting static files..."
+            python project/manage.py collectstatic --noinput --clear
+        fi
+        ;;
+esac
 
 # ============================================================================
-# Create Superuser if it doesn't exist
+# Create Superuser if it doesn't exist (skip for Celery containers)
 # ============================================================================
-if [ "$DJANGO_SUPERUSER_USERNAME" ] && [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
-    echo "👤 Verifying superuser..."
-    python project/manage.py createsuperuser --noinput 2>/dev/null || echo "✅ Superuser already exists."
-else
-    if [ "$IS_RENDER" = true ]; then
-        echo "⚠️ Superuser variables not configured on Render"
-    fi
-fi
+case "$FIRST_ARG" in
+    celery) ;;  # skip
+    *)
+        if [ "$DJANGO_SUPERUSER_USERNAME" ] && [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
+            echo "👤 Verifying superuser..."
+            python project/manage.py createsuperuser --noinput 2>/dev/null || echo "✅ Superuser already exists."
+        else
+            if [ "$IS_RENDER" = true ]; then
+                echo "⚠️ Superuser variables not configured on Render"
+            fi
+        fi
+        ;;
+esac
 
 # ============================================================================
 # Start Server

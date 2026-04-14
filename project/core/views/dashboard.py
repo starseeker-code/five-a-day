@@ -59,7 +59,16 @@ def home(request):
 
     birthday_count = len(birthday_students)
 
-    birthdays_display = [{"name": s.first_name, "day": s.birth_date.day} for s in birthday_students[:5]]
+    birthdays_display = [
+        {
+            "name": s.first_name,
+            "day": s.birth_date.day,
+            "age": today.year
+            - s.birth_date.year
+            - (1 if (today.month, today.day) < (s.birth_date.month, s.birth_date.day) else 0),
+        }
+        for s in birthday_students[:5]
+    ]
     has_more_birthdays = birthday_count > 5
 
     days_in_month = cal_module.monthrange(current_year, current_month)[1]

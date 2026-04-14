@@ -219,6 +219,10 @@ def send_payment_reminder_email(
     iban_number: str,
     reduced_price_cheque_idioma: str,
     telephone_number_bizum: str,
+    iban_holder: str = "",
+    full_time_fee: int = 0,
+    part_time_fee: int = 0,
+    adult_fee: int = 0,
     attachments: list | None = None,
 ) -> bool:
     """
@@ -234,6 +238,10 @@ def send_payment_reminder_email(
         iban_number: Numero IBAN para transferencias
         reduced_price_cheque_idioma: Precio reducido con cheque idioma
         telephone_number_bizum: Telefono para Bizum
+        iban_holder: Titular de la cuenta bancaria
+        full_time_fee: Cuota 2 sesiones semanales
+        part_time_fee: Cuota 1 sesion semanal
+        adult_fee: Cuota adultos
         attachments: Lista de PDFs (tarifas, instrucciones)
 
     Returns:
@@ -250,8 +258,12 @@ def send_payment_reminder_email(
             "payment_end_day_number": payment_end_day_number,
             "month": month,
             "iban_number": iban_number,
+            "iban_holder": iban_holder,
             "reduced_price_cheque_idioma": reduced_price_cheque_idioma,
             "telephone_number_bizum": telephone_number_bizum,
+            "full_time_fee": full_time_fee,
+            "part_time_fee": part_time_fee,
+            "adult_fee": adult_fee,
         },
         attachments=attachments,
         fail_silently=True,

@@ -11,7 +11,8 @@
         testing-up testing-down testing-logs testing-seed testing-reset \
         testing-rebuild testing-shell testing-health \
         sync lint lint-fix format format-check pre-commit-install pre-commit-run \
-        mypy bandit audit coverage-badge
+        mypy bandit audit coverage-badge \
+        celery-logs celery-restart celery-status celery-test-task
 
 # ============================================================================
 # HELP
@@ -89,6 +90,12 @@ help:
 	@echo "    make testing-reset    Wipe QA database and re-seed"
 	@echo "    make testing-shell    Django shell in QA container"
 	@echo "    make testing-health   Health check for QA environment"
+	@echo ""
+	@echo "  Celery (async tasks):"
+	@echo "    make celery-logs      Tail Celery worker + beat logs"
+	@echo "    make celery-restart   Restart worker + beat containers"
+	@echo "    make celery-status    Show Celery worker status"
+	@echo "    make celery-test-task Send a debug task to verify Celery works"
 	@echo ""
 	@echo "  Developer Tooling:"
 	@echo "    make sync             Install all deps (including dev) via uv"
@@ -398,6 +405,21 @@ testing-health:
 	@echo ""
 	@echo "=== Health endpoint ==="
 	@curl -sf http://localhost:8000/health/ 2>/dev/null || echo "(not reachable)"
+
+# ============================================================================
+# CELERY (async tasks + scheduled jobs)
+# ============================================================================
+celery-logs:
+	docker compose logs -f celery_worker celery_beat
+
+celery-restart:
+	docker compose restart celery_worker celery_beat
+
+celery-status:
+	docker compose exec -w /app/project celery_worker celery -A project.celery inspect active
+
+celery-test-task:
+	docker compose exec web python project/manage.py shell -c "from project.celery import debug_task; debug_task.delay(); print('Task queued — check celery-logs')"
 
 # ============================================================================
 # DEVELOPER TOOLING (UV, Ruff, pre-commit)

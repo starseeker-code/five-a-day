@@ -13,6 +13,7 @@ from core.views import (
     enrollment_form,
     fun_friday_form,
     monthly_report_form,
+    newsletter_form,
     payment_reminder_form,
     receipts_form,
     tax_certificate_form,
@@ -34,4 +35,5 @@ urlpatterns = [
     path("apps/birthday/", birthday_form, name="birthday_form"),
     path("apps/receipts/", receipts_form, name="receipts_form"),
     path("apps/enrollment/", enrollment_form, name="enrollment_form"),
+    path("apps/newsletter/", newsletter_form, name="newsletter_form"),
 ]
