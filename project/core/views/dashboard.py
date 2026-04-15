@@ -1,7 +1,9 @@
 import calendar as cal_module
+import json
 from datetime import date
 from decimal import Decimal
 
+import httpx
 from django.core.paginator import Paginator
 from django.db.models import Case, DecimalField, Sum, Value, When
 from django.shortcuts import render
@@ -10,6 +12,47 @@ from billing.models import Payment
 from core.constants import SCHEDULED_APPS
 from core.models import TodoItem
 from students.models import Student
+
+_QUOTE_COOKIE = "inspirational_quotes"
+_QUOTE_COOKIE_TTL = 48 * 60 * 60  # 48 hours in seconds
+
+
+def _get_quote(request):
+    """
+    Returns (quote_text, author_or_None, new_cookie_value_or_None).
+
+    Reads two quotes stored in a cookie (48h TTL). Day 0 shows the first quote,
+    day 1+ shows the second. When the cookie is missing or expired, fetches fresh
+    quotes from zenquotes.io. On API failure, falls back to the default subtitle.
+    new_cookie_value is non-None only when the cookie needs to be written.
+    """
+    raw = request.COOKIES.get(_QUOTE_COOKIE)
+    today = date.today()
+
+    if raw:
+        try:
+            data = json.loads(raw)
+            quotes = data["quotes"]
+            stored = date.fromisoformat(data["date"])
+            idx = min((today - stored).days, len(quotes) - 1)
+            q = quotes[idx]
+            return q["q"], q["a"], None
+        except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+            pass
+
+    # Cookie missing, corrupt, or expired — fetch from API
+    try:
+        resp = httpx.get("https://zenquotes.io/api/quotes/", timeout=5.0)
+        resp.raise_for_status()
+        items = resp.json()
+        quotes = [{"q": item["q"], "a": item["a"]} for item in items[:2] if item.get("q") and item["q"] != "[AUTH]"]
+        if quotes:
+            cookie_val = json.dumps({"date": today.isoformat(), "quotes": quotes})
+            return quotes[0]["q"], quotes[0]["a"], cookie_val
+    except Exception:
+        pass
+
+    return "¡Cada día es una nueva oportunidad para inspirar!", None, None
 
 
 def home(request):
@@ -144,6 +187,8 @@ def home(request):
     ).order_by("first_name")[:5]
     today_birthday_names = [s.first_name for s in today_birthday_students]
 
+    quote_text, quote_author, new_cookie = _get_quote(request)
+
     context = {
         "pending_payments_count": pending_count,
         "pending_students": pending_students_display,
@@ -164,9 +209,20 @@ def home(request):
         "overdue_todos_count": overdue_todos_count,
         "today_birthday_names": today_birthday_names,
         "today": today,
+        "inspirational_quote": quote_text,
+        "inspirational_author": quote_author,
     }
 
-    return render(request, "home.html", context)
+    response = render(request, "home.html", context)
+    if new_cookie is not None:
+        response.set_cookie(
+            _QUOTE_COOKIE,
+            new_cookie,
+            max_age=_QUOTE_COOKIE_TTL,
+            httponly=True,
+            samesite="Lax",
+        )
+    return response
 
 
 def all_info(request):

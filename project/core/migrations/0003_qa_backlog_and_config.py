@@ -4,38 +4,54 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0002_alter_funfridayattendance_unique_together_and_more'),
+        ("core", "0002_alter_funfridayattendance_unique_together_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BacklogTask',
+            name="BacklogTask",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=300)),
-                ('description', models.TextField(blank=True)),
-                ('priority', models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='medium', max_length=10)),
-                ('status', models.CharField(choices=[('open', 'Open'), ('in_progress', 'In Progress'), ('done', 'Done')], default='open', max_length=15)),
-                ('created_by', models.CharField(default='anonymous', max_length=100)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=300)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "priority",
+                    models.CharField(
+                        choices=[("low", "Low"), ("medium", "Medium"), ("high", "High")],
+                        default="medium",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("open", "Open"), ("in_progress", "In Progress"), ("done", "Done")],
+                        default="open",
+                        max_length=15,
+                    ),
+                ),
+                ("created_by", models.CharField(default="anonymous", max_length=100)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'backlog_tasks',
-                'ordering': ['-created_at'],
+                "db_table": "backlog_tasks",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='QAConfiguration',
+            name="QAConfiguration",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('error_email_enabled', models.BooleanField(default=False, verbose_name='Send error reports via email')),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "error_email_enabled",
+                    models.BooleanField(default=False, verbose_name="Send error reports via email"),
+                ),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'qa_configuration',
+                "db_table": "qa_configuration",
             },
         ),
     ]

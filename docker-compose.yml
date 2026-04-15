@@ -107,6 +107,8 @@ services:
 
   # ==========================================================================
   # CELERY WORKER - Async task processing
+  # In production (GCP) this is replaced by Cloud Tasks — no worker process
+  # runs on Cloud Run. Tasks execute synchronously via CELERY_TASK_ALWAYS_EAGER.
   # ==========================================================================
   celery_worker:
     build:
@@ -132,6 +134,8 @@ services:
 
   # ==========================================================================
   # CELERY BEAT - Scheduled tasks (cron)
+  # In production (GCP) this is replaced by Cloud Scheduler — cron jobs trigger
+  # Cloud Run Jobs that execute Django management commands directly.
   # ==========================================================================
   celery_beat:
     build:
@@ -154,33 +158,6 @@ services:
         condition: service_healthy
     networks:
       - fiveaday_network
-
-  # ==========================================================================
-  # NGINX - Reverse Proxy y servidor de archivos estáticos (FUTURO/PRODUCCIÓN)
-  # ==========================================================================
-  # Descomenta para producción. Sirve archivos estáticos y hace proxy a Django
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: fiveaday_nginx
-  #   restart: unless-stopped
-  #   
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   
-  #   volumes:
-  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./nginx/conf.d:/etc/nginx/conf.d:ro
-  #     - static_volume:/app/staticfiles:ro
-  #     - media_volume:/app/mediafiles:ro
-  #     - ./certbot/conf:/etc/letsencrypt:ro
-  #     - ./certbot/www:/var/www/certbot:ro
-  #   
-  #   depends_on:
-  #     - web
-  #   
-  #   networks:
-  #     - fiveaday_network
 
   # ==========================================================================
   # FRONTEND - React/Vue/Next.js (FUTURO)
@@ -210,32 +187,6 @@ services:
   #   networks:
   #     - fiveaday_network
 
-  # ==========================================================================
-  # PGADMIN - Herramienta de administración PostgreSQL (OPCIONAL/DESARROLLO)
-  # ==========================================================================
-  # Descomenta si quieres una interfaz gráfica para gestionar PostgreSQL
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   container_name: fiveaday_pgadmin
-  #   restart: unless-stopped
-  #   
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fiveaday.com}
-  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
-  #   
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin
-  #   
-  #   ports:
-  #     - "5050:80"
-  #   
-  #   depends_on:
-  #     - db
-  #   
-  #   networks:
-  #     - fiveaday_network
-
 # ============================================================================
 # VOLÚMENES PERSISTENTES
 # ============================================================================
@@ -248,8 +199,6 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  # pgadmin_data:
-  #   driver: local
 
 # ============================================================================
 # REDES

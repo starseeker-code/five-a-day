@@ -10,7 +10,7 @@
         clean clean-all health url send-test-email generate-payments \
         testing-up testing-down testing-logs testing-seed testing-reset \
         testing-rebuild testing-shell testing-health \
-        sync lint lint-fix format format-check pre-commit-install pre-commit-run \
+        sync lint lint-fix format format-check pre-commit-install pc-run \
         mypy bandit audit coverage-badge \
         celery-logs celery-restart celery-status celery-test-task
 
@@ -108,7 +108,7 @@ help:
 	@echo "    make audit            Audit dependencies for vulnerabilities"
 	@echo "    make coverage-badge   Generate coverage.svg badge from last test run"
 	@echo "    make pre-commit-install  Install pre-commit hooks"
-	@echo "    make pre-commit-run   Run pre-commit on all files"
+	@echo "    make pc-run   Run pre-commit on all files"
 	@echo ""
 	@echo "  Cleanup:"
 	@echo "    make clean            Remove stopped containers + prune"
@@ -349,21 +349,37 @@ clean-all:
 #   1. pyproject.toml → version = "x.y.z"
 #   2. project/settings.py → APP_VERSION fallback = "x.y.z"
 # This command updates both at once.
+#
+# Usage: make version x.y.z
+
+# Capture `make version x.y.z` — treat the version number as a goal with an empty recipe
+# so Make doesn't complain about a missing target named "x.y.z".
+ifeq ($(firstword $(MAKECMDGOALS)),version)
+  _VERSION_ARG := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifneq ($(_VERSION_ARG),)
+    $(eval $(_VERSION_ARG):;@:)
+  endif
+endif
 
 version:
-	@if [ -z "$(V)" ]; then \
-		echo "Usage: make version V=1.1.0"; \
+	@CURRENT=$$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/'); \
+	NEW="$(_VERSION_ARG)"; \
+	if [ -z "$$NEW" ]; then \
+		echo "Usage: make version x.y.z"; \
 		echo ""; \
-		echo "Current version:"; \
-		grep 'version = ' pyproject.toml | head -1; \
-		grep 'APP_VERSION' project/project/settings.py | head -1; \
+		echo "Current version: $$CURRENT"; \
 		exit 1; \
+	fi; \
+	read -p "Version $$CURRENT will become the new version $$NEW, are you sure? [y/N] " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "yes" ]; then \
+		sed -i 's/^version = ".*"/version = "'"$$NEW"'"/' pyproject.toml; \
+		sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
+		echo "Version updated to $$NEW in:"; \
+		echo "  - pyproject.toml"; \
+		echo "  - project/settings.py"; \
+	else \
+		echo "Cancelled."; \
 	fi
-	@sed -i 's/^version = ".*"/version = "$(V)"/' pyproject.toml
-	@sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "$(V)")/' project/project/settings.py
-	@echo "Version updated to $(V) in:"
-	@echo "  - pyproject.toml"
-	@echo "  - project/settings.py"
 
 # ============================================================================
 # TESTING / QA ENVIRONMENT
@@ -458,8 +474,20 @@ coverage-badge:
 pre-commit-install:
 	uv run --no-project pre-commit install
 
-pre-commit-run:
-	uv run --no-project pre-commit run --all-files
+pc-run:
+	@if uv run --no-project pre-commit run --all-files; then \
+		read -p "Pre-commit passed. Is this a new version? [y/N] " answer; \
+		if [ "$$answer" = "y" ] || [ "$$answer" = "yes" ]; then \
+			CURRENT=$$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/'); \
+			MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
+			MINOR=$$(echo $$CURRENT | cut -d. -f2); \
+			PATCH=$$(echo $$CURRENT | cut -d. -f3); \
+			NEW="$$MAJOR.$$MINOR.$$((PATCH + 1))"; \
+			sed -i 's/^version = ".*"/version = "'"$$NEW"'"/' pyproject.toml; \
+			sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
+			echo "Updated version $$CURRENT with new version $$NEW"; \
+		fi; \
+	fi
 
 # ============================================================================
 # PRODUCTION

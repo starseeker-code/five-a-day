@@ -17,25 +17,42 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from billing.models import (
-    EnrollmentType,
     Enrollment,
+    EnrollmentType,
     Payment,
     SiteConfiguration,
-    current_academic_year,
     academic_year_start_date,
+    current_academic_year,
 )
 from core.models import HistoryLog, ScheduleSlot, TodoItem
 from students.models import Group, Parent, Student, StudentParent, Teacher
-
 
 # ---------------------------------------------------------------------------
 # Seed data constants
 # ---------------------------------------------------------------------------
 
 TEACHERS = [
-    {"first_name": "Laura", "last_name": "Martinez", "email": "laura.martinez@fiveaday.test", "phone": "600100001", "admin": True},
-    {"first_name": "Carlos", "last_name": "Lopez", "email": "carlos.lopez@fiveaday.test", "phone": "600100002", "admin": False},
-    {"first_name": "Ana", "last_name": "Garcia", "email": "ana.garcia@fiveaday.test", "phone": "600100003", "admin": False},
+    {
+        "first_name": "Laura",
+        "last_name": "Martinez",
+        "email": "laura.martinez@fiveaday.test",
+        "phone": "600100001",
+        "admin": True,
+    },
+    {
+        "first_name": "Carlos",
+        "last_name": "Lopez",
+        "email": "carlos.lopez@fiveaday.test",
+        "phone": "600100002",
+        "admin": False,
+    },
+    {
+        "first_name": "Ana",
+        "last_name": "Garcia",
+        "email": "ana.garcia@fiveaday.test",
+        "phone": "600100003",
+        "admin": False,
+    },
 ]
 
 GROUPS = [
@@ -47,12 +64,54 @@ GROUPS = [
 ]
 
 PARENTS = [
-    {"first_name": "Maria", "last_name": "Fernandez", "dni": "12345678A", "phone": "600200001", "email": "maria.fernandez@test.com", "iban": "ES1234567890123456789012"},
-    {"first_name": "Pedro", "last_name": "Sanchez", "dni": "23456789B", "phone": "600200002", "email": "pedro.sanchez@test.com", "iban": "ES2345678901234567890123"},
-    {"first_name": "Carmen", "last_name": "Ruiz", "dni": "34567890C", "phone": "600200003", "email": "carmen.ruiz@test.com", "iban": "ES3456789012345678901234"},
-    {"first_name": "Jose", "last_name": "Moreno", "dni": "45678901D", "phone": "600200004", "email": "jose.moreno@test.com", "iban": "ES4567890123456789012345"},
-    {"first_name": "Elena", "last_name": "Navarro", "dni": "56789012E", "phone": "600200005", "email": "elena.navarro@test.com", "iban": "ES5678901234567890123456"},
-    {"first_name": "Francisco", "last_name": "Romero", "dni": "67890123F", "phone": "600200006", "email": "francisco.romero@test.com", "iban": "ES6789012345678901234567"},
+    {
+        "first_name": "Maria",
+        "last_name": "Fernandez",
+        "dni": "12345678A",
+        "phone": "600200001",
+        "email": "maria.fernandez@test.com",
+        "iban": "ES1234567890123456789012",
+    },
+    {
+        "first_name": "Pedro",
+        "last_name": "Sanchez",
+        "dni": "23456789B",
+        "phone": "600200002",
+        "email": "pedro.sanchez@test.com",
+        "iban": "ES2345678901234567890123",
+    },
+    {
+        "first_name": "Carmen",
+        "last_name": "Ruiz",
+        "dni": "34567890C",
+        "phone": "600200003",
+        "email": "carmen.ruiz@test.com",
+        "iban": "ES3456789012345678901234",
+    },
+    {
+        "first_name": "Jose",
+        "last_name": "Moreno",
+        "dni": "45678901D",
+        "phone": "600200004",
+        "email": "jose.moreno@test.com",
+        "iban": "ES4567890123456789012345",
+    },
+    {
+        "first_name": "Elena",
+        "last_name": "Navarro",
+        "dni": "56789012E",
+        "phone": "600200005",
+        "email": "elena.navarro@test.com",
+        "iban": "ES5678901234567890123456",
+    },
+    {
+        "first_name": "Francisco",
+        "last_name": "Romero",
+        "dni": "67890123F",
+        "phone": "600200006",
+        "email": "francisco.romero@test.com",
+        "iban": "ES6789012345678901234567",
+    },
 ]
 
 # Children: (first, last, birth_date, gender, group_name, parent_dnis, school)
@@ -108,9 +167,7 @@ class Command(BaseCommand):
 
         # Check if data already exists
         if Student.objects.exists():
-            self.stdout.write(self.style.WARNING(
-                "Database already has students. Use --reset to wipe and re-seed."
-            ))
+            self.stdout.write(self.style.WARNING("Database already has students. Use --reset to wipe and re-seed."))
             return
 
         small = options["small"]
@@ -130,12 +187,14 @@ class Command(BaseCommand):
         self._seed_inactive_student(groups, parents)
 
         total = Student.objects.count()
-        self.stdout.write(self.style.SUCCESS(
-            f"Done! Created {total} students, "
-            f"{Parent.objects.count()} parents, "
-            f"{Enrollment.objects.count()} enrollments, "
-            f"{Payment.objects.count()} payments."
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Done! Created {total} students, "
+                f"{Parent.objects.count()} parents, "
+                f"{Enrollment.objects.count()} enrollments, "
+                f"{Payment.objects.count()} payments."
+            )
+        )
 
     # ------------------------------------------------------------------
 
@@ -280,11 +339,7 @@ class Command(BaseCommand):
                 schedule = "full_time" if i % 3 != 0 else "part_time"
                 modality = "monthly"
 
-            base = (
-                etype.base_amount_full_time
-                if schedule == "full_time"
-                else etype.base_amount_part_time
-            )
+            base = etype.base_amount_full_time if schedule == "full_time" else etype.base_amount_part_time
 
             enrollment, created = Enrollment.objects.get_or_create(
                 student=student,
@@ -314,8 +369,10 @@ class Command(BaseCommand):
             # Generate monthly payments Sep → current month
             if modality == "monthly":
                 month_fee = (
-                    Decimal("54.00") if schedule == "full_time"
-                    else Decimal("36.00") if schedule == "part_time"
+                    Decimal("54.00")
+                    if schedule == "full_time"
+                    else Decimal("36.00")
+                    if schedule == "part_time"
                     else Decimal("60.00")
                 )
                 for m in range(9, 13):  # Sep-Dec
@@ -403,7 +460,9 @@ class Command(BaseCommand):
                 for col in range(2):
                     idx = (row * 10 + day * 2 + col) % len(group_list)
                     _, created = ScheduleSlot.objects.get_or_create(
-                        row=row, day=day, col=col,
+                        row=row,
+                        day=day,
+                        col=col,
                         defaults={"group": group_list[idx]},
                     )
                     if created:

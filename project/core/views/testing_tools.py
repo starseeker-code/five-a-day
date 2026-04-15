@@ -27,7 +27,9 @@ def _git_info():
     try:
         result = subprocess.run(
             ["git", "log", "-1", f"--pretty=format:{fmt}"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
             cwd=settings.BASE_DIR.parent,
         )
         if result.returncode != 0:
@@ -35,7 +37,9 @@ def _git_info():
         lines = result.stdout.strip().split("\n")
         branch = subprocess.run(
             ["git", "branch", "--show-current"],
-            capture_output=True, text=True, timeout=3,
+            capture_output=True,
+            text=True,
+            timeout=3,
             cwd=settings.BASE_DIR.parent,
         ).stdout.strip()
         return {
@@ -78,8 +82,9 @@ def testing_tools_view(request):
 @require_http_methods(["POST"])
 def api_seed_database(request):
     """Run the seed_testdata management command via AJAX."""
-    from django.core.management import call_command
     from io import StringIO
+
+    from django.core.management import call_command
 
     try:
         data = json.loads(request.body)
@@ -109,13 +114,9 @@ def api_create_backlog_task(request):
         priority = data.get("priority", "medium")
 
         if not title:
-            return JsonResponse(
-                {"success": False, "message": "El titulo es obligatorio."}, status=400
-            )
+            return JsonResponse({"success": False, "message": "El titulo es obligatorio."}, status=400)
         if priority not in VALID_PRIORITIES:
-            return JsonResponse(
-                {"success": False, "message": "Prioridad no valida."}, status=400
-            )
+            return JsonResponse({"success": False, "message": "Prioridad no valida."}, status=400)
 
         username = request.session.get("username", "anonymous")
         task = BacklogTask.objects.create(
@@ -151,17 +152,19 @@ def api_create_backlog_task(request):
             except Exception:
                 pass  # Never block task creation on email failure
 
-        return JsonResponse({
-            "success": True,
-            "task": {
-                "id": task.id,
-                "title": task.title,
-                "priority": task.priority,
-                "status": task.status,
-                "created_by": task.created_by,
-                "created_at": task.created_at.strftime("%d/%m/%Y %H:%M"),
-            },
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "task": {
+                    "id": task.id,
+                    "title": task.title,
+                    "priority": task.priority,
+                    "status": task.status,
+                    "created_by": task.created_by,
+                    "created_at": task.created_at.strftime("%d/%m/%Y %H:%M"),
+                },
+            }
+        )
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "message": "JSON invalido."}, status=400)
 
