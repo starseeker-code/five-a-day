@@ -139,7 +139,7 @@ The `README.md` must stay in sync with the code. At the end of any non-trivial c
 
 1. **Header badges** — version badge must match `pyproject.toml`
 2. **Project Status table** — three rows in order Production → Testing → Development, each with branch + hosting + CI badge
-3. **Recent Versions table** — keep only the **last 3** versions. Entries must include: version, date (YYYY-MM-DD), a dense description mentioning every user-visible change in that version. When a new patch ships, drop the oldest row.
+3. **Recent Versions table** — keep only the **last 3** versions. Entries must include: version, date (YYYY-MM-DD), and an **extremely brief** description — one short phrase, ≤10 words, naming only the headline change. The long-form writeup (every user-visible change, subsection headings, bullets) lives in the Version History `<details>` block below, not in this table. When a new patch ships, drop the oldest row.
 4. **Version History `<details>` blocks** — add a new `<details id="vXYZ" open>` block for the new version; remove the `open` attribute from the previous one. Structure: `**Subsection**` headings + bullet lists. Pull subjects from `git log` for the commits in that version.
 5. **Directory Layout** — if directories, tool counts, test counts, or Make command counts changed, update them here. `tests/` line must show current test count and coverage percentage.
 6. **Make Commands table** — every renamed or new `make` target must appear or be updated.

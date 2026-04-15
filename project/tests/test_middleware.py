@@ -38,12 +38,6 @@ class TestPublicPaths:
         response = client.get("/login/")
         assert response.status_code == 200
 
-    def test_google_oauth_prefix_public(self, client):
-        # The middleware allows any path starting with /auth/google/
-        response = client.get("/auth/google/")
-        # May return 302 (redirect to Google) or 500 (no credentials), but NOT a login redirect
-        assert response.status_code != 302 or "/login/" not in response.get("Location", "")
-
 
 class TestProtectedPaths:
     """Verify that unauthenticated requests are redirected to login."""

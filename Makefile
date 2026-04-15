@@ -508,7 +508,7 @@ pc-run:
 	fi
 	@if [ -n "$$(git status --porcelain uv.lock 2>/dev/null)" ]; then \
 		git add uv.lock; \
-		echo "Staged updated uv.lock — next git commit will not be blocked by it"; \
+		echo "Staged updated uv.lock"; \
 	fi
 
 # ============================================================================

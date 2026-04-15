@@ -105,7 +105,7 @@ If hosting changes (region, new managed service, etc.) update the Hosting cell. 
 - Current version + the two previous patches
 - When adding a new version, **delete the oldest row**
 - Date in `YYYY-MM-DD`
-- Description: dense one-liner that names every user-visible change in that version. Synthesise — don't copy commit subjects verbatim. Distill from `git log <prev-tag>..HEAD --format='%s%n%b'` plus the staged diff.
+- Description: **extremely brief — one short phrase, ≤10 words.** Name the headline change only, not every bullet. Good examples: "Favicon + social metadata, CI test-suite fixes" / "CI/CD pipeline + public-repo hardening" / "`update-readme` skill + docs overhaul". Bad examples (too long — move that detail to the Version History `<details>` block instead): anything with semicolons, parentheticals, or "plus …". The long-form per-version writeup lives in the Version History block, not here — this table is a glance-at-it index.
 
 #### d. Version History `<details>` blocks
 
