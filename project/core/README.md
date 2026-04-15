@@ -13,12 +13,12 @@ The `core` app is the "everything else" app — it owns the dashboard, authentic
 
 ## Views (core/views/)
 
-The monolithic `views.py` was split into 12 focused modules:
+The monolithic `views.py` was split into 13 focused modules:
 
 | Module | Views | Description |
 | ------ | ----- | ----------- |
 | `auth.py` | `login_view`, `logout_view`, `google_oauth_redirect`, `google_oauth_callback` | Session-based auth + Google OAuth |
-| `dashboard.py` | `home`, `all_info` | Dashboard with stats (single `Case/When` aggregate query), todos, birthdays; database view |
+| `dashboard.py` | `home`, `all_info` | Dashboard with stats (single `Case/When` aggregate query), todos, birthdays, inspirational quote from zenquotes.io (48 h cookie); database view |
 | `schedule.py` | `schedule_view`, `save_schedule_slot`, `fun_friday_view` | Weekly schedule grid + Fun Friday list (single attendance query for both weeks, filters from loaded students) |
 | `fun_friday_attendance.py` | `toggle_fun_friday_this_week`, `add/remove_fun_friday_attendance` | AJAX attendance toggles |
 | `todos.py` | `create_todo`, `complete_todo`, `history_list` | Todo CRUD + history pagination API |
@@ -26,19 +26,26 @@ The monolithic `views.py` was split into 12 focused modules:
 | `parents.py` | `ParentCreateView` | Parent creation CBV |
 | `payments.py` | `payments_list`, `create_payment`, `quick_complete_payment`, etc. | Payment CRUD + AJAX APIs. Stats use single `Case/When` aggregate (1 query instead of 8). |
 | `management.py` | `gestion_view`, `update_site_config`, `create_teacher`, `create_group` | Admin config panel |
-| `app_forms.py` | `fun_friday_form`, `payment_reminder_form`, etc. (10 views) | Email app form views |
+| `app_forms.py` | `fun_friday_form`, `payment_reminder_form`, `newsletter_form`, `receipt_enrollment_form`, etc. | Email app form views (10+ forms, all prefill from `ACADEMY_*` env vars where relevant) |
 | `support.py` | `submit_support_ticket` | Support ticket email API |
 | `errors.py` | `handler400-500`, `health_check` | Error pages + health endpoint |
+| `testing_tools.py` | `testing_tools_view`, `seed_testdata_ajax`, `submit_backlog`, `toggle_error_reporting` | **QA-only** dashboard at `/testing/` — database seeding, backlog reporting, error-reporting toggle. All gated by `qa_access_required` decorator. |
 
 ## URL Patterns (core/urls.py)
 
-Routes for: login/logout, dashboard, schedule, todos, history, support, error test pages.
+Routes for: login/logout, dashboard, schedule, todos, history, support, `/testing/` QA dashboard, error test pages.
 
 Student, payment, management, and email app routes live in `students/urls.py`, `billing/urls.py`, and `comms/urls.py` respectively, but their views are still in `core/views/`.
 
-## Middleware
+## Middleware & Decorators
 
-**SimpleAuthMiddleware** — session-based auth that protects all URLs except `/login/`, `/health/`, `/static/`, `/media/`, and `/auth/google/*` (including `/callback/`). Credentials come from `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars (required; no hardcoded fallbacks).
+- **`SimpleAuthMiddleware`** (`middleware.py`) — session-based auth that protects all URLs except `/login/`, `/health/`, `/static/`, `/media/`, and `/auth/google/*` (including `/callback/`). Credentials come from `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars (required; no hardcoded fallbacks).
+- **`QAErrorEmailMiddleware`** (`middleware.py`) — in the QA environment, catches unhandled exceptions and emails them to `SUPPORT_EMAIL` with the full traceback. Toggleable via the `/testing/` dashboard.
+- **`qa_access_required`** (`decorators.py`) — reusable gate for `/testing/` views and endpoints. Returns 404 (not 403) unless `DJANGO_ENV=testing`, `DEBUG=False`, and the session user matches `QA_TESTING_USERNAME`.
+
+## Management Commands
+
+- **`seed_testdata`** — populates the QA database with 3 teachers, 5 groups, 6 parents, 12 child students, 3 adult students, 1 inactive student, active enrollments, payments in various states, schedule slots, todo items, and history log entries. Flags: `--reset` (wipe first), `--small` (6 children only). Also callable from the `/testing/` dashboard via AJAX.
 
 ## Templates
 

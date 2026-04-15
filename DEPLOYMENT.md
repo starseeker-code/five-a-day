@@ -96,7 +96,8 @@ Verify with `free -h` — you should see ~2 GB in the Swap row.
 ```bash
 git clone https://github.com/YOUR_ORG/five-a-day.git
 cd five-a-day
-cp .env.example .env.testing   # Edit with testing values
+# Create .env.testing and populate it using the template in README.md (section ".env template")
+touch .env.testing
 docker compose --env-file .env.testing up -d
 ```
 

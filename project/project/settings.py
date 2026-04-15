@@ -12,10 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ============================================================================
 # APP VERSION
 # ============================================================================
-# NOTA: Al cambiar la versión, actualizar también en:
-#   - readme.md (badge y texto)
+# NOTA: Usa `make version x.y.z` para actualizar ambos sitios a la vez:
 #   - pyproject.toml (campo version)
-APP_VERSION = os.getenv("APP_VERSION", "1.0.5")
+#   - README.md (badge y tabla de versiones — gestionado por la skill update-readme)
+APP_VERSION = os.getenv("APP_VERSION", "1.0.6")
 
 # ============================================================================
 # SECURITY SETTINGS

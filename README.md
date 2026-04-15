@@ -9,11 +9,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.0.4-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.0.5-brightgreen?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
   <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
-  <img src="coverage.svg" alt="Coverage">
+  <a href="https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml"><img src="https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://codecov.io/gh/starseeker-code/five-a-day"><img src="https://codecov.io/gh/starseeker-code/five-a-day/branch/main/graph/badge.svg" alt="Coverage"></a>
 </p>
 
 ---
@@ -29,26 +30,19 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ### Project Status
 
-| Environment | Version | Status |
-|-------------|---------|--------|
-| **Production** | v1.0.4 | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
-| **Testing (QA)** | v1.0.4 | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
-| **Development** | v1.0.4 | ![active](https://img.shields.io/badge/active-brightgreen) |
+Live status for each environment is pulled from GitHub Actions — the badges below reflect the real state of CI on each branch.
 
-| | |
-|---|---|
-| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [GITHUB.md](docs/GITHUB.md), [HTTPS.md](docs/HTTPS.md), [UV.md](docs/UV.md), [CELERY.md](docs/CELERY.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
+| Environment | Branch | Hosting | CI Status |
+|-------------|--------|---------|-----------|
+| **Production** | `main` | GCP Cloud Run + Cloud SQL (PostgreSQL 16), `europe-southwest1` | [![Production CI](https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml?query=branch%3Amain) |
+| **Testing (QA)** | `testing` | GCP Compute Engine e2-micro (free tier), Docker Compose | [![Testing CI](https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml/badge.svg?branch=testing)](https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml?query=branch%3Atesting) |
+| **Development** | `development` | Local machine via `make up` (Docker Compose) | [![Development CI](https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/starseeker-code/five-a-day/actions/workflows/ci.yml?query=branch%3Adevelopment) |
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.4** | 2026-04-15 | GitHub Actions CI/CD pipeline (lint, typecheck, tests, CodeQL, Dependabot), auto-merge `development` → `testing` with 24h delay + auto-PR to `main`, email notifications, branch protection rules, inspirational quote generator, GCP deployment plan, cleaned legacy Render config, `make version x.y.z` + `make pc-run` with auto version bump |
-| v1.0.3 | 2026-04-14 | Test coverage raised to 70% — 294 tests total (40+ new tests) across auth views, comms services, dashboard, schedule, management, and apps modules |
-| v1.0.2 | 2026-04-13 | Replaced Poetry with UV, full developer tooling (Ruff, mypy, bandit, pip-audit, pre-commit, pytest-cov, pytest-xdist, pytest-randomly) |
-| v1.0.1t | 2026-04-14 | QA/testing environment: `/testing/` dashboard, database seeding, backlog with email, error reporting, HTTPS guide, access control via `QA_TESTING_USERNAME` |
-| v1.0.0 | 2026-04-11 | Security hardening, query optimization (Case/When aggregates, N+1 fixes), GCP config, transaction safety |
-| v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 132 tests, frontend cleanup, full documentation |
-| v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
-| v0.29.0 | 2025-03-01 | Enrollment system with discounts, adult students, email automation |
+| **v1.0.5** | 2026-04-15 | GitHub Actions CI/CD pipeline (lint, typecheck, tests, CodeQL, Dependabot), auto-merge `development` → `testing` with 24 h delay + auto-PR to `main`, email notifications, branch protection rules for public repo hardening, `make pc-run` auto-stages regenerated `uv.lock` |
+| v1.0.4 | 2026-04-15 | Inspirational quote generator on `/home` (48 h cookie rotation), GCP deployment plan ([DEPLOYMENT.md](DEPLOYMENT.md)), Celery worker + beat containers, cleaned legacy Render config, `make version x.y.z` positional arg with confirmation guard, `make pc-run` (renamed from `pre-commit-run`) with auto version bump |
+| v1.0.3 | 2026-04-14 | Test coverage raised to **70 %** — 13 new test files across auth views, comms services, app forms, constants, create payment views, exports, forms, parent views, payment views, schedule views, student forms, student views, transactions |
 
 ---
 
@@ -81,6 +75,7 @@ Built to centralize student records, automate billing cycles, and streamline par
     - [Key Constraints](#key-constraints)
   - [Development \& Docker](#development--docker)
     - [Quick Start](#quick-start)
+    - [.env template](#env-template)
     - [Make Commands](#make-commands)
     - [Environment Configuration](#environment-configuration)
     - [Environment Variables Reference](#environment-variables-reference)
@@ -120,8 +115,7 @@ Built to centralize student records, automate billing cycles, and streamline par
     - [Security Headers](#security-headers)
     - [Infrastructure \& Deployment](#infrastructure--deployment-1)
       - [Docker](#docker)
-      - [Render (render.yaml)](#render-renderyaml)
-      - [Google Cloud Run (gcp-cloudrun.yaml)](#google-cloud-run-gcp-cloudrunyaml)
+      - [Google Cloud Run](#google-cloud-run)
     - [Secrets Management](#secrets-management)
     - [Email Security](#email-security)
     - [Data Protection \& Input Validation](#data-protection--input-validation)
@@ -135,7 +129,6 @@ Built to centralize student records, automate billing cycles, and streamline par
     - [Error pages you might see](#error-pages-you-might-see)
     - [For developers: how the QA environment works](#for-developers-how-the-qa-environment-works)
       - [Access control for /testing/](#access-control-for-testing)
-    - [GCP deployment plan](#gcp-deployment-plan)
   - [CI/CD \& GitHub Actions](#cicd--github-actions)
     - [Pipeline Overview](#pipeline-overview)
     - [Branch Strategy](#branch-strategy)
@@ -158,18 +151,34 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ## Version History & Roadmap
 
-<details id="v104" open>
-<summary><strong>v1.0.4 — CI/CD Pipeline, GCP Migration Plan, Quote Generator (current)</strong></summary>
+<details id="v105" open>
+<summary><strong>v1.0.5 — CI/CD Pipeline & Public Repo Hardening (current)</strong></summary>
 
 **GitHub Actions CI/CD** (new — see [docs/GITHUB.md](docs/GITHUB.md))
 
-- `ci.yml` — three parallel jobs on every push/PR: Ruff + Bandit lint, mypy type check, pytest against PostgreSQL 16 service container with coverage uploaded to Codecov
-- `auto-merge.yml` — hourly cron that merges `development` → `testing` after 24h of inactivity and CI passing, then auto-creates a PR `testing` → `main`
+- `ci.yml` — three parallel jobs on every push/PR: Ruff + Bandit lint, mypy type check, pytest against a PostgreSQL 16 service container with coverage uploaded to Codecov
+- `auto-merge.yml` — hourly cron that merges `development` → `testing` after 24 h of inactivity and CI passing, then auto-creates a PR `testing` → `main`
 - `codeql.yml` — weekly Python security analysis (OWASP Top 10, Django-specific queries)
-- `notify-production.yml` — emails `hellofiveaday@gmail.com` on every push to `main` with commit info and deploy instructions
-- Owner email notifications when `development` → `testing` merge lands + PR opened to `main`
+- `notify-production.yml` — emails `hellofiveaday@gmail.com` on every push to `main` with commit info and `gcloud` deploy instructions
+- Owner email notifications when `development` → `testing` merge lands and a PR is opened to `main`
 - `dependabot.yml` — grouped weekly Python and GitHub Actions updates targeting `development`
 - `CODEOWNERS` — auto-request reviews from both owner accounts
+
+**Public-repo hardening**
+
+- Branch protection rules documented for `main` (14 protections) and `testing` (minimal)
+- Secret scanning + push protection + CodeQL enabled (all free for public repos)
+- Fork PR workflow restriction, read-only default workflow permissions, block-approvals-from-Actions
+- `SECURITY.md` + `CODEOWNERS` + `LICENSE` required-file checklist in [docs/GITHUB.md](docs/GITHUB.md)
+
+**Developer tooling**
+
+- `make pc-run` auto-stages regenerated `uv.lock` as the final step — next `git commit` is no longer blocked by the lock file
+
+</details>
+
+<details id="v104">
+<summary><strong>v1.0.4 — GCP Migration Plan, Quote Generator, Celery</strong></summary>
 
 **GCP migration plan** (new — see [DEPLOYMENT.md](DEPLOYMENT.md))
 
@@ -177,20 +186,20 @@ Built to centralize student records, automate billing cycles, and streamline par
 - Three environments: local Docker (dev), Compute Engine e2-micro free tier (testing), Cloud Run + Cloud SQL (production)
 - Cost estimate: ~$15-27/month for production, $0/month for testing
 - Celery replacement strategy using Cloud Scheduler + Cloud Run Jobs
-- Cleaned legacy Render config (`render.yaml` removed, commented nginx and pgAdmin services removed from docker-compose)
+- Cleaned legacy Render config — `render.yaml` removed; commented nginx and pgAdmin services removed from `docker-compose.yml`
 
 **Dashboard enhancement**
 
-- Inspirational quote generator on `/home` — fetches two daily quotes from `zenquotes.io`, stores them in a 48h cookie, rotates daily (day 0 shows quote 1, day 1+ shows quote 2), graceful fallback to the default Spanish subtitle on API failure
+- Inspirational quote generator on `/home` — fetches two daily quotes from `zenquotes.io`, stores them in a 48 h cookie, rotates daily (day 0 shows quote 1, day 1+ shows quote 2), graceful fallback to the default Spanish subtitle on API failure
 
 **Developer tooling**
 
 - `make version x.y.z` — positional argument (replaces `V=x.y.z`) with confirmation guard before writing
 - `make pc-run` — renamed from `pre-commit-run`; after a clean pass, prompts to auto-increment the patch version in `pyproject.toml` and `project/settings.py`
 
-**Bug fixes**
+**Celery**
 
-- Celery worker and beat containers added to docker-compose with correct permissions and health checks
+- Celery worker and beat containers added to `docker-compose.yml` with correct permissions and health checks
 - Several payment and enrollment issues fixed
 
 </details>
@@ -200,15 +209,15 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 **Testing**
 
-- Test count raised from 252 to **294** (40+ new tests)
+- 40+ new tests added across 13 new test files — overall suite around 280+ tests
 - Coverage raised to **70%** across `core`, `students`, `billing`, `comms`
-- New test files: `test_auth_views.py`, `test_comms_services.py`, `test_dashboard.py`, `test_schedule_views.py`, `test_management_views.py`, `test_app_forms.py`
+- New test files: `test_auth_views.py`, `test_app_form_views.py`, `test_constants.py`, `test_create_payment_views.py`, `test_exports.py`, `test_forms.py`, `test_parent_views.py`, `test_payment_views.py`, `test_schedule_views.py`, `test_student_forms.py`, `test_student_views.py`, `test_transactions.py`
 - Additional parametrized test cases for email-form views and error pages
 
 **Coverage tooling**
 
-- `coverage.svg` badge now reflects the improved coverage
-- `make coverage-badge` command streamlines badge regeneration
+- Coverage badge pulled dynamically from Codecov (CI workflow uploads `coverage.xml` on every run)
+- `make coverage-badge` retained for offline SVG generation
 
 </details>
 
@@ -628,15 +637,17 @@ erDiagram
 git clone https://github.com/starseeker-code/five-a-day.git
 cd five-a-day
 
-# Configure environment
-cp .env.example .env   # Edit with your values (see Environment Configuration below)
+# Create the .env file — copy the template below into `.env` and fill in the blanks
+touch .env
 ```
+
+Paste the template from [.env template](#env-template) into your new `.env` file and fill in the empty values.
 
 **Docker (recommended):**
 
 ```bash
 make build             # Build images
-make up                # Start PostgreSQL + Django → http://localhost:8000
+make up                # Start PostgreSQL + Redis + Django + Celery → http://localhost:8000
 make migrate           # Apply migrations (first time only)
 ```
 
@@ -653,6 +664,87 @@ python manage.py runserver
 > - `DJANGO_ENV=development` — enables development behaviors (auto superuser, no collectstatic)
 > - `DJANGO_DEBUG=true` — enables Django debug mode, detailed error pages
 > - `POSTGRES_PASSWORD` — required for database connection
+> - `DJANGO_SECRET_KEY` — generate with `python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'`
+
+### .env template
+
+`.env` is gitignored and never committed. The template below is the authoritative structure — copy it into your new `.env` file, then fill in the empty values with your own secrets. Defaults that are safe to keep as-is are already filled in.
+
+```bash
+# ============================================================================
+# DJANGO SETTINGS
+# ============================================================================
+DJANGO_ENV=development          # production | development
+DJANGO_DEBUG=True
+SECURE_SSL_REDIRECT=False
+# Generate with: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+DJANGO_SECRET_KEY=
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+LOG_LEVEL=INFO
+DJANGO_LOG_LEVEL=INFO
+
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
+DATABASE=postgres               # sqlite | postgres
+POSTGRES_DB=fiveaday_db
+POSTGRES_USER=fiveaday_user
+# Generate with: openssl rand -base64 32
+POSTGRES_PASSWORD=
+POSTGRES_HOST=db                # `db` in Docker, `localhost` outside
+POSTGRES_PORT=5432
+
+# ============================================================================
+# SUPERUSER (auto-created on first boot if all three are set)
+# ============================================================================
+DJANGO_SUPERUSER_USERNAME=
+DJANGO_SUPERUSER_EMAIL=
+DJANGO_SUPERUSER_PASSWORD=
+
+# ============================================================================
+# EMAIL CONFIGURATION (Gmail SMTP + App Password)
+# ============================================================================
+EMAIL_HOST_USER=                # your-academy@gmail.com
+EMAIL_SECRET=                   # 16-char Gmail App Password
+SUPPORT_EMAIL=                  # where support tickets are sent
+EMAIL_TEST_1=                   # dev test recipient 1
+EMAIL_TEST_2=                   # dev test recipient 2
+
+# ============================================================================
+# CELERY / REDIS
+# ============================================================================
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+# ============================================================================
+# AUTHENTICATION (session-based, until the Django User model is adopted in v1.6)
+# ============================================================================
+LOGIN_USERNAME=fiveaday
+LOGIN_PASSWORD=
+
+# ============================================================================
+# GOOGLE OAUTH
+# ============================================================================
+# Create at https://console.cloud.google.com/ → APIs & Services → Credentials
+# Authorised redirect URI: http://localhost:8000/auth/google/callback/
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback/
+
+# ============================================================================
+# ACADEMY BUSINESS INFO (prefilled in payment-reminder email forms)
+# ============================================================================
+ACADEMY_IBAN=
+ACADEMY_IBAN_HOLDER=
+ACADEMY_PHONE=
+ACADEMY_WHATSAPP=
+```
+
+**Note**: do not include `VERSION=` in your `.env` — it is deprecated. The app version is derived from `pyproject.toml` (and overridable via `APP_VERSION`).
 
 ### Make Commands
 
@@ -685,8 +777,16 @@ Run `make` or `make help` for the full list. Key commands:
 | `make test-fast` | Stop on first failure |
 | `make test-k K=payment` | Run tests matching keyword |
 | **Versioning** | |
-| `make version V=1.1.0` | Update version in pyproject.toml + settings.py |
-| `make version` | Show current version locations |
+| `make version 1.1.0` | Update version in `pyproject.toml` + `settings.py` (with y/N confirmation) |
+| `make version` | Show current version |
+| **Developer Tooling** | |
+| `make lint` / `make lint-fix` | Run Ruff linter (optionally auto-fix) |
+| `make format` / `make format-check` | Run Ruff formatter |
+| `make mypy` | Run mypy type checker |
+| `make bandit` | Run bandit security linter |
+| `make audit` | `pip-audit` — scan deps for CVEs |
+| `make pc-run` | Run pre-commit on all files; on clean pass, offer to auto-bump patch version; auto-stages regenerated `uv.lock` |
+| `make pre-commit-install` | Install the git pre-commit hook |
 | **Email & Payments** | |
 | `make send-test-email` | Send test birthday email |
 | `make test-all-emails` | List all email templates |
@@ -712,13 +812,16 @@ The database is **always PostgreSQL** — in Docker development, in tests, and i
 
 ### Environment Variables Reference
 
+The table below describes every variable in the [.env template](#env-template) above, plus a few advanced overrides not included in the template. See the template for the full `.env` structure.
+
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| **Core** | | | |
-| `DJANGO_ENV` | Environment: `development` / `production` | No | `development` |
+| **Django core** | | | |
+| `DJANGO_ENV` | Environment: `development` / `production` / `testing` | No | `development` |
 | `DJANGO_DEBUG` | Debug mode: `true` / `false` | No | `false` |
 | `DJANGO_SECRET_KEY` | Secret key | **Yes in production** | dev fallback |
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated hosts | No | `localhost,127.0.0.1` |
+| `SECURE_SSL_REDIRECT` | Force HTTPS redirects | No | `True` when `DEBUG=False` |
 | **Database** | | | |
 | `DATABASE` | Set to `postgres` for PostgreSQL | No | `postgres` |
 | `DATABASE_URL` | Full URL (Cloud deployments) | No | — |
@@ -727,23 +830,36 @@ The database is **always PostgreSQL** — in Docker development, in tests, and i
 | `POSTGRES_PASSWORD` | Database password | **Yes** | — |
 | `POSTGRES_HOST` | Database host | No | `db` (Docker) |
 | `POSTGRES_PORT` | Database port | No | `5432` |
+| **Superuser** (auto-created on first boot when all three are set) | | | |
+| `DJANGO_SUPERUSER_USERNAME` | Superuser name | No | — |
+| `DJANGO_SUPERUSER_EMAIL` | Superuser email | No | — |
+| `DJANGO_SUPERUSER_PASSWORD` | Superuser password | No | — |
 | **Email** | | | |
 | `EMAIL_HOST_USER` | Gmail address | For email features | — |
 | `EMAIL_SECRET` | Gmail app password | For email features | — |
 | `SUPPORT_EMAIL` | Support ticket recipient | No | — |
 | `EMAIL_TEST_1` / `EMAIL_TEST_2` | Test email recipients | No | — |
 | **Auth** | | | |
-| `LOGIN_USERNAME` | Admin username | No | `fiveaday` |
-| `LOGIN_PASSWORD` | Admin password | No | `Fiveaday123!` |
+| `LOGIN_USERNAME` | Admin username | **Yes** | — (login refused if missing) |
+| `LOGIN_PASSWORD` | Admin password | **Yes** | — (login refused if missing) |
+| `QA_TESTING_USERNAME` | Extra user allowed to see `/testing/` dashboard | No (QA only) | — |
 | `GOOGLE_CLIENT_ID` | OAuth client ID | For Google login | — |
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret | For Google login | — |
 | `GOOGLE_REDIRECT_URI` | OAuth callback URL | For Google login | auto-detected |
-| `GOOGLE_ALLOWED_EMAIL` | Restrict Google login | No | `EMAIL_HOST_USER` |
-| **Other** | | | |
-| `APP_VERSION` | Version string | No | from settings.py |
-| `CELERY_BROKER_URL` | Redis URL for Celery | No | eager mode |
-| `SESSION_COOKIE_AGE` | Session duration (seconds) | No | `86400` (24h) |
-| `LOG_LEVEL` | Logging level | No | `DEBUG`/`INFO` |
+| `GOOGLE_ALLOWED_EMAIL` | Restrict Google login to one email | No | `EMAIL_HOST_USER` |
+| **Celery / Redis** | | | |
+| `CELERY_BROKER_URL` | Redis URL for Celery | No | eager mode (tasks run inline) |
+| `CELERY_RESULT_BACKEND` | Redis URL for results | No | same as broker |
+| **Academy business info** (prefills payment-reminder email forms) | | | |
+| `ACADEMY_IBAN` | Bank account for payment reminders | No | — |
+| `ACADEMY_IBAN_HOLDER` | IBAN account holder | No | — |
+| `ACADEMY_PHONE` | Phone for Bizum payments | No | — |
+| `ACADEMY_WHATSAPP` | WhatsApp number for reminders | No | — |
+| **Logging / misc** | | | |
+| `LOG_LEVEL` | App log level | No | `DEBUG` in dev, `INFO` in prod |
+| `DJANGO_LOG_LEVEL` | Django framework log level | No | inherits `LOG_LEVEL` |
+| `APP_VERSION` | Version string override | No | from `settings.py` default |
+| `SESSION_COOKIE_AGE` | Session duration (seconds) | No | `86400` (24 h) |
 
 ### App Versioning
 
@@ -752,10 +868,12 @@ The app version is defined in **two places** and should be updated together:
 1. **`pyproject.toml`** line 3: `version = "x.y.z"` — package metadata
 2. **`project/settings.py`** line 17: `APP_VERSION = os.getenv("APP_VERSION", "x.y.z")` — runtime fallback
 
-Use `make version V=1.1.0` to update both at once. The version appears in:
+Use `make version x.y.z` (positional) to update both at once — it prompts `Version A will become the new version B, are you sure?` before writing. `make pc-run` also auto-bumps the patch digit on successful pre-commit if you answer `y` when asked.
+
+The version appears in:
 - `/health/` endpoint response
 - Support ticket emails
-- Can be overridden at runtime via the `APP_VERSION` environment variable
+- Can be overridden at runtime via the `APP_VERSION` environment variable (do **not** leave a legacy value like `0.x.y` in `.env` — remove the line so the default in `settings.py` takes effect)
 
 ---
 
@@ -809,9 +927,13 @@ five-a-day/
 │   │
 │   ├── core/                     Dashboard, Auth, Schedule, Utilities
 │   │   ├── models.py             TodoItem, HistoryLog, FunFridayAttendance, ScheduleSlot
-│   │   ├── views/                12 view modules
+│   │   ├── views/                13 view modules (dashboard, auth, students, parents,
+│   │   │                         payments, management, app_forms, schedule,
+│   │   │                         fun_friday_attendance, todos, support, errors,
+│   │   │                         testing_tools)
 │   │   ├── constants.py          DIAS_ES, MESES_ES, SCHEDULED_APPS
-│   │   ├── middleware.py         SimpleAuthMiddleware
+│   │   ├── middleware.py         SimpleAuthMiddleware, QAErrorEmailMiddleware
+│   │   ├── decorators.py         qa_access_required (testing env gate)
 │   │   ├── context_processors.py Notifications injected into all templates
 │   │   ├── transactions.py       Optimized queryset builders
 │   │   ├── templates/            ALL HTML templates (base, pages, emails)
@@ -831,7 +953,7 @@ five-a-day/
 │   │   ├── exports.py            Excel/CSV builders
 │   │   ├── admin.py              Payment + Enrollment admin with actions
 │   │   ├── urls.py               20 URL patterns
-│   │   └── management/commands/  generate_payments
+│   │   └── management/commands/  generate_payments, seed_testdata
 │   │
 │   ├── comms/                    Communications
 │   │   ├── services/             EmailService + 12 email functions + PDF gen
@@ -839,15 +961,39 @@ five-a-day/
 │   │   ├── urls.py               10 URL patterns
 │   │   └── management/commands/  send_email, test_all_emails
 │   │
-│   ├── tests/                    pytest suite (174 tests)
-│   └── conftest.py               Shared fixtures
+│   ├── tests/                    pytest suite (283 tests, 70 % coverage)
+│   └── conftest.py               Shared fixtures (models + authenticated_client)
 │
-├── Dockerfile                    Multi-stage build
-├── docker-compose.yml            PostgreSQL + Django
-├── Makefile                      45+ commands
-├── pyproject.toml                Dependencies (uv/pip compatible)
-├── CLAUDE.md                     AI development context
-└── DEPLOYMENT.md                 GCP deployment guide
+├── .github/                      CI/CD — see docs/GITHUB.md
+│   ├── workflows/
+│   │   ├── ci.yml                Lint + typecheck + tests on every push/PR
+│   │   ├── auto-merge.yml        Hourly development → testing merge + PR to main
+│   │   ├── codeql.yml            Weekly Python security scan
+│   │   └── notify-production.yml Email on push to main
+│   ├── dependabot.yml            Weekly dependency updates
+│   └── CODEOWNERS                Auto-request reviews from owner accounts
+│
+├── docs/
+│   ├── GITHUB.md                 Full CI/CD + branch protection reference
+│   ├── HTTPS.md                  HTTPS setup (Docker Nginx + Cloud Run)
+│   ├── UV.md                     UV dependency management guide
+│   ├── CELERY.md                 Celery worker/beat reference
+│   └── TODO.md                   Open tasks
+│
+├── scripts/                      Dev helpers (docker_smoke_test, etc.)
+├── backups/                      DB dumps from `make backup` (gitignored)
+│
+├── Dockerfile                    Multi-stage build (builder + runtime)
+├── docker-compose.yml            PostgreSQL + Redis + Django + Celery worker + beat
+├── docker-compose.testing.yml    QA override (Gunicorn, DEBUG=False)
+├── Makefile                      60+ commands (`make help`)
+├── pyproject.toml                Dependencies (uv-managed) + tool config
+├── uv.lock                       Reproducible dependency lock
+├── entrypoint.sh                 Docker entrypoint (migrate, collectstatic, start)
+├── .env / .env.testing           Gitignored — never committed
+├── CLAUDE.md                     AI development context (project rules)
+├── DEPLOYMENT.md                 GCP deployment guide (all 3 environments)
+└── README.md                     This file
 ```
 
 ### App: core
@@ -857,7 +1003,7 @@ Dashboard, authentication, scheduling, and shared utilities. Owns all views and 
 | Component | Details |
 |-----------|---------|
 | **Models** | TodoItem, HistoryLog (1000-entry cap), FunFridayAttendance, ScheduleSlot |
-| **Views** | 12 modules: auth, dashboard, students, parents, payments, management, app_forms, schedule, fun_friday_attendance, todos, support, errors |
+| **Views** | 13 modules: auth, dashboard, students, parents, payments, management, app_forms, schedule, fun_friday_attendance, todos, support, errors, testing_tools |
 | **Middleware** | SimpleAuthMiddleware — session-based, protects all routes except /login/, /health/, /static/ |
 | **Templates** | base.html (layout), 15+ page templates, 12 email templates, error pages |
 | **Static** | app.css (sidebar/icons), 13 JS modules, logo |
@@ -1049,8 +1195,8 @@ Standalone page with custom styling (does not extend base.html).
 
 | Metric | Value |
 |--------|-------|
-| **Total tests** | 294 |
-| **Test files** | 17 |
+| **Total tests** | 283 |
+| **Test files** | 19 |
 | **Coverage** | 70% (with `--cov-report=term-missing` on every run) |
 | **Runtime** | ~30 seconds (8 parallel workers via pytest-xdist) |
 | **Database** | PostgreSQL (same as production) — **always use `make test`** |
@@ -1207,7 +1353,7 @@ Production defaults are applied automatically when `DEBUG=False` — no manual o
 
 - Django's `CsrfViewMiddleware` is active in the middleware stack.
 - All POST endpoints receive CSRF validation. JavaScript AJAX requests use `getCsrfToken()` (reads from cookies) and send via `X-CSRFToken` header.
-- `CSRF_TRUSTED_ORIGINS` is configured per deployment (`render.yaml`, `gcp-cloudrun.yaml`).
+- `CSRF_TRUSTED_ORIGINS` is configured per deployment via the `CSRF_TRUSTED_ORIGINS` env var (see [DEPLOYMENT.md](DEPLOYMENT.md)).
 - Only exception: `@csrf_exempt` on `/health/` endpoint (GET-only, returns `{"status": "healthy"}`).
 
 ### Transport Security (HTTPS)
@@ -1244,30 +1390,27 @@ All settings are environment-controlled and only activate when `DEBUG=False`.
 | Health checks | Database has auth-checking healthcheck; web service uses `/health/` endpoint |
 | Seed script guard | `scripts/reset_seed_dev_data.py` aborts if `DJANGO_ENV=production` or `DEBUG=False` |
 
-#### Render (render.yaml)
+#### Google Cloud Run
+
+Full deployment walkthrough in [DEPLOYMENT.md](DEPLOYMENT.md). Security-relevant decisions:
 
 | Decision | Implementation |
 |----------|---------------|
-| Auto-generated secrets | `DJANGO_SECRET_KEY` and `DJANGO_SUPERUSER_PASSWORD` use `generateValue: true` |
-| Dashboard-only secrets | `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, `LOGIN_USERNAME`, `LOGIN_PASSWORD`, `EMAIL_HOST_USER`, `EMAIL_SECRET` use `sync: false` (set in Render dashboard, not in YAML) |
-| SSL enforced | `SECURE_SSL_REDIRECT=True`, all cookie secure flags enabled |
-| Strict cookies | `SESSION_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_HTTPONLY=True` |
-
-#### Google Cloud Run (gcp-cloudrun.yaml)
-
-| Decision | Implementation |
-|----------|---------------|
-| Secret Manager | All credentials (`DJANGO_SECRET_KEY`, `LOGIN_*`, `EMAIL_SECRET`, `POSTGRES_*`, `GOOGLE_*`) loaded from GCP Secret Manager via `secretKeyRef` |
-| Service account | Runs under dedicated `fiveaday-sa` service account with least-privilege IAM |
-| Autoscaling | min=0, max=3 instances; startup probe with 50s timeout |
+| Secret Manager | All credentials (`DJANGO_SECRET_KEY`, `LOGIN_*`, `EMAIL_SECRET`, `POSTGRES_*`, `GOOGLE_*`) injected at startup from GCP Secret Manager |
+| Cloud SQL Auth Proxy | PostgreSQL connection goes through the proxy — no public IP on the database |
+| Autoscaling | min=0 (cold starts acceptable) or min=1 (~$7/mo) for always-warm, max=2 instances |
 | Probes | Startup probe + liveness probe on `/health/` |
+| TLS | Managed automatically by Cloud Run (custom domain + Google-managed certificate) |
+| SSL enforced | `SECURE_SSL_REDIRECT=True`, all cookie secure flags enabled when `DEBUG=False` |
+| Strict cookies | `SESSION_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_HTTPONLY=True` |
 
 ### Secrets Management
 
 | Rule | Implementation |
 |------|---------------|
 | No hardcoded credentials | `auth.py` requires `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars — refuses login if missing |
-| No secrets in YAML | `render.yaml` uses `generateValue` or `sync: false`; `gcp-cloudrun.yaml` uses Secret Manager refs |
+| No secrets in YAML | Production credentials live in GCP Secret Manager, injected into Cloud Run at startup — never in the repo |
+| No secrets in GitHub Actions for deploy | CI uses only non-production Gmail SMTP + Codecov upload token. Production deploy runs manually with the operator's `gcloud` credentials |
 | No secrets in Docker image | `.dockerignore` excludes all `.env*` files |
 | `.gitignore` coverage | `.env*` pattern excludes all env file variants |
 | Production startup validation | `settings.py` raises `ValueError` if `SECRET_KEY` is the dev default and `DEBUG=False` |
@@ -1463,66 +1606,7 @@ The `seed_testdata` command creates:
 
 Use `--reset` to wipe and re-seed, or `--small` for a minimal dataset (6 children only).
 
-### GCP deployment plan
-
-The QA environment will be deployed on Google Cloud Platform, optimized for minimal cost:
-
-#### Recommended setup: Cloud Run + Cloud SQL
-
-| Component | GCP Service | Spec | Estimated cost |
-|-----------|-------------|------|----------------|
-| Application | Cloud Run | 1 vCPU, 512 MB, scales 0–2 | Free tier covers ~2M requests/month |
-| Database | Cloud SQL (PostgreSQL 16) | `db-f1-micro`, 10 GB SSD | ~$8/month |
-| Container images | Artifact Registry | Standard repo | Free tier (0.5 GB) |
-| HTTPS | Cloud Run managed | Automatic TLS certificate | Free |
-| DNS (optional) | Cloud DNS | 1 managed zone | ~$0.20/month |
-
-**Total estimated cost: ~$8–10/month**
-
-Cloud Run scales to zero when nobody is using it (no cost for idle time) and GCP provides automatic HTTPS with a `*.run.app` domain at no extra cost. The `db-f1-micro` Cloud SQL instance is the smallest available and more than enough for a QA team of 3–10 people.
-
-#### Why Cloud Run instead of a VM or Kubernetes
-
-- Kubernetes (GKE) has a management fee (~$70/month) that makes no sense for a small QA environment.
-- A Compute Engine VM would cost ~$5/month but requires manual updates, SSL certificate management, and doesn't scale to zero.
-- Cloud Run gives production-grade infrastructure (load balancing, HTTPS, health checks, rolling deploys) with almost no operational overhead.
-
-#### Deployment steps (run once during initial setup)
-
-```bash
-# 1. Build and push the Docker image
-gcloud builds submit --tag gcr.io/PROJECT_ID/fiveaday-testing
-
-# 2. Create the Cloud SQL instance
-gcloud sql instances create fiveaday-testing \
-  --tier=db-f1-micro \
-  --region=europe-southwest1 \
-  --database-version=POSTGRES_16
-
-# 3. Create the database and user
-gcloud sql databases create fiveaday_testing --instance=fiveaday-testing
-gcloud sql users create fiveaday_tester --instance=fiveaday-testing --password=SECURE_PASSWORD
-
-# 4. Store secrets
-echo -n "value" | gcloud secrets create SECRET_NAME --data-file=-
-
-# 5. Deploy to Cloud Run
-gcloud run deploy fiveaday-testing \
-  --image gcr.io/PROJECT_ID/fiveaday-testing \
-  --region europe-southwest1 \
-  --allow-unauthenticated \
-  --set-env-vars "DJANGO_ENV=production,DJANGO_DEBUG=False" \
-  --set-secrets "DJANGO_SECRET_KEY=django-secret-key:latest"
-
-# 6. Seed the database (one-time, via Cloud Run job or exec)
-gcloud run jobs create seed-testdata \
-  --image gcr.io/PROJECT_ID/fiveaday-testing \
-  --command "python" \
-  --args "project/manage.py,seed_testdata" \
-  --region europe-southwest1
-```
-
-After deployment, Cloud Run provides a URL like `https://fiveaday-testing-xxxxx.europe-southwest1.run.app` with HTTPS enabled automatically.
+> **Deploying the QA environment** — see [DEPLOYMENT.md](DEPLOYMENT.md) for the full GCP plan. Testing runs on a Compute Engine e2-micro (free tier) with Docker Compose, while production uses Cloud Run + Cloud SQL.
 
 ---
 
@@ -1544,6 +1628,7 @@ Auto-merge check
   • development ahead of testing?
   • last commit ≥ 24 h old?
   • CI passing on that commit?
+  • version bumped in pyproject.toml (dev > testing)?
         │ all yes
         ▼
 git merge development → testing
@@ -1594,14 +1679,23 @@ Concurrent CI runs on the same branch cancel each other automatically — new pu
 
 - CI triggers immediately (lint, typecheck, tests run in parallel, ~2-4 min)
 - CodeQL triggers immediately (weekly scan also runs independently)
-- The hourly auto-merge cron checks this commit every hour until it is ≥ 24 h old with passing CI, then promotes to `testing`
+- The hourly auto-merge cron promotes to `testing` only when **all four** conditions hold: dev is ahead of testing, the last commit is ≥ 24 h old, CI is green, **and the version in `pyproject.toml` has been bumped** (strictly higher than `testing`'s version). Without a version bump the merge is skipped even with 24 h of new commits on dev — run `make pc-run` (answer yes) or `make version x.y.z` before the next tick to unlock it.
 
 **2. Auto-merge fires**
 
 - Creates a `--no-ff` merge commit on `testing` titled `YYYY-MM-DD - <your last commit message>`
 - Pushes to `testing` (which triggers CI on `testing`)
+- **Creates and pushes an annotated staging tag `testing-vX.Y.Z`** on the new testing merge commit
 - Opens PR `testing → main` if one is not already open (title matches the merge commit)
-- Sends an HTML email to `OWNER_EMAILS` with a "Review PR" button
+- Sends an HTML email to `OWNER_EMAILS` with version bump, staging tag, and a "Review PR" button
+
+**2b. You merge the PR → release tag on main**
+
+- `notify-production.yml` reads `version` from `pyproject.toml` on `main`'s new HEAD
+- **Creates and pushes an annotated release tag `vX.Y.Z`** on that commit (skipped if tag already exists)
+- Sends an HTML email to `hellofiveaday@gmail.com` with the release tag and `gcloud` deploy steps
+
+The two tag namespaces (`testing-vX.Y.Z` and `vX.Y.Z`) are fully independent — the `testing → main` PR can use any merge strategy (merge commit, squash, or rebase) because the release tag is derived from `pyproject.toml`, not from commit SHA continuity.
 
 **3. You review and merge the PR**
 
@@ -1723,19 +1817,20 @@ Results appear in **Security → Code scanning alerts**. A new alert on `main` d
 ```bash
 # First-time setup
 uv sync --no-install-project   # Install all dependencies (UV — see docs/UV.md)
-make pre-commit-install        # Install pre-commit hooks (Ruff + mypy + bandit)
-make up                        # Start Docker (PostgreSQL + Django)
+make pre-commit-install        # Install the git pre-commit hook
+make up                        # Start Docker (PostgreSQL + Redis + Django + Celery)
 ```
 
-1. Create a feature branch from `development`
+1. Work on `development` (or a short-lived branch off `development`)
 2. Make changes following the conventions below
-3. Run `make lint` — Ruff linting must pass
-4. Run `make mypy` — mypy type checking must pass
-5. Run `make test` — all 294 tests must pass (PostgreSQL via Docker, parallel, with coverage)
-6. Run `make check` — no Django system check issues
-7. Create a pull request with clear description of changes
+3. Run `make pc-run` — Ruff + mypy + bandit all pass, offers to auto-bump the patch version on success, and auto-stages `uv.lock` if regenerated
+4. Run `make test` — all 283 tests must pass (PostgreSQL via Docker, parallel, with coverage)
+5. `git commit` with a message like `v1.0.6 - Short description` (version comes first — conventions match every other commit in the project)
+6. `git push origin development`
+7. CI runs automatically on your push (see [CI/CD](#cicd--github-actions))
+8. ~24 h later, the auto-merge pipeline promotes your commit to `testing` and opens a PR to `main` for your review
 
-Pre-commit hooks run **Ruff** (lint + format), **mypy** (type checking), and **bandit** (security) automatically on every commit.
+Pre-commit hooks run **Ruff** (lint + format), **mypy** (type checking), and **bandit** (security) automatically on every `git commit`. If a hook modifies files (e.g. mypy regenerates `uv.lock`), the commit aborts — running `make pc-run` once resolves this by staging the regenerated lock file.
 
 ### Make Commands (Developer Tooling)
 
@@ -1749,7 +1844,8 @@ Pre-commit hooks run **Ruff** (lint + format), **mypy** (type checking), and **b
 | **pytest-xdist** | Parallel test execution | Built into `make test` (`-n auto`) |
 | **pytest-randomly** | Randomized test ordering | Built into `make test` (seed printed) |
 | **pytest-cov** | Coverage reporting + badge | `make test`, `make coverage-badge` |
-| **pre-commit** | Git hooks: ruff, mypy, bandit | `make pre-commit-install` |
+| **pre-commit** | Git hooks: ruff, ruff-format, mypy, bandit | `make pre-commit-install` (first-time), `make pc-run` (dry-run all hooks + auto bump) |
+| **make version** | Bump version in both `pyproject.toml` and `settings.py` | `make version x.y.z` (positional, with `y/N` confirmation) |
 
 All tools are configured in `pyproject.toml` and installed as dev dependencies via `uv sync`.
 

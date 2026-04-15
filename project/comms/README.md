@@ -14,7 +14,7 @@ Generic email sending service with HTML template rendering and inline images.
 - `send_bulk_emails(template_name, emails_data, ...)` — sends multiple emails with the same template
 - `email_service` — singleton instance used throughout the project
 
-Templates live in `core/templates/emails/` and extend `emails/base_email.html`.
+Templates live in `core/templates/emails/` and extend `emails/base_email.html`. There are currently **14 email templates**: `happy_birthday`, `welcome_student`, `enrollment_child`, `enrollment_adult`, `fun_friday`, `payment_reminder`, `receipt_quarterly_child`, `receipt_adult`, `receipt_enrollment`, `vacation_closure`, `tax_certificate`, `monthly_report`, `newsletter`, plus the shared `base_email`.
 
 ### Email Functions (`comms/services/email_functions.py`)
 
@@ -24,7 +24,7 @@ Convenience functions for each email type. Each wraps `email_service.send_email(
 | -------- | -------- | ------- |
 | `send_birthday_email` | `happy_birthday` | Daily cron / manual |
 | `send_welcome_email` | `welcome_student` | On student creation |
-| `send_enrollment_confirmation_email` | `enrollment_child` | On enrollment |
+| `send_enrollment_confirmation_email` | `enrollment_child` / `enrollment_adult` | On enrollment |
 | `send_fun_friday_email` | `fun_friday` | Weekly manual |
 | `send_payment_reminder_email` | `payment_reminder` | Monthly manual |
 | `send_quarterly_receipt_email` | `receipt_quarterly_child` | Quarterly manual |
@@ -33,6 +33,8 @@ Convenience functions for each email type. Each wraps `email_service.send_email(
 | `send_all_tax_certificates` | (iterates parents) | Yearly batch |
 | `send_monthly_report` | `monthly_report` | Monthly manual |
 | `generate_tax_certificate_pdf` | (HTML to PDF) | Called by tax certificate |
+
+The **newsletter** and **enrollment receipt** templates do not have dedicated convenience functions — they are triggered directly from the `/apps/newsletter/` and receipt form views in `core/views/app_forms.py`, which call `email_service.send_email()` inline with per-recipient context.
 
 ## Celery Tasks (`comms/tasks.py`)
 
@@ -63,7 +65,7 @@ python manage.py send_email --tax-certificate --year 2024
 ### `test_all_emails`
 
 ```bash
-python manage.py test_all_emails                     # Send all 11 test emails
+python manage.py test_all_emails                     # Send one test of each email template
 python manage.py test_all_emails --only fun_friday,birthday
 python manage.py test_all_emails --list              # List available templates
 python manage.py test_all_emails --to admin@test.com

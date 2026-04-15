@@ -54,12 +54,54 @@ jobs:
             exit 0
           fi
 
+          # 3. Has the version been bumped on development?
+          # Source of truth is pyproject.toml — it's what `make version` and `make pc-run` write.
+          # A version bump is REQUIRED: no version change → no merge, even with 24 h of new commits.
+          extract_version() {
+            # $1 = ref (e.g. origin/testing or origin/development)
+            git show "$1:pyproject.toml" 2>/dev/null \
+              | grep -E '^[[:space:]]*version[[:space:]]*=' \
+              | head -1 \
+              | sed -E 's/.*version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/'
+          }
+
+          TESTING_VERSION=$(extract_version origin/testing)
+          DEV_VERSION=$(extract_version origin/development)
+
+          if [ -z "$TESTING_VERSION" ] || [ -z "$DEV_VERSION" ]; then
+            echo "Could not read version from pyproject.toml on one of the branches (testing='$TESTING_VERSION', development='$DEV_VERSION') — skipping."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "testing     version: $TESTING_VERSION"
+          echo "development version: $DEV_VERSION"
+
+          if [ "$DEV_VERSION" = "$TESTING_VERSION" ]; then
+            echo "Version unchanged ($DEV_VERSION) — development has new commits but no version bump. Skipping merge."
+            echo "Run 'make pc-run' (answer yes) or 'make version x.y.z' on development before the next cron tick to unlock the merge."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Semver sort (GNU sort -V handles both "1.0.5" and "v1.0.5"). The highest value MUST be DEV_VERSION.
+          HIGHEST=$(printf '%s\n%s\n' "$TESTING_VERSION" "$DEV_VERSION" | sort -V | tail -1)
+          if [ "$HIGHEST" != "$DEV_VERSION" ]; then
+            echo "development version ($DEV_VERSION) is LOWER than testing ($TESTING_VERSION) — this should not happen. Refusing to merge backwards."
+            echo "should_merge=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Version bump confirmed: $TESTING_VERSION → $DEV_VERSION"
+
           LAST_SHA=$(git rev-parse origin/development)
           LAST_MSG=$(git log origin/development -1 --format="%s")
 
-          echo "should_merge=true"  >> "$GITHUB_OUTPUT"
-          echo "last_sha=$LAST_SHA" >> "$GITHUB_OUTPUT"
-          echo "last_msg=$LAST_MSG" >> "$GITHUB_OUTPUT"
+          echo "should_merge=true"    >> "$GITHUB_OUTPUT"
+          echo "last_sha=$LAST_SHA"   >> "$GITHUB_OUTPUT"
+          echo "last_msg=$LAST_MSG"   >> "$GITHUB_OUTPUT"
+          echo "new_version=$DEV_VERSION" >> "$GITHUB_OUTPUT"
+          echo "old_version=$TESTING_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check CI status on development
         id: ci
@@ -124,6 +166,30 @@ jobs:
           echo "merge_msg=$MERGE_MSG" >> "$GITHUB_OUTPUT"
           echo "Merged with message: $MERGE_MSG"
 
+      - name: Tag the testing merge commit with the staging tag
+        id: tag
+        if: steps.merge.conclusion == 'success'
+        run: |
+          NEW_VER="${{ steps.conditions.outputs.new_version }}"
+          TAG="testing-v${NEW_VER}"
+
+          # Defensive — the version-progression check should prevent collisions,
+          # but if the tag exists already, skip rather than clobber.
+          if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists on origin — skipping tag creation."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG"       >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Annotated tag — richer metadata than a lightweight tag, shows up in the Tags tab.
+          git tag -a "$TAG" -m "Staging $TAG — auto-merged development → testing. The matching release tag v${NEW_VER} will be created on main when the PR lands."
+          git push origin "refs/tags/$TAG"
+
+          echo "Created and pushed staging tag $TAG on testing HEAD."
+          echo "created=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG"     >> "$GITHUB_OUTPUT"
+
       - name: Create PR testing → main
         id: pr
         if: steps.merge.conclusion == 'success'
@@ -157,6 +223,12 @@ jobs:
                 '',
                 'This PR was created automatically after `development` was merged into `testing`.',
                 '',
+                `**Version:** \`${{ steps.conditions.outputs.old_version }}\` → \`${{ steps.conditions.outputs.new_version }}\``,
+                `**Staging tag (on testing):** \`${{ steps.tag.outputs.tag }}\``,
+                `**Release tag (on main, created after this PR merges):** \`v${{ steps.conditions.outputs.new_version }}\``,
+                '',
+                'Merge strategy is flexible — staging and release tags are independent, so squash/rebase/merge-commit all work.',
+                '',
                 '### Pre-merge checklist',
                 '- [ ] All CI checks passing on this PR',
                 '- [ ] Manual review completed',
@@ -189,6 +261,9 @@ jobs:
             <p>A new merge has landed on the <code>testing</code> branch and a pull request to <code>main</code> is now awaiting review.</p>
 
             <table cellpadding="6" style="border-collapse: collapse; font-family: sans-serif;">
+              <tr><td><strong>Version bump</strong></td><td><code>${{ steps.conditions.outputs.old_version }}</code> → <code>${{ steps.conditions.outputs.new_version }}</code></td></tr>
+              <tr><td><strong>Staging tag (on testing)</strong></td><td><code>${{ steps.tag.outputs.tag }}</code> (${{ steps.tag.outputs.created == 'true' && 'newly created' || 'pre-existing' }})</td></tr>
+              <tr><td><strong>Release tag (pending)</strong></td><td><code>v${{ steps.conditions.outputs.new_version }}</code> — will be created on <code>main</code> after the PR merges</td></tr>
               <tr><td><strong>Merge commit</strong></td><td><code>${{ steps.merge.outputs.merge_msg }}</code></td></tr>
               <tr><td><strong>Repository</strong></td><td>${{ github.repository }}</td></tr>
               <tr><td><strong>PR status</strong></td><td>${{ steps.pr.outputs.already_existed == 'true' && 'Updated (PR already existed)' || 'Newly created' }}</td></tr>

@@ -23,7 +23,7 @@ help:
 	@echo "  =========================="
 	@echo ""
 	@echo "  Setup & Build:"
-	@echo "    make setup            Copy .env.example to .env"
+	@echo "    make setup            Create empty .env (fill in from README.md '.env template')"
 	@echo "    make build            Build Docker images"
 	@echo "    make rebuild          Full rebuild (no cache) + start"
 	@echo "    make rebuild-web      Rebuild only the web image"
@@ -120,8 +120,8 @@ help:
 # ============================================================================
 setup:
 	@if [ ! -f .env ]; then \
-		cp .env.example .env; \
-		echo "Created .env — edit it with your configuration."; \
+		touch .env; \
+		echo "Created empty .env. Copy the template from README.md (section '.env template') into .env and fill in the blanks."; \
 	else \
 		echo ".env already exists."; \
 	fi
@@ -487,6 +487,10 @@ pc-run:
 			sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
 			echo "Updated version $$CURRENT with new version $$NEW"; \
 		fi; \
+	fi
+	@if [ -n "$$(git status --porcelain uv.lock 2>/dev/null)" ]; then \
+		git add uv.lock; \
+		echo "Staged updated uv.lock — next git commit will not be blocked by it"; \
 	fi
 
 # ============================================================================

@@ -53,8 +53,8 @@ make test                      # Run tests (PostgreSQL)
 ```bash
 make lint              # Ruff linter
 make format            # Ruff formatter
-make pre-commit-run    # Run all pre-commit hooks
-make test              # Run 294 tests (PostgreSQL via Docker, parallel, 70% coverage)
+make pc-run            # Run all pre-commit hooks (dry run + auto version bump)
+make test              # Run 283 tests (PostgreSQL via Docker, parallel, with coverage)
 ```
 
 - **UV** for dependency management (see [docs/UV.md](docs/UV.md))
@@ -126,7 +126,25 @@ All pricing flows through `billing/services/`. The single source of truth is `Si
 - **Celery eager mode** — without Redis, tasks run synchronously. Don't rely on task.delay() being truly async in development.
 - **`#webcrumbs` removed** — the old CSS scoping wrapper is gone. If you see references to it in old code, delete them.
 - **Template names are English** — all email templates were renamed from Spanish (e.g., `matricula_niño.html` → `enrollment_child.html`). Never create templates with Spanish names.
-- **Version in two places** — `pyproject.toml` and `settings.py`. Use `make version V=x.y.z` to update both.
+- **Version in two places** — `pyproject.toml` and `project/project/settings.py`. Use `make version x.y.z` (positional, with y/N confirmation) to update both.
+- **APP_VERSION in `.env`** — the local `.env` may contain a legacy `APP_VERSION=0.x.y` line. Either remove the line or update it — it silently overrides the default in `settings.py` at runtime.
+- **`pc-run` renamed** — the old `make pre-commit-run` target is now `make pc-run`. It also auto-bumps the patch version on a clean pass (y/N prompt) and auto-stages `uv.lock` if regenerated.
+
+## README maintenance (MUST do at end of every work session)
+
+The `README.md` must stay in sync with the code. At the end of any non-trivial change, verify and update these sections before handing off:
+
+1. **Header badges** — version badge must match `pyproject.toml`
+2. **Project Status table** — three rows in order Production → Testing → Development, each with branch + hosting + CI badge
+3. **Recent Versions table** — keep only the **last 3** versions. Entries must include: version, date (YYYY-MM-DD), a dense description mentioning every user-visible change in that version. When a new patch ships, drop the oldest row.
+4. **Version History `<details>` blocks** — add a new `<details id="vXYZ" open>` block for the new version; remove the `open` attribute from the previous one. Structure: `**Subsection**` headings + bullet lists. Pull subjects from `git log` for the commits in that version.
+5. **Directory Layout** — if directories, tool counts, test counts, or Make command counts changed, update them here. `tests/` line must show current test count and coverage percentage.
+6. **Make Commands table** — every renamed or new `make` target must appear or be updated.
+7. **Contributing → Development Workflow** — if the developer flow changed (new pre-commit behavior, new commands), update the numbered list.
+8. **Table of Contents** — every new section or renamed heading must have a matching ToC entry with a valid anchor (GitHub generates anchors by lowercasing, replacing spaces with `-`, dropping non-alphanumerics except `-`).
+9. **Delete stale content** — if a file or service was removed (e.g. `render.yaml`, a retired workflow), remove every reference to it. Grep the README for the name first.
+
+**When the user invokes the `update-readme` skill**, use the staged changes (`git diff --cached`, `git status --porcelain`, `git diff --cached --stat`) to determine what changed, then apply the checklist above. Do not guess — inspect the staged diff first.
 
 ## Django Best Practices (enforced in this project)
 
