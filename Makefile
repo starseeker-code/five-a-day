@@ -363,20 +363,35 @@ endif
 
 version:
 	@CURRENT=$$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/'); \
+	BADGE=$$(grep -oE 'version-v[0-9]+(\.[0-9]+)*-brightgreen' README.md | head -1 | sed -E 's/version-v(.*)-brightgreen/\1/'); \
 	NEW="$(_VERSION_ARG)"; \
 	if [ -z "$$NEW" ]; then \
 		echo "Usage: make version x.y.z"; \
 		echo ""; \
-		echo "Current version: $$CURRENT"; \
+		echo "Current version:"; \
+		echo "  pyproject.toml:  $$CURRENT"; \
+		echo "  README.md badge: $$BADGE"; \
+		if [ -n "$$BADGE" ] && [ "$$CURRENT" != "$$BADGE" ]; then \
+			echo ""; \
+			echo "  WARNING: pyproject and README badge are out of sync."; \
+		fi; \
 		exit 1; \
 	fi; \
 	read -p "Version $$CURRENT will become the new version $$NEW, are you sure? [y/N] " confirm; \
 	if [ "$$confirm" = "y" ] || [ "$$confirm" = "yes" ]; then \
 		sed -i 's/^version = ".*"/version = "'"$$NEW"'"/' pyproject.toml; \
 		sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
+		sed -i -E 's|version-v[0-9]+(\.[0-9]+)*-brightgreen|version-v'"$$NEW"'-brightgreen|' README.md; \
+		uv lock --quiet; \
 		echo "Version updated to $$NEW in:"; \
 		echo "  - pyproject.toml"; \
-		echo "  - project/settings.py"; \
+		echo "  - project/project/settings.py"; \
+		echo "  - README.md (badge URL)"; \
+		echo "  - uv.lock (regenerated via 'uv lock')"; \
+		echo ""; \
+		echo "NOTE: the Recent Versions table, Version History details block, and per-app"; \
+		echo "      READMEs were NOT changed automatically — run the 'update-readme' skill"; \
+		echo "      after staging your work to refresh them."; \
 	else \
 		echo "Cancelled."; \
 	fi
@@ -485,7 +500,10 @@ pc-run:
 			NEW="$$MAJOR.$$MINOR.$$((PATCH + 1))"; \
 			sed -i 's/^version = ".*"/version = "'"$$NEW"'"/' pyproject.toml; \
 			sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
-			echo "Updated version $$CURRENT with new version $$NEW"; \
+			sed -i -E 's|version-v[0-9]+(\.[0-9]+)*-brightgreen|version-v'"$$NEW"'-brightgreen|' README.md; \
+			uv lock --quiet; \
+			echo "Updated version $$CURRENT with new version $$NEW (pyproject.toml, settings.py, README badge, uv.lock)"; \
+			echo "Reminder: Recent Versions + Version History in README were NOT touched - run '/update-readme' skill to refresh them."; \
 		fi; \
 	fi
 	@if [ -n "$$(git status --porcelain uv.lock 2>/dev/null)" ]; then \

@@ -57,3 +57,13 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 # Use in-memory email backend (enables django.core.mail.outbox for assertions)
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Disable production-only security redirects — the Django test client speaks HTTP,
+# so SECURE_SSL_REDIRECT=True (inherited from settings.py when DEBUG=False) would
+# turn every test request into a 301 to https://testserver/... and fail assertions.
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False

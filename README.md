@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.0.5-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.0.7-brightgreen?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
   <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
@@ -40,9 +40,9 @@ Live status for each environment is pulled from GitHub Actions — the badges be
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.5** | 2026-04-15 | GitHub Actions CI/CD pipeline (lint, typecheck, tests, CodeQL, Dependabot), auto-merge `development` → `testing` with 24 h delay + auto-PR to `main`, email notifications, branch protection rules for public repo hardening, `make pc-run` auto-stages regenerated `uv.lock` |
-| v1.0.4 | 2026-04-15 | Inspirational quote generator on `/home` (48 h cookie rotation), GCP deployment plan ([DEPLOYMENT.md](DEPLOYMENT.md)), Celery worker + beat containers, cleaned legacy Render config, `make version x.y.z` positional arg with confirmation guard, `make pc-run` (renamed from `pre-commit-run`) with auto version bump |
-| v1.0.3 | 2026-04-14 | Test coverage raised to **70 %** — 13 new test files across auth views, comms services, app forms, constants, create payment views, exports, forms, parent views, payment views, schedule views, student forms, student views, transactions |
+| **v1.0.7** | 2026-04-15 | Favicon + Open Graph / Twitter Card / `theme-color` / `apple-touch-icon` metadata on every page (multi-resolution `favicon.ico` generated from `logo.png`, overridable per-page blocks); `SECURE_SSL_REDIRECT`/HSTS/secure cookies disabled in `settings_test.py` so the CI test suite stops getting 301-redirected by the Django test client; WhiteNoise `No directory at: staticfiles/` warning silenced via `pytest.ini` `filterwarnings`; dashboard quote fetcher now uses `follow_redirects=True` against `zenquotes.io/api/quotes` (no trailing slash) and logs failures instead of swallowing them; CI mypy job now sets `DJANGO_DEBUG=True` + dummy `DJANGO_SECRET_KEY` so django-stubs can import `settings.py` without tripping the production secret-key guard; `make version` + `make pc-run` now also rewrite the README version badge, regenerate `uv.lock`, and warn when `pyproject.toml` and the badge drift apart |
+| v1.0.6 | 2026-04-15 | New `update-readme` Claude skill under `.claude/skills/update-readme/SKILL.md` that routes staged changes across the whole documentation set (main README, `CLAUDE.md`, `DEPLOYMENT.md`, `docs/`, per-app READMEs); sweeping README restructure — renamed `readme.md` → `README.md`, reorganized sections, expanded env-var reference; `.env.testing.example` removed (its contents now live inline in the README's `.env template` code block, with `.gitignore` tightened so no `.env*` file can be committed); `auto-merge.yml` and `notify-production.yml` workflow refinements; per-app README tune-ups for `core` and `comms` |
+| v1.0.5 | 2026-04-15 | GitHub Actions CI/CD pipeline (lint, typecheck, tests, CodeQL, Dependabot), auto-merge `development` → `testing` with 24 h delay + auto-PR to `main`, email notifications, branch protection rules for public repo hardening, `make pc-run` auto-stages regenerated `uv.lock` |
 
 ---
 
@@ -70,6 +70,7 @@ Live status for each environment is pulled from GitHub Actions — the badges be
     - [Frontend](#frontend)
     - [Infrastructure \& Deployment](#infrastructure--deployment)
     - [Python Dependencies](#python-dependencies)
+    - [Developer Tooling](#developer-tooling)
   - [Database Schema](#database-schema)
     - [ER Diagram](#er-diagram)
     - [Key Constraints](#key-constraints)
@@ -106,6 +107,7 @@ Live status for each environment is pulled from GitHub Actions — the badges be
     - [Model Tests](#model-tests)
     - [Service Tests](#service-tests)
     - [View Tests](#view-tests)
+    - [Additional Test Files (v1.0.0+)](#additional-test-files-v100)
   - [Migrations](#migrations)
   - [Security](#security)
     - [Authentication](#authentication)
@@ -128,7 +130,7 @@ Live status for each environment is pulled from GitHub Actions — the badges be
     - [How to report a problem](#how-to-report-a-problem)
     - [Error pages you might see](#error-pages-you-might-see)
     - [For developers: how the QA environment works](#for-developers-how-the-qa-environment-works)
-      - [Access control for /testing/](#access-control-for-testing)
+      - [Access control for `/testing/`](#access-control-for-testing)
   - [CI/CD \& GitHub Actions](#cicd--github-actions)
     - [Pipeline Overview](#pipeline-overview)
     - [Branch Strategy](#branch-strategy)
@@ -143,6 +145,7 @@ Live status for each environment is pulled from GitHub Actions — the badges be
     - [CodeQL Security Scanning](#codeql-security-scanning)
   - [Contributing](#contributing)
     - [Development Workflow](#development-workflow)
+    - [Make Commands (Developer Tooling)](#make-commands-developer-tooling)
     - [Code Conventions](#code-conventions)
     - [Adding a Feature](#adding-a-feature)
   - [License](#license)
@@ -151,8 +154,64 @@ Live status for each environment is pulled from GitHub Actions — the badges be
 
 ## Version History & Roadmap
 
-<details id="v105" open>
-<summary><strong>v1.0.5 — CI/CD Pipeline & Public Repo Hardening (current)</strong></summary>
+<details id="v107" open>
+<summary><strong>v1.0.7 — Favicon, Social Metadata & CI Test Fixes (current)</strong></summary>
+
+**Social sharing & branding**
+
+- Multi-resolution `favicon.ico` (16/32/48/64/128/256) generated from `project/static/images/logo.png` — dropped in both `project/static/` and `project/core/static/` so both STATICFILES_DIRS paths serve it
+- `base.html` now includes full social-sharing metadata: `<meta name="description">`, `<meta name="author">`, `<meta name="theme-color" content="#6d28d9">` (matches the violet palette), `apple-touch-icon`, full Open Graph set (`og:type`, `og:site_name`, `og:title`, `og:description`, `og:image`, `og:image:alt`, `og:url`, `og:locale`), and Twitter Card summary tags
+- Every content field is wrapped in an overridable Django block (`meta_description`, `og_title`, `og_description`, `og_image`, `twitter_title`, `twitter_description`, `twitter_image`) so per-page templates can tailor link previews without touching `base.html`
+
+**Test-suite fixes**
+
+- `settings_test.py` now explicitly sets `SECURE_SSL_REDIRECT = False`, `SECURE_HSTS_SECONDS = 0`, `SESSION_COOKIE_SECURE = False`, `CSRF_COOKIE_SECURE = False` — the CI environment runs with `DJANGO_DEBUG=False`, which activated the production SSL redirect and turned every test request into a 301 to `https://testserver/...`. The test settings are now self-contained and correct regardless of `DJANGO_DEBUG`.
+- `pytest.ini` adds `filterwarnings = ignore:No directory at:UserWarning` to silence the 142 WhiteNoise warnings that were emitted once per test request (the `staticfiles/` directory only exists after `collectstatic`, which isn't run before tests)
+
+**Dashboard reliability**
+
+- Zenquotes fetch in `core/views/dashboard.py` now targets `https://zenquotes.io/api/quotes` (no trailing slash — the old URL was getting 301-redirected) with `follow_redirects=True` as a guard against future URL changes
+- Silent `except Exception: pass` replaced with proper `logger.warning(...)` calls — failures are still non-fatal but now visible in logs
+
+**CI tooling**
+
+- `mypy` job in `ci.yml` now sets `DJANGO_SETTINGS_MODULE=project.settings`, `DJANGO_DEBUG=True`, a dummy `DJANGO_SECRET_KEY`, and `PYTHONPATH=project` — `django-stubs` imports `settings.py` at load time, which previously raised the production secret-key guard
+- `make version x.y.z` now also updates the README version badge via `sed`, regenerates `uv.lock` via `uv lock --quiet`, and prints a reminder to run the `update-readme` skill afterwards; running `make version` with no arg now shows both `pyproject.toml` and the README badge side-by-side and warns if they've drifted
+- `make pc-run`'s auto patch-bump now also rewrites the README badge and regenerates `uv.lock` — the existing `git add uv.lock` tail stages the refreshed lockfile automatically
+
+</details>
+
+<details id="v106">
+<summary><strong>v1.0.6 — Documentation Skill & Doc Overhaul</strong></summary>
+
+**Documentation agent**
+
+- New `update-readme` Claude skill at `.claude/skills/update-readme/SKILL.md` — routes staged files to the right docs (main README, CLAUDE.md, DEPLOYMENT.md, docs/, per-app READMEs), applies per-file checklists, and sweeps for stale references across the full documentation tree
+
+**README overhaul**
+
+- `readme.md` → `README.md` rename (case-sensitive file systems matter on GCP)
+- Major reorganization of sections; expanded Environment Variables Reference; tightened Recent Versions table to 3 rows; populated Developer Tooling and Make Commands tables
+- `.env template` is now the single authoritative source for local env-var structure, lives inline in the README as a fenced `bash` block
+
+**Secrets hygiene**
+
+- Removed `.env.testing.example` (its content now lives only inline in the README `.env template` block)
+- `.gitignore` tightened: `.env*` matches everything, no `!.env.example` exception, no `.env*.example` carve-outs
+
+**CI workflow refinements**
+
+- `auto-merge.yml` — improved commit detection and PR creation for the `development` → `testing` → `main` cascade
+- `notify-production.yml` — richer production deployment notification email with commit info and next-step `gcloud` commands
+
+**Per-app docs**
+
+- `project/core/README.md` and `project/comms/README.md` touched up to match post-refactor structure
+
+</details>
+
+<details id="v105">
+<summary><strong>v1.0.5 — CI/CD Pipeline & Public Repo Hardening</strong></summary>
 
 **GitHub Actions CI/CD** (new — see [docs/GITHUB.md](docs/GITHUB.md))
 
@@ -777,8 +836,8 @@ Run `make` or `make help` for the full list. Key commands:
 | `make test-fast` | Stop on first failure |
 | `make test-k K=payment` | Run tests matching keyword |
 | **Versioning** | |
-| `make version 1.1.0` | Update version in `pyproject.toml` + `settings.py` (with y/N confirmation) |
-| `make version` | Show current version |
+| `make version 1.1.0` | Update version in `pyproject.toml`, `settings.py`, the README badge, and regenerate `uv.lock` (with y/N confirmation); reminds you to run the `update-readme` skill to refresh Version History |
+| `make version` | Show current version from `pyproject.toml` + README badge; warns if they've drifted |
 | **Developer Tooling** | |
 | `make lint` / `make lint-fix` | Run Ruff linter (optionally auto-fix) |
 | `make format` / `make format-check` | Run Ruff formatter |
@@ -803,8 +862,9 @@ The project supports three environments, controlled by `DJANGO_ENV` and `DJANGO_
 | Environment | `DJANGO_ENV` | `DJANGO_DEBUG` | Database | Static Files | Use Case |
 |------------|-------------|---------------|----------|-------------|----------|
 | **Production** | `production` | `false` | PostgreSQL (Cloud SQL) | WhiteNoise + collectstatic | Live deployment |
-| **Development** | `development` | `true` | PostgreSQL (Docker) | Django dev server | Local coding |
 | **Testing** | (via settings_test.py) | `false` | PostgreSQL (Docker) | Simple storage | `make test` |
+| **Development** | `development` | `true` | PostgreSQL (Docker) | Django dev server | Local coding |
+
 
 > **Defaults are production-safe**: `DJANGO_DEBUG` defaults to `false` and `DJANGO_ENV` defaults to `development`. In production, always set `DJANGO_ENV=production` and ensure `DJANGO_SECRET_KEY` is a strong random value.
 

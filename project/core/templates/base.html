@@ -6,6 +6,32 @@
     <title>{% block title %}Five a Day{% endblock %}</title>
     {% load static %}
 
+    <!-- SEO / descriptive metadata -->
+    <meta name="description" content="{% block meta_description %}Five a Day eVolution — sistema de gestión académica de Five a Day English Academy (Albacete): estudiantes, matrículas, pagos, horarios y comunicaciones.{% endblock %}">
+    <meta name="author" content="Five a Day English Academy">
+    <meta name="theme-color" content="#6d28d9">
+
+    <!-- Favicon & app icons -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
+
+    <!-- Open Graph (Facebook, WhatsApp, Slack, LinkedIn, …) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Five a Day eVolution">
+    <meta property="og:title" content="{% block og_title %}Five a Day eVolution{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Sistema de gestión académica de Five a Day English Academy (Albacete): estudiantes, matrículas, pagos, horarios y comunicaciones.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endblock %}">
+    <meta property="og:image:alt" content="Logo de Five a Day English Academy">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta property="og:locale" content="es_ES">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{% block twitter_title %}Five a Day eVolution{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Sistema de gestión académica de Five a Day English Academy.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endblock %}">
+
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

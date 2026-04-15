@@ -58,6 +58,14 @@ jobs:
         run: uv sync --frozen --no-install-project
 
       - name: mypy
+        env:
+          # django-stubs plugin imports project.settings at load time. Our settings.py
+          # raises ValueError when DEBUG=False AND SECRET_KEY is the dev default, so we
+          # set DJANGO_DEBUG=True to bypass that check during static analysis.
+          DJANGO_SETTINGS_MODULE: project.settings
+          DJANGO_DEBUG: "True"
+          DJANGO_SECRET_KEY: mypy-static-analysis-dummy-key
+          PYTHONPATH: project
         run: uv run mypy project/
 
   # ============================================================

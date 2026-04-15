@@ -1,5 +1,6 @@
 import calendar as cal_module
 import json
+import logging
 from datetime import date
 from decimal import Decimal
 
@@ -13,8 +14,13 @@ from core.constants import SCHEDULED_APPS
 from core.models import TodoItem
 from students.models import Student
 
+logger = logging.getLogger(__name__)
+
 _QUOTE_COOKIE = "inspirational_quotes"
 _QUOTE_COOKIE_TTL = 48 * 60 * 60  # 48 hours in seconds
+_QUOTE_API_URL = (
+    "https://zenquotes.io/api/quotes"  # no trailing slash — the API 301-redirects "/api/quotes/" → "/api/quotes"
+)
 
 
 def _get_quote(request):
@@ -42,15 +48,20 @@ def _get_quote(request):
 
     # Cookie missing, corrupt, or expired — fetch from API
     try:
-        resp = httpx.get("https://zenquotes.io/api/quotes/", timeout=5.0)
+        # follow_redirects=True guards against future URL changes (the API has already moved once)
+        resp = httpx.get(_QUOTE_API_URL, timeout=5.0, follow_redirects=True)
         resp.raise_for_status()
         items = resp.json()
         quotes = [{"q": item["q"], "a": item["a"]} for item in items[:2] if item.get("q") and item["q"] != "[AUTH]"]
         if quotes:
             cookie_val = json.dumps({"date": today.isoformat(), "quotes": quotes})
             return quotes[0]["q"], quotes[0]["a"], cookie_val
-    except Exception:
-        pass
+        logger.warning(
+            "zenquotes API returned no usable quotes (got %d items)", len(items) if isinstance(items, list) else 0
+        )
+    except Exception as e:
+        # Log but don't break the page — fall back to the default subtitle below.
+        logger.warning("zenquotes API fetch failed: %s: %s", type(e).__name__, e)
 
     return "¡Cada día es una nueva oportunidad para inspirar!", None, None
 

@@ -51,7 +51,7 @@ Student, payment, management, and email app routes live in `students/urls.py`, `
 
 All templates live in `core/templates/`:
 
-- `base.html` — main layout (sidebar, header, support modal, Tailwind CDN config)
+- `base.html` — main layout (sidebar, header, support modal, Tailwind CDN config). Also carries the site-wide `<head>` metadata: favicon + apple-touch-icon, `theme-color` (violet `#6d28d9`), meta description/author, full Open Graph set, and Twitter Card tags. Every content field is wrapped in a Django block (`meta_description`, `og_title`, `og_description`, `og_image`, `twitter_title`, `twitter_description`, `twitter_image`) so per-page templates can tailor link previews.
 - `home.html`, `login.html`, `schedule.html`, `fun_friday.html`, etc.
 - `payments/` — payment list, create, detail
 - `apps/` — email form views + `_email_preview.html` partial
@@ -60,6 +60,8 @@ All templates live in `core/templates/`:
 
 ## Static Files
 
+- `favicon.ico` — multi-resolution (16/32/48/64/128/256) icon generated from `images/logo.png`; referenced from `base.html` as both `rel="icon"` and `rel="shortcut icon"`
+- `images/logo.png` — 500×500 PNG; reused as `apple-touch-icon` and Open Graph image
 - `css/app.css` — sidebar transitions, Material Symbols icon font settings
 - `js/base.js` — notification/history dropdowns (loaded on every page)
 - `js/support.js` — support ticket modal
