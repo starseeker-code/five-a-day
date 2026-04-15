@@ -1,0 +1,40 @@
+version: 2
+
+updates:
+  # Python dependencies (pip / uv)
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: "Europe/Madrid"
+    open-pull-requests-limit: 5
+    target-branch: development
+    labels:
+      - dependencies
+      - python
+    groups:
+      # Group all non-breaking minor/patch updates into one PR
+      python-minor-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Django major versions require manual upgrade planning
+      - dependency-name: django
+        update-types: [version-update:semver-major]
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: "Europe/Madrid"
+    open-pull-requests-limit: 5
+    target-branch: development
+    labels:
+      - dependencies
+      - github-actions

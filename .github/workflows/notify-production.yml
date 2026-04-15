@@ -1,0 +1,81 @@
+name: Notify production
+
+# Fires whenever a new commit lands on main (production). Sends an email to
+# hellofiveaday@gmail.com so the team knows a production deploy is ready.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Send production notification
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need HEAD and HEAD~1 for diff summary
+
+      - name: Gather commit info
+        id: info
+        run: |
+          SHA=${{ github.sha }}
+          SHORT_SHA=$(git rev-parse --short "$SHA")
+          MESSAGE=$(git log -1 --format="%s" "$SHA")
+          AUTHOR=$(git log -1 --format="%an" "$SHA")
+          FILES_CHANGED=$(git diff --stat HEAD~1 HEAD | tail -1 || echo "unknown")
+
+          {
+            echo "short_sha=$SHORT_SHA"
+            echo "message=$MESSAGE"
+            echo "author=$AUTHOR"
+            echo "files_changed=$FILES_CHANGED"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_HOST_USER }}
+          password: ${{ secrets.EMAIL_SECRET }}
+          from: "Five a Day CI <${{ secrets.EMAIL_HOST_USER }}>"
+          to: hellofiveaday@gmail.com
+          subject: "[Five a Day] New commit on main — production deploy ready"
+          html_body: |
+            <h2>New commit on <code>main</code> (production)</h2>
+            <p>A new commit has landed on the <code>main</code> branch. Production deploy is ready when you are.</p>
+
+            <table cellpadding="6" style="border-collapse: collapse; font-family: sans-serif;">
+              <tr><td><strong>Commit</strong></td><td><code>${{ steps.info.outputs.message }}</code></td></tr>
+              <tr><td><strong>Author</strong></td><td>${{ steps.info.outputs.author }}</td></tr>
+              <tr><td><strong>SHA</strong></td><td><code>${{ steps.info.outputs.short_sha }}</code></td></tr>
+              <tr><td><strong>Files changed</strong></td><td>${{ steps.info.outputs.files_changed }}</td></tr>
+              <tr><td><strong>Repository</strong></td><td>${{ github.repository }}</td></tr>
+            </table>
+
+            <p style="margin-top: 1em;">
+              <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}" style="padding: 8px 16px; background: #6b46c1; color: white; text-decoration: none; border-radius: 4px;">View commit →</a>
+            </p>
+
+            <hr>
+            <h3>Next steps</h3>
+            <ol>
+              <li>Verify CI is green on this commit</li>
+              <li>Deploy to Cloud Run:
+                <pre style="background: #f4f4f4; padding: 8px;">gcloud builds submit --tag $IMAGE .
+            gcloud run deploy fiveaday --image=$IMAGE --region=europe-southwest1</pre>
+              </li>
+              <li>Run migrations if the schema changed:
+                <pre style="background: #f4f4f4; padding: 8px;">gcloud run jobs execute fiveaday-migrate --region=europe-southwest1 --wait</pre>
+              </li>
+            </ol>
+
+            <p style="color: #666; font-size: 12px;">
+              Sent automatically by the notify-production workflow on every push to <code>main</code>.
+            </p>

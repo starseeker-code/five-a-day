@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.0.1t-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.0.4-brightgreen?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
   <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
@@ -31,17 +31,20 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 | Environment | Version | Status |
 |-------------|---------|--------|
-| **Production** | v0.0.0 | ![undeployed](https://img.shields.io/badge/undeployed-red) |
-| **Testing (QA)** | v1.0.1t | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
-| **Development** | v1.0.0 | ![active](https://img.shields.io/badge/active-brightgreen) |
+| **Production** | v1.0.4 | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
+| **Testing (QA)** | v1.0.4 | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
+| **Development** | v1.0.4 | ![active](https://img.shields.io/badge/active-brightgreen) |
 
 | | |
 |---|---|
-| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [HTTPS.md](docs/HTTPS.md), [UV.md](docs/UV.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
+| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [GITHUB.md](docs/GITHUB.md), [HTTPS.md](docs/HTTPS.md), [UV.md](docs/UV.md), [CELERY.md](docs/CELERY.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.1t** | 2026-04-14 | QA/testing environment: `/testing/` dashboard, database seeding, backlog with email, error reporting, HTTPS guide, access control via `QA_TESTING_USERNAME` |
+| **v1.0.4** | 2026-04-15 | GitHub Actions CI/CD pipeline (lint, typecheck, tests, CodeQL, Dependabot), auto-merge `development` → `testing` with 24h delay + auto-PR to `main`, email notifications, branch protection rules, inspirational quote generator, GCP deployment plan, cleaned legacy Render config, `make version x.y.z` + `make pc-run` with auto version bump |
+| v1.0.3 | 2026-04-14 | Test coverage raised to 70% — 294 tests total (40+ new tests) across auth views, comms services, dashboard, schedule, management, and apps modules |
+| v1.0.2 | 2026-04-13 | Replaced Poetry with UV, full developer tooling (Ruff, mypy, bandit, pip-audit, pre-commit, pytest-cov, pytest-xdist, pytest-randomly) |
+| v1.0.1t | 2026-04-14 | QA/testing environment: `/testing/` dashboard, database seeding, backlog with email, error reporting, HTTPS guide, access control via `QA_TESTING_USERNAME` |
 | v1.0.0 | 2026-04-11 | Security hardening, query optimization (Case/When aggregates, N+1 fixes), GCP config, transaction safety |
 | v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 132 tests, frontend cleanup, full documentation |
 | v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
@@ -133,6 +136,18 @@ Built to centralize student records, automate billing cycles, and streamline par
     - [For developers: how the QA environment works](#for-developers-how-the-qa-environment-works)
       - [Access control for /testing/](#access-control-for-testing)
     - [GCP deployment plan](#gcp-deployment-plan)
+  - [CI/CD \& GitHub Actions](#cicd--github-actions)
+    - [Pipeline Overview](#pipeline-overview)
+    - [Branch Strategy](#branch-strategy)
+    - [Workflows](#workflows)
+    - [Automated Flows](#automated-flows)
+    - [Branch Protection — `main`](#branch-protection--main)
+    - [Branch Protection — `testing`](#branch-protection--testing)
+    - [Public Repository Hardening](#public-repository-hardening)
+    - [Required GitHub Secrets](#required-github-secrets)
+    - [Email Notifications](#email-notifications)
+    - [Dependabot](#dependabot)
+    - [CodeQL Security Scanning](#codeql-security-scanning)
   - [Contributing](#contributing)
     - [Development Workflow](#development-workflow)
     - [Code Conventions](#code-conventions)
@@ -143,8 +158,86 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ## Version History & Roadmap
 
-<details id="v101t" open>
-<summary><strong>v1.0.1t — QA Testing Environment (current, testing branch)</strong></summary>
+<details id="v104" open>
+<summary><strong>v1.0.4 — CI/CD Pipeline, GCP Migration Plan, Quote Generator (current)</strong></summary>
+
+**GitHub Actions CI/CD** (new — see [docs/GITHUB.md](docs/GITHUB.md))
+
+- `ci.yml` — three parallel jobs on every push/PR: Ruff + Bandit lint, mypy type check, pytest against PostgreSQL 16 service container with coverage uploaded to Codecov
+- `auto-merge.yml` — hourly cron that merges `development` → `testing` after 24h of inactivity and CI passing, then auto-creates a PR `testing` → `main`
+- `codeql.yml` — weekly Python security analysis (OWASP Top 10, Django-specific queries)
+- `notify-production.yml` — emails `hellofiveaday@gmail.com` on every push to `main` with commit info and deploy instructions
+- Owner email notifications when `development` → `testing` merge lands + PR opened to `main`
+- `dependabot.yml` — grouped weekly Python and GitHub Actions updates targeting `development`
+- `CODEOWNERS` — auto-request reviews from both owner accounts
+
+**GCP migration plan** (new — see [DEPLOYMENT.md](DEPLOYMENT.md))
+
+- Full Cloud Run + Cloud SQL architecture documented
+- Three environments: local Docker (dev), Compute Engine e2-micro free tier (testing), Cloud Run + Cloud SQL (production)
+- Cost estimate: ~$15-27/month for production, $0/month for testing
+- Celery replacement strategy using Cloud Scheduler + Cloud Run Jobs
+- Cleaned legacy Render config (`render.yaml` removed, commented nginx and pgAdmin services removed from docker-compose)
+
+**Dashboard enhancement**
+
+- Inspirational quote generator on `/home` — fetches two daily quotes from `zenquotes.io`, stores them in a 48h cookie, rotates daily (day 0 shows quote 1, day 1+ shows quote 2), graceful fallback to the default Spanish subtitle on API failure
+
+**Developer tooling**
+
+- `make version x.y.z` — positional argument (replaces `V=x.y.z`) with confirmation guard before writing
+- `make pc-run` — renamed from `pre-commit-run`; after a clean pass, prompts to auto-increment the patch version in `pyproject.toml` and `project/settings.py`
+
+**Bug fixes**
+
+- Celery worker and beat containers added to docker-compose with correct permissions and health checks
+- Several payment and enrollment issues fixed
+
+</details>
+
+<details id="v103">
+<summary><strong>v1.0.3 — Test Coverage Expansion (70%)</strong></summary>
+
+**Testing**
+
+- Test count raised from 252 to **294** (40+ new tests)
+- Coverage raised to **70%** across `core`, `students`, `billing`, `comms`
+- New test files: `test_auth_views.py`, `test_comms_services.py`, `test_dashboard.py`, `test_schedule_views.py`, `test_management_views.py`, `test_app_forms.py`
+- Additional parametrized test cases for email-form views and error pages
+
+**Coverage tooling**
+
+- `coverage.svg` badge now reflects the improved coverage
+- `make coverage-badge` command streamlines badge regeneration
+
+</details>
+
+<details id="v102">
+<summary><strong>v1.0.2 — UV Migration & Developer Tooling</strong></summary>
+
+**Dependency management**
+
+- Replaced Poetry with UV (see [docs/UV.md](docs/UV.md))
+- `uv.lock` replaces `poetry.lock`
+- All Make commands updated to use `uv run`
+
+**Developer tooling**
+
+- **Ruff** — unified lint + format (replaces flake8, isort, black)
+- **mypy** with `django-stubs` — static type checking
+- **bandit** — Python security linter
+- **pip-audit** — dependency CVE scanning
+- **pytest-xdist** — parallel test execution (`-n auto`)
+- **pytest-randomly** — randomized test order with reproducible seeds
+- **pytest-cov** — coverage reports (HTML + XML + terminal)
+- **pre-commit** hooks — Ruff, mypy, bandit on every commit
+
+All tools configured in `pyproject.toml` — single source of truth.
+
+</details>
+
+<details id="v101t">
+<summary><strong>v1.0.1t — QA Testing Environment</strong></summary>
 
 **Testing infrastructure**
 - QA Docker Compose overlay (`docker-compose.testing.yml`) — Gunicorn, `DEBUG=False`, separate DB volume
@@ -1430,6 +1523,196 @@ gcloud run jobs create seed-testdata \
 ```
 
 After deployment, Cloud Run provides a URL like `https://fiveaday-testing-xxxxx.europe-southwest1.run.app` with HTTPS enabled automatically.
+
+---
+
+## CI/CD & GitHub Actions
+
+The project runs a fully automated CI/CD pipeline on GitHub Actions. Every push is tested, every merge is audited, and production is reached only through a protected pull request. The full configuration reference is in [docs/GITHUB.md](docs/GITHUB.md) — this section is the overview.
+
+### Pipeline Overview
+
+```text
+Push to development
+        │
+        ▼
+CI runs (lint + typecheck + tests) + CodeQL
+        │
+        │  hourly cron
+        ▼
+Auto-merge check
+  • development ahead of testing?
+  • last commit ≥ 24 h old?
+  • CI passing on that commit?
+        │ all yes
+        ▼
+git merge development → testing
+(commit: "YYYY-MM-DD - <last commit message>")
+        │
+        ├── CI re-runs on testing
+        └── PR created: testing → main
+        │
+        ▼
+Email to owners (OWNER_EMAILS)
+        │
+        ▼
+Manual review + Code Owner approval
+        │
+        ▼
+Merge to main (protected — all checks required)
+        │
+        ▼
+Email to hellofiveaday@gmail.com
+(production deploy ready)
+```
+
+### Branch Strategy
+
+| Branch        | Purpose                                  | Protected                | Direct push              |
+|---------------|------------------------------------------|--------------------------|--------------------------|
+| `main`        | Production. Every commit is deployable.  | Full protection          | No (PR + review only)    |
+| `testing`     | Staging. Auto-merged from development.   | Minimal (no force/delete)| Only from auto-merge flow|
+| `development` | Active development. Day-to-day work.     | None                     | Yes                      |
+
+Feature branches off `development` are welcome for non-trivial work, but the expected flow is: work on `development` → wait 24 h → auto-promoted to `testing` → manual merge to `main`.
+
+### Workflows
+
+| Workflow | File | Triggers | Purpose |
+|----------|------|----------|---------|
+| **CI** | [`ci.yml`](.github/workflows/ci.yml) | Push to `development`/`testing`/`main`; PRs to `testing`/`main` | Three parallel jobs — **Lint** (Ruff + Bandit), **Type check** (mypy), **Tests** (pytest + PostgreSQL 16 service container + Codecov upload) |
+| **Auto-merge** | [`auto-merge.yml`](.github/workflows/auto-merge.yml) | Hourly cron + manual dispatch | Merges `development` → `testing` when conditions pass, creates PR to `main`, emails owners |
+| **CodeQL** | [`codeql.yml`](.github/workflows/codeql.yml) | Push to `main`/`testing`/`development`; PRs to `main`; Monday 04:30 UTC | Python static security analysis (OWASP Top 10, Django-specific queries) |
+| **Notify production** | [`notify-production.yml`](.github/workflows/notify-production.yml) | Push to `main` | Emails `hellofiveaday@gmail.com` with commit info and `gcloud` deploy instructions |
+| **Dependabot** | [`dependabot.yml`](.github/dependabot.yml) | Weekly (Mondays 08:00 Madrid) | Grouped Python and GitHub Actions updates targeting `development` |
+
+Concurrent CI runs on the same branch cancel each other automatically — new pushes always produce a fresh run.
+
+### Automated Flows
+
+**1. You push to `development`**
+
+- CI triggers immediately (lint, typecheck, tests run in parallel, ~2-4 min)
+- CodeQL triggers immediately (weekly scan also runs independently)
+- The hourly auto-merge cron checks this commit every hour until it is ≥ 24 h old with passing CI, then promotes to `testing`
+
+**2. Auto-merge fires**
+
+- Creates a `--no-ff` merge commit on `testing` titled `YYYY-MM-DD - <your last commit message>`
+- Pushes to `testing` (which triggers CI on `testing`)
+- Opens PR `testing → main` if one is not already open (title matches the merge commit)
+- Sends an HTML email to `OWNER_EMAILS` with a "Review PR" button
+
+**3. You review and merge the PR**
+
+- All required checks must pass (Lint, Type check, Tests, CodeQL alerts, Code Owner approval)
+- You cannot approve your own PR — the second owner account approves
+- On merge, `main` is updated
+
+**4. Production notification fires**
+
+- `notify-production.yml` sends an email to `hellofiveaday@gmail.com`
+- Email contains commit info, file-change summary, and the exact `gcloud` commands to deploy to Cloud Run
+
+### Branch Protection — `main`
+
+Configure at **Settings → Branches → Add ruleset**, target `main`:
+
+**Required status checks** (names must match CI job names exactly):
+
+| Check | Workflow |
+|-------|----------|
+| `Lint` | ci.yml |
+| `Type check` | ci.yml |
+| `Tests` | ci.yml |
+| `Analyze Python` | codeql.yml |
+
+**Protection rules** (every item below enabled):
+
+| Rule | Setting |
+|------|---------|
+| Require a pull request before merging | ✓ |
+| Required approvals | **1** (higher if you add collaborators) |
+| Dismiss stale reviews when new commits are pushed | ✓ |
+| Require review from Code Owners | ✓ |
+| Require status checks to pass | ✓ |
+| Require branches to be up to date before merging | ✓ |
+| Require conversation resolution before merging | ✓ |
+| Require signed commits | ✓ (strongly recommended for a public repo) |
+| Require linear history | ✓ (enforces squash/rebase merges) |
+| Restrict who can push to matching branches | ✓ |
+| Do not allow bypassing the above settings | ✓ (admins follow the same rules) |
+| Allow force pushes | ✗ |
+| Allow deletions | ✗ |
+
+### Branch Protection — `testing`
+
+`testing` needs direct pushes from the auto-merge workflow, so PR requirements are **not** enforced. Apply only safety rails:
+
+| Rule | Setting |
+|------|---------|
+| Require a pull request before merging | ✗ |
+| Allow force pushes | ✗ |
+| Allow deletions | ✗ |
+| Require status checks to pass (optional) | ✓ — lets CI block a broken auto-merge from polluting `testing` further |
+
+### Public Repository Hardening
+
+Because this repository is **public**, extra care is taken to prevent accidental secret leaks, abuse of the CI, and unreviewed contributions:
+
+| Control | Where | Why |
+|---------|-------|-----|
+| **GitHub Secret Scanning** | Settings → Code security | Free for public repos — detects committed secrets across history |
+| **Push Protection** | Settings → Code security | Free for public repos — blocks pushes that contain secrets before they land |
+| **CodeQL** | `codeql.yml` + Settings → Code security | Free for public repos — weekly security analysis |
+| **Dependabot alerts + security updates** | Settings → Code security | Free for public repos — fixes known CVEs in dependencies |
+| **Require 2FA for all contributors** | Organization settings (if in an org) | Prevents compromised account pushes |
+| **Restrict fork PRs from running CI with secrets** | Settings → Actions → Fork PR workflows: require approval for first-time contributors | Prevents secret exfiltration via malicious PRs from forks |
+| **Actions allow-list** | Settings → Actions → Allow specific actions | Prevents supply-chain attacks — pin to verified creators only |
+| **Workflow permissions default: read-only** | Settings → Actions → Workflow permissions | Individual workflows explicitly request `write` where needed |
+| **Block workflows from approving PRs** | Settings → Actions → Allow GitHub Actions to create and approve pull requests: **only allow create, not approve** | Humans must approve, even automated PRs |
+| **SECURITY.md** | Root of the repo | Public disclosure policy so researchers know how to report vulnerabilities privately |
+| **License file** | Root of the repo | Required for a public repo — defines what others can legally do with the code |
+
+The `.env` file is gitignored and **never** committed. Production secrets live in GCP Secret Manager (see [DEPLOYMENT.md](DEPLOYMENT.md)), not in the repository or in GitHub Secrets. GitHub Secrets are used only for CI operations (sending notification emails, uploading coverage).
+
+### Required GitHub Secrets
+
+Configure at **Settings → Secrets and variables → Actions**:
+
+| Secret | Required by | Purpose |
+|--------|-------------|---------|
+| `GH_PAT` | auto-merge.yml | Fine-grained Personal Access Token. Pushes to `testing` and creates PRs *while triggering downstream CI* (which the default `GITHUB_TOKEN` cannot do). Permissions: Contents RW, Pull requests RW, Checks R, Metadata R |
+| `EMAIL_HOST_USER` | auto-merge.yml, notify-production.yml | Gmail address used to send notification emails |
+| `EMAIL_SECRET` | auto-merge.yml, notify-production.yml | Gmail App Password — can be the same one the application uses for transactional email |
+| `OWNER_EMAILS` | auto-merge.yml | Comma-separated recipient list for the `development → testing` merge notification |
+| `CODECOV_TOKEN` | ci.yml | Optional — only needed for private repos. Public repos push coverage anonymously |
+
+**Rotate `GH_PAT` annually.** Without it, the auto-merge falls back to the default `GITHUB_TOKEN`, which cannot trigger CI on PRs it creates — breaking the pipeline silently.
+
+### Email Notifications
+
+| Event | Recipient | Sent by |
+|-------|-----------|---------|
+| `development → testing` merged + PR opened to `main` | `OWNER_EMAILS` (secret) | auto-merge.yml |
+| New commit on `main` (production ready to deploy) | `hellofiveaday@gmail.com` (hardcoded) | notify-production.yml |
+
+Both use Gmail SMTP via the `dawidd6/action-send-mail@v3` action. Emails include HTML formatting, links to the commit/PR, and actionable next steps.
+
+### Dependabot
+
+Dependabot opens **weekly PRs on `development`** (Mondays, 08:00 Europe/Madrid) for:
+
+- **Python packages** — minor and patch updates grouped into a single PR. Django major version bumps are intentionally ignored (require manual upgrade planning).
+- **GitHub Actions** — updates to `actions/*`, `astral-sh/setup-uv`, `dawidd6/action-send-mail`, etc.
+
+PRs are labelled `dependencies` + `python` or `github-actions` for easy filtering. The normal 24 h cycle carries merged updates to `testing` and then to `main`.
+
+### CodeQL Security Scanning
+
+Runs on every push and PR to `main`, plus a full scan every Monday at 04:30 UTC. Uses the `security-and-quality` query suite — covers OWASP Top 10, CWE Top 25, and Django-specific queries (SQL injection, path traversal, hardcoded credentials, insecure deserialization, etc.).
+
+Results appear in **Security → Code scanning alerts**. A new alert on `main` does not auto-block future merges unless branch protection is configured to require the CodeQL check.
 
 ---
 
