@@ -5,6 +5,10 @@
 {% block sidebar_class %}w-[7.5rem]{% endblock %}
 {% block sidebar_hover %}expandable-sidebar{% endblock %}
 
+{% block page_subtitle %}
+    {% if inspirational_author %}&ldquo;{{ inspirational_quote }}&rdquo; &mdash; {{ inspirational_author }}{% else %}{{ inspirational_quote }}{% endif %}
+{% endblock %}
+
 {% block header_actions %}
 <a href="{% url 'create_payment' %}" class="header-action-btn bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 hover:shadow-md text-base font-semibold leading-none no-underline">
     <span class="material-symbols-outlined text-[20px]">payment</span> Nuevo Pago
@@ -83,7 +87,7 @@
         <div class="mt-4 text-sm text-neutral-600">
             {% if birthday_count > 0 %}
                 {% for bday in birthdays %}
-                    <span class="text-neutral-700">{{ bday.name }}</span> <span class="text-neutral-400">({{ bday.day }})</span>{% if not forloop.last %}, {% endif %}
+                    <span class="text-neutral-700">{{ bday.name }}</span> <span class="text-neutral-400">({{ bday.day }}) — cumple {{ bday.age }}</span>{% if not forloop.last %}, {% endif %}
                 {% endfor %}
                 {% if has_more_birthdays %}<span class="text-neutral-400"> ...</span>{% endif %}
             {% else %}

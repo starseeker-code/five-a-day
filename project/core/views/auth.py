@@ -16,8 +16,15 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        valid_username = os.getenv("LOGIN_USERNAME", "fiveaday")
-        valid_password = os.getenv("LOGIN_PASSWORD", "Fiveaday123!")
+        valid_username = os.getenv("LOGIN_USERNAME")
+        valid_password = os.getenv("LOGIN_PASSWORD")
+
+        if not valid_username or not valid_password:
+            messages.error(
+                request,
+                "Login credentials not configured. Set LOGIN_USERNAME and LOGIN_PASSWORD environment variables.",
+            )
+            return render(request, "login.html", {"google_oauth_available": False})
 
         if username == valid_username and password == valid_password:
             request.session["is_authenticated"] = True
@@ -26,9 +33,7 @@ def login_view(request):
         else:
             messages.error(request, "❌ Usuario o contraseña incorrectos")
 
-    google_oauth_available = bool(
-        os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET")
-    )
+    google_oauth_available = bool(os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET"))
     return render(request, "login.html", {"google_oauth_available": google_oauth_available})
 
 
@@ -62,6 +67,7 @@ def _google_callback_uri(request):
 
 def _build_flow(client_id, client_secret, callback_uri, state=None):
     from google_auth_oauthlib.flow import Flow
+
     cfg = {
         "web": {
             "client_id": client_id,
@@ -80,6 +86,7 @@ def _build_flow(client_id, client_secret, callback_uri, state=None):
 
 
 # ── Google OAuth views ───────────────────────────────────────────────
+
 
 def google_oauth_redirect(request):
     """Redirect the browser to Google's OAuth2 consent screen."""
@@ -107,16 +114,15 @@ def google_oauth_redirect(request):
 def google_oauth_callback(request):
     """Handle the OAuth2 redirect from Google and establish a session."""
     import urllib.parse
-    from google.oauth2 import id_token
+
     from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token
 
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
     # Checked backend-only — never sent to the frontend
     allowed_email = (
-        os.getenv("GOOGLE_ALLOWED_EMAIL")
-        or os.getenv("EMAIL_HOST_USER")
-        or os.getenv("DJANGO_SUPERUSER_EMAIL", "")
+        os.getenv("GOOGLE_ALLOWED_EMAIL") or os.getenv("EMAIL_HOST_USER") or os.getenv("DJANGO_SUPERUSER_EMAIL", "")
     )
 
     if settings.DEBUG:

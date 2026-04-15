@@ -1,10 +1,11 @@
-from pathlib import Path
-from dotenv import load_dotenv
 import os
-import dj_database_url
+from pathlib import Path
 from urllib.parse import urlparse
 
-load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env', override=True)
+import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # NOTA: Al cambiar la versión, actualizar también en:
 #   - readme.md (badge y texto)
 #   - pyproject.toml (campo version)
-APP_VERSION = os.getenv("APP_VERSION", "0.30.2")
+APP_VERSION = os.getenv("APP_VERSION", "1.0.4")
 
 # ============================================================================
 # SECURITY SETTINGS
@@ -40,19 +41,16 @@ if not DEBUG:
 
     # HSTS (HTTP Strict Transport Security)
     SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))  # 1 año
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = (
-        os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower() == "true"
-    )
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower() == "true"
     SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "True").lower() == "true"
 
     # Otros headers de seguridad
-    SECURE_CONTENT_TYPE_NOSNIFF = (
-        os.getenv("SECURE_CONTENT_TYPE_NOSNIFF", "True").lower() == "true"
-    )
-    SECURE_BROWSER_XSS_FILTER = (
-        os.getenv("SECURE_BROWSER_XSS_FILTER", "True").lower() == "true"
-    )
+    SECURE_CONTENT_TYPE_NOSNIFF = os.getenv("SECURE_CONTENT_TYPE_NOSNIFF", "True").lower() == "true"
+    SECURE_BROWSER_XSS_FILTER = os.getenv("SECURE_BROWSER_XSS_FILTER", "True").lower() == "true"
     X_FRAME_OPTIONS = os.getenv("X_FRAME_OPTIONS", "DENY")
+
+    # Trust the X-Forwarded-Proto header from reverse proxies (Nginx, Cloud Run LB)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
     # CSRF Trusted Origins (para producción)
     csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
@@ -73,16 +71,16 @@ if not DEBUG:
 #   - settings.py: Define configuraciones según el entorno (actualmente solo lo almacena)
 ENVIRONMENT = os.getenv("DJANGO_ENV", "development")
 
+# QA testing tools — only enabled when DJANGO_ENV=testing and a QA user is configured
+IS_TESTING_ENV = ENVIRONMENT == "testing" and not DEBUG
+QA_TESTING_USERNAME = os.getenv("QA_TESTING_USERNAME", "")
+
 # ============================================================================
 # SESSION CONFIGURATION
 # ============================================================================
-SESSION_COOKIE_AGE = int(
-    os.getenv("SESSION_COOKIE_AGE", "86400")
-)  # 24 horas por defecto
+SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", "86400"))  # 24 horas por defecto
 SESSION_COOKIE_HTTPONLY = os.getenv("SESSION_COOKIE_HTTPONLY", "True").lower() == "true"
-SESSION_COOKIE_SAMESITE = os.getenv(
-    "SESSION_COOKIE_SAMESITE", "Lax"
-)  # 'Strict' en producción
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Strict" if not DEBUG else "Lax")
 
 # ============================================================================
 # SUPPORT / TICKETING
@@ -92,10 +90,8 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", None)
 # ============================================================================
 # CSRF CONFIGURATION
 # ============================================================================
-CSRF_COOKIE_HTTPONLY = os.getenv("CSRF_COOKIE_HTTPONLY", "False").lower() == "true"
-CSRF_COOKIE_SAMESITE = os.getenv(
-    "CSRF_COOKIE_SAMESITE", "Lax"
-)  # 'Strict' en producción
+CSRF_COOKIE_HTTPONLY = os.getenv("CSRF_COOKIE_HTTPONLY", "True" if not DEBUG else "False").lower() == "true"
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Strict" if not DEBUG else "Lax")
 
 # Installed packages: httpx celery gspread pytest pandas markdown dotenv
 INSTALLED_APPS = [  # https://www.djangoproject.com/
@@ -128,6 +124,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.QAErrorEmailMiddleware",  # QA: email errors to support
     "core.middleware.SimpleAuthMiddleware",  # Middleware de autenticación simple
 ]
 
@@ -163,8 +160,7 @@ database_url = os.getenv("DATABASE_URL", "").strip()
 parsed_database_url = urlparse(database_url) if database_url else None
 database_url_host = parsed_database_url.hostname if parsed_database_url else ""
 database_url_has_valid_host = bool(
-    database_url_host
-    and ("." in database_url_host or database_url_host in ("localhost", "127.0.0.1"))
+    database_url_host and ("." in database_url_host or database_url_host in ("localhost", "127.0.0.1"))
 )
 
 if database_url and not database_url_has_valid_host:
@@ -279,6 +275,7 @@ LOGGING = {
 # ============================================================================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR.parent / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Configuración de WhiteNoise para producción
 STORAGES = {
@@ -333,7 +330,7 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 
 # Configuración de colas
 CELERY_TASK_ROUTES = {
-    "core.tasks.send_*": {"queue": "emails"},
+    "comms.tasks.send_*": {"queue": "emails"},
 }
 
 # Modo eager cuando no hay broker (plan free)

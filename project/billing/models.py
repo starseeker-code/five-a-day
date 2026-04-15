@@ -1,8 +1,10 @@
-from django.db import models
-from django.core.validators import MinValueValidator
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.db import models
+
 from billing import constants
 
 
@@ -41,6 +43,7 @@ def academic_year_end_date(year):
 # SITE CONFIGURATION - Singleton para configuración del sitio
 # ============================================================================
 
+
 class SiteConfiguration(models.Model):
     """
     Modelo singleton para almacenar configuración editable del sitio.
@@ -51,115 +54,115 @@ class SiteConfiguration(models.Model):
     children_enrollment_fee = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('40.00'),
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Matrícula niños'
+        default=Decimal("40.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
+        verbose_name="Matrícula niños",
     )
     adult_enrollment_fee = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('20.00'),
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Matrícula adultos'
+        default=Decimal("20.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
+        verbose_name="Matrícula adultos",
     )
 
     # Mensualidades (Monthly Fees)
     full_time_monthly_fee = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('54.00'),
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Mensualidad jornada completa'
+        default=Decimal("54.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
+        verbose_name="Mensualidad jornada completa",
     )
     part_time_monthly_fee = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('36.00'),
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Mensualidad media jornada'
+        default=Decimal("36.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
+        verbose_name="Mensualidad media jornada",
     )
     adult_group_monthly_fee = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('60.00'),
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Mensualidad grupo adultos'
+        default=Decimal("60.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
+        verbose_name="Mensualidad grupo adultos",
     )
 
     # Descuentos (Discounts)
     language_cheque_discount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('20.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Cheque idioma (€ fijo)'
+        default=Decimal("20.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Cheque idioma (€ fijo)",
     )
     quarterly_enrollment_discount = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('5.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Matrícula trimestral (%)'
+        default=Decimal("5.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Matrícula trimestral (%)",
     )
     old_student_discount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('20.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Alumno antiguo (€ fijo)'
+        default=Decimal("20.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Alumno antiguo (€ fijo)",
     )
     june_discount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('20.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Descuento junio — completar año (€ fijo)'
+        default=Decimal("20.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Descuento junio — completar año (€ fijo)",
     )
     full_year_bonus = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        default=Decimal('20.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Año completo (€ fijo, no adultos)'
+        default=Decimal("20.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Año completo (€ fijo, no adultos)",
     )
     sibling_discount = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('5.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Hermanos (% mensual)'
+        default=Decimal("5.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Hermanos (% mensual)",
     )
     half_month_discount = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('50.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Medio mes — septiembre (%)'
+        default=Decimal("50.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Medio mes — septiembre (%)",
     )
     one_week_discount = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('75.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Solo 1 semana — primer mes (%)'
+        default=Decimal("75.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Solo 1 semana — primer mes (%)",
     )
     three_week_discount = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('25.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Solo 3 semanas (%)'
+        default=Decimal("25.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Solo 3 semanas (%)",
     )
 
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'site_configuration'
-        verbose_name = 'Configuración del sitio'
-        verbose_name_plural = 'Configuración del sitio'
+        db_table = "site_configuration"
+        verbose_name = "Configuración del sitio"
+        verbose_name_plural = "Configuración del sitio"
 
     def __str__(self):
-        return 'Configuración del sitio'
+        return "Configuración del sitio"
 
     def save(self, *args, **kwargs):
         """Ensure only one instance exists (singleton pattern)"""
@@ -176,45 +179,36 @@ class SiteConfiguration(models.Model):
         Obtiene la configuración del sitio (crea una si no existe).
         Usa valores por defecto de constants.py si no hay configuración.
         """
-        try:
-            config = cls.objects.get(pk=1)
-        except cls.DoesNotExist:
-            config = cls.objects.create(
-                pk=1,
-                children_enrollment_fee=constants.CHILDREN_ENROLLMENT_FEE,
-                adult_enrollment_fee=constants.ADULT_ENROLLMENT_FEE,
-                full_time_monthly_fee=constants.FULL_TIME_MONTHLY_FEE,
-                part_time_monthly_fee=constants.PART_TIME_MONTHLY_FEE,
-                adult_group_monthly_fee=constants.ADULT_GROUP_MONTHLY_FEE,
-                language_cheque_discount=constants.LANGUAGE_CHEQUE_DISCOUNT[0],
-                quarterly_enrollment_discount=constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
-                old_student_discount=constants.OLD_STUDENT_DISCOUNT[0],
-                june_discount=constants.JUNE_DISCOUNT[0],
-                full_year_bonus=constants.FULL_YEAR_BONUS[0],
-                sibling_discount=constants.SIBLING_DISCOUNT[0],
-                half_month_discount=constants.HALF_MONTH_DISCOUNT[0],
-                one_week_discount=constants.ONE_WEEK_DISCOUNT[0],
-                three_week_discount=constants.THREE_WEEK_DISCOUNT[0],
-            )
+        config, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                "children_enrollment_fee": constants.CHILDREN_ENROLLMENT_FEE,
+                "adult_enrollment_fee": constants.ADULT_ENROLLMENT_FEE,
+                "full_time_monthly_fee": constants.FULL_TIME_MONTHLY_FEE,
+                "part_time_monthly_fee": constants.PART_TIME_MONTHLY_FEE,
+                "adult_group_monthly_fee": constants.ADULT_GROUP_MONTHLY_FEE,
+                "language_cheque_discount": constants.LANGUAGE_CHEQUE_DISCOUNT[0],
+                "quarterly_enrollment_discount": constants.QUARTERLY_ENROLLMENT_DISCOUNT[0],
+                "old_student_discount": constants.OLD_STUDENT_DISCOUNT[0],
+                "june_discount": constants.JUNE_DISCOUNT[0],
+                "full_year_bonus": constants.FULL_YEAR_BONUS[0],
+                "sibling_discount": constants.SIBLING_DISCOUNT[0],
+                "half_month_discount": constants.HALF_MONTH_DISCOUNT[0],
+                "one_week_discount": constants.ONE_WEEK_DISCOUNT[0],
+                "three_week_discount": constants.THREE_WEEK_DISCOUNT[0],
+            },
+        )
         return config
 
 
 class EnrollmentType(models.Model):
-    name = models.CharField(
-        max_length=20,
-        choices=constants.ENROLLMENT_TYPE_CHOICES,
-        unique=True
-    )
+    name = models.CharField(max_length=20, choices=constants.ENROLLMENT_TYPE_CHOICES, unique=True)
     display_name = models.CharField(max_length=50)
     base_amount_full_time = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
     )
     base_amount_part_time = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
     )
     description = models.TextField(blank=True)
     active = models.BooleanField(default=True)
@@ -222,68 +216,37 @@ class EnrollmentType(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'enrollment_types'
+        db_table = "enrollment_types"
 
     def __str__(self):
         return self.display_name
 
+
 class Enrollment(models.Model):
-    student = models.ForeignKey(
-        'students.Student',
-        on_delete=models.PROTECT,
-        related_name='enrollments'
-    )
-    enrollment_type = models.ForeignKey(
-        EnrollmentType,
-        on_delete=models.PROTECT,
-        related_name='enrollments'
-    )
+    student = models.ForeignKey("students.Student", on_delete=models.PROTECT, related_name="enrollments")
+    enrollment_type = models.ForeignKey(EnrollmentType, on_delete=models.PROTECT, related_name="enrollments")
 
     enrollment_period_start = models.DateField()
     enrollment_period_end = models.DateField()
     academic_year = models.CharField(max_length=9, default=current_academic_year)
-    schedule_type = models.CharField(
-        max_length=20,
-        choices=constants.SCHEDULE_TYPE_CHOICES,
-        default='full_time'
-    )
+    schedule_type = models.CharField(max_length=20, choices=constants.SCHEDULE_TYPE_CHOICES, default="full_time")
     payment_modality = models.CharField(
-        max_length=10,
-        choices=constants.PAYMENT_MODALITY_CHOICES,
-        default='monthly',
-        verbose_name='Modalidad de pago'
+        max_length=10, choices=constants.PAYMENT_MODALITY_CHOICES, default="monthly", verbose_name="Modalidad de pago"
     )
-    has_language_cheque = models.BooleanField(
-        default=False,
-        verbose_name='Cheque idioma'
-    )
-    is_sibling_discount = models.BooleanField(
-        default=False,
-        verbose_name='Descuento hermano'
-    )
+    has_language_cheque = models.BooleanField(default=False, verbose_name="Cheque idioma")
+    is_sibling_discount = models.BooleanField(default=False, verbose_name="Descuento hermano")
 
     enrollment_amount = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
     )
     discount_percentage = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[MinValueValidator(Decimal('0.00'))]
+        max_digits=5, decimal_places=2, default=Decimal("0.00"), validators=[MinValueValidator(Decimal("0.00"))]
     )
     final_amount = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(constants.MIN_ENROLLMENT_AMOUNT)]
     )
 
-    status = models.CharField(
-        max_length=10,
-        choices=constants.ENROLLMENT_STATUS_CHOICES,
-        default='pending'
-    )
+    status = models.CharField(max_length=10, choices=constants.ENROLLMENT_STATUS_CHOICES, default="pending")
     enrollment_date = models.DateField()
 
     document_url = models.URLField(blank=True)
@@ -293,19 +256,18 @@ class Enrollment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'enrollments'
+        db_table = "enrollments"
         indexes = [
-            models.Index(fields=['student']),
-            models.Index(fields=['status']),
-            models.Index(fields=['enrollment_date']),
-            models.Index(fields=['enrollment_period_start']),
+            models.Index(fields=["student"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["academic_year"]),
+            models.Index(fields=["enrollment_date"]),
+            models.Index(fields=["enrollment_period_start"]),
         ]
         # Prevent overlapping active enrollments for the same student
         constraints = [
             models.UniqueConstraint(
-                fields=['student'],
-                condition=models.Q(status='active'),
-                name='unique_active_enrollment_per_student'
+                fields=["student"], condition=models.Q(status="active"), name="unique_active_enrollment_per_student"
             )
         ]
 
@@ -319,11 +281,11 @@ class Enrollment(models.Model):
         if not self.final_amount:
             base_amount = (
                 self.enrollment_type.base_amount_full_time
-                if self.schedule_type == 'full_time'
+                if self.schedule_type == "full_time"
                 else self.enrollment_type.base_amount_part_time
             )
 
-            discount_amount = base_amount * (self.discount_percentage / 100)
+            discount_amount = base_amount * (self.discount_percentage / Decimal("100"))
             self.final_amount = base_amount - discount_amount
 
             if not self.enrollment_amount:
@@ -331,74 +293,38 @@ class Enrollment(models.Model):
 
         super().save(*args, **kwargs)
 
+    def _total_paid(self):
+        return self.payments.filter(payment_status="completed").aggregate(total=models.Sum("amount"))[
+            "total"
+        ] or Decimal("0.00")
+
     @property
     def is_paid(self):
-        """Check if enrollment is fully paid"""
-        total_payments = self.payments.filter(
-            payment_status='completed'
-        ).aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0.00')
-
-        return total_payments >= self.final_amount
+        return self._total_paid() >= self.final_amount
 
     @property
     def remaining_amount(self):
-        """Calculate remaining amount to be paid"""
-        total_payments = self.payments.filter(
-            payment_status='completed'
-        ).aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0.00')
+        return max(self.final_amount - self._total_paid(), Decimal("0.00"))
 
-        return max(self.final_amount - total_payments, Decimal('0.00'))
 
 class Payment(models.Model):
-    student = models.ForeignKey(
-        'students.Student',
-        on_delete=models.PROTECT,
-        related_name='payments'
-    )
-    enrollment = models.ForeignKey(
-        Enrollment,
-        on_delete=models.PROTECT,
-        related_name='payments',
-        null=True,
-        blank=True
-    )
+    student = models.ForeignKey("students.Student", on_delete=models.PROTECT, related_name="payments")
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.PROTECT, related_name="payments", null=True, blank=True)
     parent = models.ForeignKey(
-        'students.Parent',
-        on_delete=models.PROTECT,
-        related_name='payments',
-        null=True,
-        blank=True
+        "students.Parent", on_delete=models.PROTECT, related_name="payments", null=True, blank=True
     )
 
-    payment_type = models.CharField(
-        max_length=20,
-        choices=constants.PAYMENT_TYPE_CHOICES,
-        default='monthly'
-    )
-    payment_method = models.CharField(
-        max_length=15,
-        choices=constants.PAYMENT_METHOD_CHOICES,
-        default='transfer'
-    )
+    payment_type = models.CharField(max_length=20, choices=constants.PAYMENT_TYPE_CHOICES, default="monthly")
+    payment_method = models.CharField(max_length=15, choices=constants.PAYMENT_METHOD_CHOICES, default="transfer")
 
     amount = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(constants.MIN_PAYMENT_AMOUNT)]
+        max_digits=8, decimal_places=2, validators=[MinValueValidator(constants.MIN_PAYMENT_AMOUNT)]
     )
     currency = models.CharField(max_length=3, default=constants.DEFAULT_CURRENCY)
 
-    payment_status = models.CharField(
-        max_length=10,
-        choices=constants.PAYMENT_STATUS_CHOICES,
-        default='pending'
-    )
-    due_date = models.DateField()  # When payment is expected
-    payment_date = models.DateField(null=True, blank=True)  # When payment was actually made
+    payment_status = models.CharField(max_length=10, choices=constants.PAYMENT_STATUS_CHOICES, default="pending")
+    due_date = models.DateField()
+    payment_date = models.DateField(null=True, blank=True)
 
     concept = models.CharField(max_length=200)
     reference_number = models.CharField(max_length=50, blank=True)  # Bank reference, receipt number, etc.
@@ -410,14 +336,14 @@ class Payment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'payments'
+        db_table = "payments"
         indexes = [
-            models.Index(fields=['student']),
-            models.Index(fields=['parent']),
-            models.Index(fields=['payment_status']),
-            models.Index(fields=['due_date']),
-            models.Index(fields=['payment_date']),
-            models.Index(fields=['enrollment']),
+            models.Index(fields=["student"]),
+            models.Index(fields=["parent"]),
+            models.Index(fields=["payment_status"]),
+            models.Index(fields=["due_date"]),
+            models.Index(fields=["payment_date"]),
+            models.Index(fields=["enrollment"]),
         ]
 
     def __str__(self):
@@ -427,11 +353,11 @@ class Payment(models.Model):
         """Validation logic"""
 
         # If payment is completed, payment_date should be set
-        if self.payment_status == 'completed' and not self.payment_date:
+        if self.payment_status == "completed" and not self.payment_date:
             self.payment_date = date.today()
 
         # Payment date should not be in the future for completed payments
-        if self.payment_status == 'completed' and self.payment_date and self.payment_date > date.today():
+        if self.payment_status == "completed" and self.payment_date and self.payment_date > date.today():
             raise ValidationError("Payment date cannot be in the future for completed payments.")
 
         # Validate student-parent relationship (skip for adult students)
@@ -442,11 +368,7 @@ class Payment(models.Model):
     @property
     def is_overdue(self):
         """Check if payment is overdue"""
-        return (
-            self.payment_status == 'pending' and
-            self.due_date is not None and
-            self.due_date < date.today()
-        )
+        return self.payment_status == "pending" and self.due_date is not None and self.due_date < date.today()
 
     @property
     def days_overdue(self):

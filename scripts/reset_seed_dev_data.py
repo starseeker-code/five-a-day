@@ -1,43 +1,132 @@
+import os
+import random
+import sys
 from datetime import date, timedelta
 from decimal import Decimal
-import random
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
 
 from core.models import (
-    SiteConfiguration,
+    Enrollment,
     EnrollmentType,
-    Teacher,
     Group,
     Parent,
-    Student,
-    Enrollment,
     Payment,
+    SiteConfiguration,
+    Student,
+    Teacher,
 )
+
+
+def _check_environment():
+    """Abort if running in production — this script destroys ALL data."""
+    env = os.getenv("DJANGO_ENV", "").lower()
+    debug = getattr(settings, "DEBUG", False)
+    if env == "production" or not debug:
+        print(
+            "ABORT: reset_seed_dev_data.py cannot run in production "
+            "(DJANGO_ENV='production' or DEBUG=False). "
+            "Set DJANGO_ENV=development and DEBUG=True to proceed."
+        )
+        sys.exit(1)
+
+
+_check_environment()
 
 
 random.seed(20260227)
 
 FIRST_NAMES = [
-    "Lucas", "Martina", "Hugo", "Sofía", "Daniel", "Paula", "Alejandro", "Valeria",
-    "Mateo", "Claudia", "Pablo", "Nora", "Diego", "Alba", "Marco", "Irene",
-    "Adrián", "Elena", "Javier", "Lucía", "Álvaro", "Carla", "Raúl", "Marta",
-    "Bruno", "Noa", "Víctor", "Aitana", "Gonzalo", "Sara", "Mario", "Lola",
-    "Eric", "Naiara", "Rubén", "Inés", "Samuel", "Leire", "Gael", "Olivia",
+    "Lucas",
+    "Martina",
+    "Hugo",
+    "Sofía",
+    "Daniel",
+    "Paula",
+    "Alejandro",
+    "Valeria",
+    "Mateo",
+    "Claudia",
+    "Pablo",
+    "Nora",
+    "Diego",
+    "Alba",
+    "Marco",
+    "Irene",
+    "Adrián",
+    "Elena",
+    "Javier",
+    "Lucía",
+    "Álvaro",
+    "Carla",
+    "Raúl",
+    "Marta",
+    "Bruno",
+    "Noa",
+    "Víctor",
+    "Aitana",
+    "Gonzalo",
+    "Sara",
+    "Mario",
+    "Lola",
+    "Eric",
+    "Naiara",
+    "Rubén",
+    "Inés",
+    "Samuel",
+    "Leire",
+    "Gael",
+    "Olivia",
 ]
 
 LAST_NAMES = [
-    "García", "Martínez", "López", "Sánchez", "Pérez", "Gómez", "Fernández", "Ruiz",
-    "Díaz", "Moreno", "Muñoz", "Álvarez", "Romero", "Alonso", "Navarro", "Torres",
-    "Domínguez", "Vázquez", "Ramos", "Gil", "Castro", "Ortega", "Molina", "Delgado",
-    "Suárez", "Santos", "Iglesias", "Reyes", "Méndez", "Cruz", "Serrano", "Flores",
+    "García",
+    "Martínez",
+    "López",
+    "Sánchez",
+    "Pérez",
+    "Gómez",
+    "Fernández",
+    "Ruiz",
+    "Díaz",
+    "Moreno",
+    "Muñoz",
+    "Álvarez",
+    "Romero",
+    "Alonso",
+    "Navarro",
+    "Torres",
+    "Domínguez",
+    "Vázquez",
+    "Ramos",
+    "Gil",
+    "Castro",
+    "Ortega",
+    "Molina",
+    "Delgado",
+    "Suárez",
+    "Santos",
+    "Iglesias",
+    "Reyes",
+    "Méndez",
+    "Cruz",
+    "Serrano",
+    "Flores",
 ]
 
 SCHOOLS = [
-    "CEIP Valle Verde", "Colegio San Martín", "IES Río Azul", "Colegio Aurora",
-    "CEIP Las Acacias", "IES Sierra Norte", "Colegio Atlántico", "CEIP El Bosque",
-    "Colegio Alameda", "IES Costa Sur",
+    "CEIP Valle Verde",
+    "Colegio San Martín",
+    "IES Río Azul",
+    "Colegio Aurora",
+    "CEIP Las Acacias",
+    "IES Sierra Norte",
+    "Colegio Atlántico",
+    "CEIP El Bosque",
+    "Colegio Alameda",
+    "IES Costa Sur",
 ]
 
 
@@ -119,16 +208,24 @@ def run_seed():
             active=True,
             admin=(i == 0),
         )
-        for i, (first, last) in enumerate([
-            ("Laura", "Jiménez"),
-            ("Carlos", "Ortega"),
-            ("Ana", "Velasco"),
-        ])
+        for i, (first, last) in enumerate(
+            [
+                ("Laura", "Jiménez"),
+                ("Carlos", "Ortega"),
+                ("Ana", "Velasco"),
+            ]
+        )
     ]
 
     group_names = [
-        "Kids A1", "Kids A2", "Kids B1", "Kids B2",
-        "Teens A2", "Teens B1", "Adults A2", "Adults B1",
+        "Kids A1",
+        "Kids A2",
+        "Kids B1",
+        "Kids B2",
+        "Teens A2",
+        "Teens B1",
+        "Adults A2",
+        "Adults B1",
     ]
     groups = [
         Group.objects.create(
@@ -220,8 +317,15 @@ def run_seed():
         students.append(s)
 
     enrollment_statuses = [
-        "active", "active", "active", "active", "active",
-        "pending", "finished", "cancelled", "suspended",
+        "active",
+        "active",
+        "active",
+        "active",
+        "active",
+        "pending",
+        "finished",
+        "cancelled",
+        "suspended",
     ]
 
     enrollments = []
@@ -241,7 +345,7 @@ def run_seed():
             enrollment_type=e_type,
             enrollment_period_start=period_start,
             enrollment_period_end=period_end,
-            academic_year=f"{start_year}-{start_year+1}",
+            academic_year=f"{start_year}-{start_year + 1}",
             schedule_type=schedule,
             enrollment_amount=final,
             discount_percentage=discount,
@@ -302,7 +406,9 @@ def run_seed():
     print(f"Cumpleaños este mes: {Student.objects.filter(birth_date__month=month).count()}")
     print(f"Pendientes vencidos: {Payment.objects.filter(payment_status='pending', due_date__lt=today).count()}")
     print(f"Pendientes futuros/hoy: {Payment.objects.filter(payment_status='pending', due_date__gte=today).count()}")
-    print(f"Alumnos con >=2 padres (incluye hermanos): {Student.objects.annotate(pc=Count('parents')).filter(pc__gte=2).count()}")
+    print(
+        f"Alumnos con >=2 padres (incluye hermanos): {Student.objects.annotate(pc=Count('parents')).filter(pc__gte=2).count()}"
+    )
     print(f"Resumen status: {status_summary}")
     print(f"Resumen tipos: {type_summary}")
     print(f"Resumen métodos: {method_summary}")

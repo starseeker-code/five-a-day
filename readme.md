@@ -9,10 +9,11 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.0.0-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.0.1t-brightgreen?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/django-5.2-green?style=for-the-badge" alt="Django">
   <img src="https://img.shields.io/badge/postgresql-16-336791?style=for-the-badge" alt="PostgreSQL">
+  <img src="coverage.svg" alt="Coverage">
 </p>
 
 ---
@@ -28,17 +29,21 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ### Project Status
 
+| Environment | Version | Status |
+|-------------|---------|--------|
+| **Production** | v0.0.0 | ![undeployed](https://img.shields.io/badge/undeployed-red) |
+| **Testing (QA)** | v1.0.1t | ![ready](https://img.shields.io/badge/ready_to_deploy-blue) |
+| **Development** | v1.0.0 | ![active](https://img.shields.io/badge/active-brightgreen) |
+
 | | |
 |---|---|
-| **Production URL** | [five-a-day.netlify.app](https://five-a-day.netlify.app) |
-| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
-| **State** | Pre-production |
-| **Production version** | v1.0.0 |
-| **Development version** | v1.0.0 |
+| **Documentation** | This README, [DEPLOYMENT.md](DEPLOYMENT.md), [HTTPS.md](docs/HTTPS.md), [UV.md](docs/UV.md), per-app READMEs, [CLAUDE.md](CLAUDE.md) |
 
 | Version | Date | Description |
 |---------|------|-------------|
-| **v1.0.0** | 2026-04-10 | Multi-app architecture, service layer, 112 tests, frontend cleanup, full documentation |
+| **v1.0.1t** | 2026-04-14 | QA/testing environment: `/testing/` dashboard, database seeding, backlog with email, error reporting, HTTPS guide, access control via `QA_TESTING_USERNAME` |
+| v1.0.0 | 2026-04-11 | Security hardening, query optimization (Case/When aggregates, N+1 fixes), GCP config, transaction safety |
+| v1.0.0 | 2026-04-10 | Multi-app architecture, service layer, 132 tests, frontend cleanup, full documentation |
 | v0.30.2 | 2025-03-14 | History system, GDPR for adults, Docker Compose workflow |
 | v0.29.0 | 2025-03-01 | Enrollment system with discounts, adult students, email automation |
 
@@ -46,61 +51,128 @@ Built to centralize student records, automate billing cycles, and streamline par
 
 ## Table of Contents
 
-- [Version History & Roadmap](#version-history--roadmap)
-  - [v1.0.0 — Architecture Refactor & Test Suite](#v100)
-  - [v0.30.2 — Docker & History System](#v0302)
-  - [v0.29.0 — Enrollment & Email System](#v0290)
-  - [Roadmap: v1.1 through v1.12](#roadmap)
-- [Tech Stack](#tech-stack)
-  - [Backend](#backend)
-  - [Frontend](#frontend)
-  - [Infrastructure & Deployment](#infrastructure--deployment)
-  - [Python Dependencies](#python-dependencies)
-- [Database Schema](#database-schema)
-  - [ER Diagram](#er-diagram)
-  - [Key Constraints](#key-constraints)
-- [Development & Docker](#development--docker)
-  - [Quick Start](#quick-start)
-  - [Make Commands](#make-commands)
-  - [Environment Configuration](#environment-configuration)
-  - [Environment Variables Reference](#environment-variables-reference)
-  - [App Versioning](#app-versioning)
-- [Project Structure & Architecture](#project-structure--architecture)
-  - [Architecture Overview](#architecture-overview)
-  - [App Dependency Flow](#app-dependency-flow)
-  - [Directory Layout](#directory-layout)
-  - [App: core](#app-core)
-  - [App: students](#app-students)
-  - [App: billing](#app-billing)
-  - [App: comms](#app-comms)
-  - [Design Decisions](#design-decisions)
-- [Features by View](#features-by-view)
-  - [Home (Dashboard)](#home-dashboard)
-  - [Students](#students)
-  - [Student Create](#student-create)
-  - [Student Detail & Update](#student-detail--update)
-  - [Payments](#payments)
-  - [Schedule](#schedule)
-  - [Fun Friday](#fun-friday)
-  - [Apps (Email Tools)](#apps-email-tools)
-  - [Management](#management)
-  - [Database (All Info)](#database-all-info)
-  - [Login](#login)
-- [Testing](#testing)
-  - [Overview](#testing-overview)
-  - [Model Tests](#model-tests)
-  - [Service Tests](#service-tests)
-  - [View Tests](#view-tests)
-- [Migrations](#migrations)
-- [Contributing](#contributing)
-- [License](#license)
+- [Five a Day eVolution](#five-a-day-evolution)
+    - [Project Status](#project-status)
+  - [Table of Contents](#table-of-contents)
+  - [Version History \& Roadmap](#version-history--roadmap)
+    - [Roadmap](#roadmap)
+      - [v1.1 — Waiting List \& Group Capacity](#v11--waiting-list--group-capacity)
+      - [v1.2 — Google Sheets Integration](#v12--google-sheets-integration)
+      - [v1.3 — PDF Invoice Generation](#v13--pdf-invoice-generation)
+      - [v1.4 — Celery + Redis Deployment](#v14--celery--redis-deployment)
+      - [v1.5 — Expense Tracking](#v15--expense-tracking)
+      - [v1.6 — Multi-User Permissions](#v16--multi-user-permissions)
+      - [v1.7 — Advanced Reporting \& Analytics](#v17--advanced-reporting--analytics)
+      - [v1.8 — SMS Notifications (Twilio)](#v18--sms-notifications-twilio)
+      - [v1.9 — Parent Portal](#v19--parent-portal)
+      - [v1.10 — Audit Log \& Security Hardening](#v110--audit-log--security-hardening)
+      - [v1.11 — Stripe Payment Integration](#v111--stripe-payment-integration)
+      - [v1.12 — Mobile Optimization \& PWA](#v112--mobile-optimization--pwa)
+  - [Tech Stack](#tech-stack)
+    - [Backend](#backend)
+    - [Frontend](#frontend)
+    - [Infrastructure \& Deployment](#infrastructure--deployment)
+    - [Python Dependencies](#python-dependencies)
+  - [Database Schema](#database-schema)
+    - [ER Diagram](#er-diagram)
+    - [Key Constraints](#key-constraints)
+  - [Development \& Docker](#development--docker)
+    - [Quick Start](#quick-start)
+    - [Make Commands](#make-commands)
+    - [Environment Configuration](#environment-configuration)
+    - [Environment Variables Reference](#environment-variables-reference)
+    - [App Versioning](#app-versioning)
+  - [Project Structure \& Architecture](#project-structure--architecture)
+    - [Architecture Overview](#architecture-overview)
+    - [App Dependency Flow](#app-dependency-flow)
+    - [Directory Layout](#directory-layout)
+    - [App: core](#app-core)
+    - [App: students](#app-students)
+    - [App: billing](#app-billing)
+    - [App: comms](#app-comms)
+    - [Design Decisions](#design-decisions)
+  - [Features by View](#features-by-view)
+    - [Home (Dashboard)](#home-dashboard)
+    - [Students](#students)
+    - [Student Create](#student-create)
+    - [Student Detail \& Update](#student-detail--update)
+    - [Payments](#payments)
+    - [Schedule](#schedule)
+    - [Fun Friday](#fun-friday)
+    - [Apps (Email Tools)](#apps-email-tools)
+    - [Management](#management)
+    - [Database (All Info)](#database-all-info)
+    - [Login](#login)
+  - [Testing](#testing)
+    - [Testing Overview](#testing-overview)
+    - [Model Tests](#model-tests)
+    - [Service Tests](#service-tests)
+    - [View Tests](#view-tests)
+  - [Migrations](#migrations)
+  - [Security](#security)
+    - [Authentication](#authentication)
+    - [Session \& Cookie Configuration](#session--cookie-configuration)
+    - [CSRF Protection](#csrf-protection)
+    - [Transport Security (HTTPS)](#transport-security-https)
+    - [Security Headers](#security-headers)
+    - [Infrastructure \& Deployment](#infrastructure--deployment-1)
+      - [Docker](#docker)
+      - [Render (render.yaml)](#render-renderyaml)
+      - [Google Cloud Run (gcp-cloudrun.yaml)](#google-cloud-run-gcp-cloudrunyaml)
+    - [Secrets Management](#secrets-management)
+    - [Email Security](#email-security)
+    - [Data Protection \& Input Validation](#data-protection--input-validation)
+    - [Logging \& Monitoring](#logging--monitoring)
+    - [Future Security Improvements](#future-security-improvements)
+  - [Testing Environment (QA)](#testing-environment-qa)
+    - [What is the testing environment?](#what-is-the-testing-environment)
+    - [How to access it](#how-to-access-it)
+    - [What you can test](#what-you-can-test)
+    - [How to report a problem](#how-to-report-a-problem)
+    - [Error pages you might see](#error-pages-you-might-see)
+    - [For developers: how the QA environment works](#for-developers-how-the-qa-environment-works)
+      - [Access control for /testing/](#access-control-for-testing)
+    - [GCP deployment plan](#gcp-deployment-plan)
+  - [Contributing](#contributing)
+    - [Development Workflow](#development-workflow)
+    - [Code Conventions](#code-conventions)
+    - [Adding a Feature](#adding-a-feature)
+  - [License](#license)
 
 ---
 
 ## Version History & Roadmap
 
+<details id="v101t" open>
+<summary><strong>v1.0.1t — QA Testing Environment (current, testing branch)</strong></summary>
+
+**Testing infrastructure**
+- QA Docker Compose overlay (`docker-compose.testing.yml`) — Gunicorn, `DEBUG=False`, separate DB volume
+- `.env.testing` with dedicated credentials and `DJANGO_ENV=testing`
+- Database seeding command (`seed_testdata`) — 15+ students, parents, enrollments, payments
+- HTTPS documentation (`HTTPS.md`) — local Docker (Nginx + self-signed cert) and GCP Cloud Run
+
+**Testing dashboard (`/testing/`)**
+- Project info card — version, environment, last commit (branch, hash, author, date)
+- Error reporting toggle — sends unhandled exceptions to SUPPORT_EMAIL with full traceback
+- Database seeding UI — seed or wipe-and-reseed via AJAX
+- Backlog — create tasks with priority, each emailed to support automatically
+
+**Access control**
+- `qa_access_required` decorator in `core/decorators.py`
+- Gated by `DJANGO_ENV=testing` + `DEBUG=False` + session username matches `QA_TESTING_USERNAME`
+- Returns 404 (not 403) for unauthorized users — page appears not to exist
+- Sidebar icon hidden for all non-QA users via context processor
+
+**Bug fixes**
+- Added `STATICFILES_DIRS` for `project/static/` — email CSS was missing from collectstatic manifest
+- Added `SECURE_PROXY_SSL_HEADER` for HTTPS behind reverse proxies
+- `QAErrorEmailMiddleware` for automated error reporting to support email
+
+</details>
+
 <details id="v100">
-<summary><strong>v1.0.0 — Architecture Refactor & Test Suite (current)</strong></summary>
+<summary><strong>v1.0.0 — Architecture Refactor & Test Suite</strong></summary>
 
 **Architecture**
 - Split monolithic `core` app into 4 apps: `students`, `billing`, `comms`, `core`
@@ -115,7 +187,7 @@ Built to centralize student records, automate billing cycles, and streamline par
 - base.html: 610 lines reduced to 305 lines
 
 **Testing**
-- 112 pytest tests: 34 model, 24 service, 54 view tests
+- 132 pytest tests: 41 model, 26 service, 65 view tests
 - Tests run against PostgreSQL (same as production)
 - Found and fixed Payment `active` field bug
 
@@ -269,6 +341,20 @@ Progressive Web App support: installable on mobile, offline-capable dashboard, p
 | `python-dotenv` | Environment variable loading from .env |
 | `markdown` | Markdown rendering |
 | `pytest` + `pytest-django` | Testing framework |
+| `pytest-xdist` | Parallel test execution (`-n auto`) |
+| `pytest-randomly` | Randomized test ordering (catches order-dependent bugs) |
+| `pytest-cov` + `coverage-badge` | Coverage reporting + SVG badge generation |
+
+### Developer Tooling
+
+| Tool | Purpose |
+|------|---------|
+| [UV](https://docs.astral.sh/uv/) | Dependency management (replaces Poetry). PEP 621, `uv.lock`. See `docs/UV.md` |
+| [Ruff](https://docs.astral.sh/ruff/) | Linting + formatting (replaces flake8, black, isort). Config in `pyproject.toml` |
+| [mypy](https://mypy-lang.org/) + `django-stubs` | Static type checking with Django ORM support |
+| [bandit](https://bandit.readthedocs.io/) | Security linter (hardcoded secrets, SQL injection, etc.) |
+| [pip-audit](https://github.com/pypa/pip-audit) | Dependency vulnerability scanning against PyPI CVE database |
+| [pre-commit](https://pre-commit.com/) | Git hooks: ruff, ruff-format, mypy, bandit |
 
 ---
 
@@ -660,7 +746,7 @@ five-a-day/
 │   │   ├── urls.py               10 URL patterns
 │   │   └── management/commands/  send_email, test_all_emails
 │   │
-│   ├── tests/                    pytest suite (112 tests)
+│   ├── tests/                    pytest suite (174 tests)
 │   └── conftest.py               Shared fixtures
 │
 ├── Dockerfile                    Multi-stage build
@@ -870,16 +956,21 @@ Standalone page with custom styling (does not extend base.html).
 
 | Metric | Value |
 |--------|-------|
-| **Total tests** | 112 |
-| **Test files** | 3 (test_models, test_services, test_views) |
-| **Runtime** | ~2 seconds |
-| **Database** | PostgreSQL (same as production) or SQLite fallback |
-| **Framework** | pytest 8.4 + pytest-django 4.11 |
+| **Total tests** | 294 |
+| **Test files** | 17 |
+| **Coverage** | 70% (with `--cov-report=term-missing` on every run) |
+| **Runtime** | ~30 seconds (8 parallel workers via pytest-xdist) |
+| **Database** | PostgreSQL (same as production) — **always use `make test`** |
+| **Framework** | pytest 9 + pytest-django + pytest-cov + pytest-xdist + pytest-randomly |
+| **Type checking** | mypy + django-stubs (pre-commit hook) |
+| **Security** | bandit security linter (pre-commit hook) |
+| **Dependency audit** | pip-audit for CVE scanning |
+| **Linting** | Ruff (check + format) via pre-commit hooks |
 | **Settings** | `project/settings_test.py` |
 | **Fixtures** | `conftest.py` — 15 shared fixtures |
 
 ```bash
-make test              # Inside Docker (PostgreSQL)
+make test              # Inside Docker (PostgreSQL, parallel, with coverage)
 make test-local        # Local against Docker PostgreSQL
 make test-sqlite       # Local with SQLite (no Docker)
 make test-coverage     # Generate HTML coverage report
@@ -889,45 +980,75 @@ make test-k K=payment  # Run tests matching keyword
 
 ### Model Tests
 
-34 tests in `test_models.py` covering model logic, properties, and database constraints.
+41 tests in `test_models.py` covering model logic, properties, and database constraints.
 
 | Group | Count | Coverage |
 |-------|-------|----------|
 | Academic year helpers | 5 | `current_academic_year()` for both semesters, `academic_year_start_date`, `academic_year_end_date` |
 | SiteConfiguration | 4 | Singleton creation, pk=1 enforcement, delete prevention, default values |
 | Student & Parent | 6 | Properties (`full_name`, `age`), string representation, M2M relationship, DNI uniqueness |
+| Student gender | 2 | Default gender value, gender choices |
 | Teacher & Group | 4 | Properties, FK relationship, name uniqueness |
 | Enrollment | 5 | Properties (`is_paid`, `remaining_amount`), string representation, unique active constraint |
+| Cancelled enrollment | 1 | Cancelled enrollment status |
+| Inactive student | 1 | Inactive student exists |
 | Payment | 4 | `is_overdue` detection (past/future/completed), `clean()` auto-sets payment_date |
 | TodoItem & HistoryLog | 5 | `is_overdue`, log creation, 1000-entry cap, debounced logging |
 | FunFridayAttendance | 1 | Unique (student, date) constraint |
+| ScheduleSlot | 3 | Slot creation, unique (row, day, col) constraint, null group |
 
 ### Service Tests
 
-24 tests in `test_services.py` covering business logic in the service layer.
+26 tests in `test_services.py` covering business logic in the service layer.
 
 | Group | Count | Coverage |
 |-------|-------|----------|
 | PricingService | 7 | Monthly fees by schedule type, enrollment fees by student type, quarterly price calculation |
 | EnrollmentService | 9 | All enrollment plans (monthly full/part, quarterly), all discount types (sibling, language cheque, both), special pricing, adult enrollment, minimum amount floor (0.01) |
+| EnrollmentService errors | 2 | Missing enrollment type validation, payment statistics |
 | PaymentService | 8 | Monthly/quarterly amount calculations with all discount combos, June bonus, payment completion, academic month/quarter validation |
 
 ### View Tests
 
-54 tests in `test_views.py` covering HTTP responses, AJAX APIs, and user flows.
+65 tests in `test_views.py` covering HTTP responses, AJAX APIs, and user flows.
 
 | Group | Count | Coverage |
 |-------|-------|----------|
 | Authentication | 6 | Unauthenticated redirect, login page, health check, valid/invalid login, logout |
-| Page loads | 8 | Dashboard, all_info, student list/detail/create, parent create, payment list/create |
-| Payment operations | 8 | Quick-complete (valid + invalid), statistics, CSV export, student-parent validation |
-| AJAX APIs | 5 | Todo create/complete, history list + pagination |
-| Management | 6 | Config update, teacher create (+ duplicate), group create, teachers API |
-| Email forms | 9 | All 8 form pages load + welcome redirect (parametrized) |
+| Dashboard | 2 | Dashboard, all_info |
+| Student views | 4 | Student list, detail, create page, search API |
+| Parent views | 2 | Parent create page, search API |
+| Payment views | 9 | Payments list, create page, detail, quick-complete (valid + invalid), statistics, CSV export, student-parent validation |
+| Payment CRUD | 5 | Delete, deactivate, update JSON, get details API, search |
+| Todo & History API | 5 | Todo create/complete/empty text, history list + pagination |
+| Management | 6 | Management page, config update, teacher create (+ duplicate), group create, teachers API |
+| Email forms | 10 | Apps page, all 8 form pages load + welcome redirect (parametrized) |
 | Enrollment API | 3 | Modality update (valid + invalid), language cheque endpoint |
 | Error pages | 5 | All 5 error pages render with correct status codes (parametrized) |
 | Schedule | 2 | Schedule page, Fun Friday page |
-| Search | 2 | Student search, parent search with results |
+| Fun Friday | 4 | Toggle (valid + adult rejected), add attendance, remove attendance |
+| Support | 2 | Missing message validation, no email configuration |
+
+### Additional Test Files (v1.0.0+)
+
+| File | Count | Coverage |
+|------|-------|----------|
+| `test_constants.py` | 9 | Pure functions: `calculate_discount`, `get_monthly_fee_by_schedule`, `get_enrollment_fee` |
+| `test_transactions.py` | 10 | Query helpers: `get_active_students`, `get_payments_for_last_two_school_years`, `get_all_payments_unrestricted` |
+| `test_forms.py` | 9 | `EnrollmentForm` validation + `create_enrollment()` delegation to service layer |
+| `test_exports.py` | 7 | Excel workbook generation: students, enrollments, payments sheets + combined workbook |
+| `test_schedule_views.py` | 8 | Schedule page, save slot (assign + clear + reject GET), Fun Friday (loads, excludes adults) |
+| `test_auth_views.py` | 8 | Login (render, redirect, valid/invalid creds, missing env), logout, OAuth redirect |
+| `test_student_views.py` | 12 | Student list (search, exclude inactive), detail, create (form, success, adult mode, full POST), search |
+| `test_payment_views.py` | 9 | `parse_date_value` (6 formats), payments list, search, quick complete |
+| `test_app_form_views.py` | 27 | All email form GET pages, POST preview (JSON), POST send, test_send without env vars |
+| `test_parent_views.py` | 4 | ParentCreateView: GET, POST (new + existing DNI + invalid) |
+| `test_create_payment_views.py` | 7 | Create payment (form + invalid parent), payment detail, update payment, Excel export |
+| `test_student_forms.py` | 7 | StudentForm + ParentForm validation: dates, DNI, required fields |
+| `test_context_processors.py` | 11 | Context keys, todo filtering, scheduled apps, history count, support email |
+| `test_middleware.py` | 9 | Public/protected paths, session handling |
+| `test_email_service.py` | 12 | EmailService: send, recipients, CC/BCC, attachments, fail_silently, bulk |
+| `test_email_functions.py` | 10 | All convenience email functions: template, subject, context, fail_silently |
 
 ---
 
@@ -935,11 +1056,14 @@ make test-k K=payment  # Run tests matching keyword
 
 All migrations were regenerated from scratch during the v1.0.0 multi-app split.
 
-| App | Migration | Models | Depends On |
-|-----|-----------|--------|------------|
+| App | Migration | Changes | Depends On |
+|-----|-----------|---------|------------|
 | `students` | `0001_initial` | Teacher, Group, Parent, Student, StudentParent | — |
+| `students` | `0002` | Student gender field, StudentParent UniqueConstraint | `students.0001` |
 | `billing` | `0001_initial` | SiteConfiguration, EnrollmentType, Enrollment, Payment | `students.0001` |
+| `billing` | `0002` | Enrollment academic_year index | `billing.0001`, `students.0002` |
 | `core` | `0001_initial` | TodoItem, HistoryLog, FunFridayAttendance, ScheduleSlot | `students.0001` |
+| `core` | `0002` | UniqueConstraint for FunFridayAttendance and ScheduleSlot (replaces unique_together) | `core.0001`, `students.0002` |
 | `comms` | — | (no models) | — |
 
 ```bash
@@ -950,15 +1074,401 @@ make migrate          # Applies them
 
 ---
 
+## Security
+
+This section documents every security decision, mechanism, and configuration in the project.
+
+### Authentication
+
+**Mechanism**: Custom session-based authentication with two backends — environment credentials and Google OAuth 2.0.
+
+| Component | File | How it works |
+|-----------|------|-------------|
+| Login view | `core/views/auth.py` | Validates username/password against `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars. Sets `request.session["is_authenticated"] = True`. No hardcoded fallbacks — if env vars are missing, login is refused with an error message. |
+| Google OAuth | `core/views/auth.py` | Full OAuth 2.0 code flow via `google-auth-oauthlib`. State token stored in session and verified on callback. ID token verified server-side via Google's public keys. Only the email matching `GOOGLE_ALLOWED_EMAIL` (or `EMAIL_HOST_USER` / `DJANGO_SUPERUSER_EMAIL`) is authorized. |
+| Auth middleware | `core/middleware.py` | `SimpleAuthMiddleware` protects all routes. Public URLs use exact match for `/login/` and prefix match for `/health/`, `/static/`, `/media/`, `/auth/google/` (covers `/callback/`). All other paths require `session["is_authenticated"]`. |
+| OAuth credentials | `core/views/auth.py` | Google tokens (access, refresh) are stored in session server-side. `client_secret` is never sent to the frontend. Allowed email check is backend-only. |
+
+**Design decisions**:
+- No Django User model — the system has 3-10 trusted admin users, so session-based auth with env var credentials is simpler and sufficient.
+- Google OAuth is optional — if `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are not set, the OAuth button is hidden.
+- `OAUTHLIB_INSECURE_TRANSPORT` is only set when `DEBUG=True` (for local HTTP testing).
+
+### Session & Cookie Configuration
+
+All cookie flags are enforced via `settings.py` with environment-aware defaults:
+
+| Setting | Development | Production | Purpose |
+|---------|------------|------------|---------|
+| `SESSION_COOKIE_AGE` | 86400 (24h) | 86400 (24h) | Session lifetime |
+| `SESSION_COOKIE_HTTPONLY` | `True` | `True` | Prevents JavaScript access to session cookie |
+| `SESSION_COOKIE_SAMESITE` | `Lax` | `Strict` | Prevents cross-site request forgery via session cookies |
+| `SESSION_COOKIE_SECURE` | `False` | `True` | Requires HTTPS for cookie transmission |
+| `CSRF_COOKIE_HTTPONLY` | `False` | `True` | Prevents JavaScript access to CSRF cookie in production |
+| `CSRF_COOKIE_SAMESITE` | `Lax` | `Strict` | Prevents cross-site CSRF cookie leakage |
+| `CSRF_COOKIE_SECURE` | `False` | `True` | Requires HTTPS for CSRF cookie |
+
+Production defaults are applied automatically when `DEBUG=False` — no manual override needed in env vars.
+
+### CSRF Protection
+
+- Django's `CsrfViewMiddleware` is active in the middleware stack.
+- All POST endpoints receive CSRF validation. JavaScript AJAX requests use `getCsrfToken()` (reads from cookies) and send via `X-CSRFToken` header.
+- `CSRF_TRUSTED_ORIGINS` is configured per deployment (`render.yaml`, `gcp-cloudrun.yaml`).
+- Only exception: `@csrf_exempt` on `/health/` endpoint (GET-only, returns `{"status": "healthy"}`).
+
+### Transport Security (HTTPS)
+
+When `DEBUG=False`, the following are enforced via `settings.py`:
+
+| Setting | Value | Effect |
+|---------|-------|--------|
+| `SECURE_SSL_REDIRECT` | `True` | All HTTP requests redirected to HTTPS |
+| `SECURE_HSTS_SECONDS` | `31536000` (1 year) | Browser remembers to use HTTPS |
+| `SECURE_HSTS_INCLUDE_SUBDOMAINS` | `True` | HSTS applies to all subdomains |
+| `SECURE_HSTS_PRELOAD` | `True` | Eligible for browser HSTS preload lists |
+
+All settings are environment-controlled and only activate when `DEBUG=False`.
+
+### Security Headers
+
+| Header | Setting | Value | Effect |
+|--------|---------|-------|--------|
+| `X-Frame-Options` | `X_FRAME_OPTIONS` | `DENY` | Prevents clickjacking — page cannot be embedded in iframes |
+| `X-Content-Type-Options` | `SECURE_CONTENT_TYPE_NOSNIFF` | `True` | Prevents MIME type sniffing attacks |
+| `X-XSS-Protection` | `SECURE_BROWSER_XSS_FILTER` | `True` | Enables browser XSS filter (legacy, supplementary) |
+
+### Infrastructure & Deployment
+
+#### Docker
+
+| Decision | Implementation |
+|----------|---------------|
+| Non-root container | `Dockerfile` creates user `django` (uid 1000) and runs as `USER django` |
+| Multi-stage build | Builder stage compiles dependencies; runtime stage uses `python:3.12-slim` without build tools |
+| No secrets in image | `.dockerignore` excludes `.env*`, `scripts/`, `.git/` |
+| DB port restricted | `docker-compose.yml` binds PostgreSQL to `127.0.0.1:5432` only (not exposed to network) |
+| Health checks | Database has auth-checking healthcheck; web service uses `/health/` endpoint |
+| Seed script guard | `scripts/reset_seed_dev_data.py` aborts if `DJANGO_ENV=production` or `DEBUG=False` |
+
+#### Render (render.yaml)
+
+| Decision | Implementation |
+|----------|---------------|
+| Auto-generated secrets | `DJANGO_SECRET_KEY` and `DJANGO_SUPERUSER_PASSWORD` use `generateValue: true` |
+| Dashboard-only secrets | `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, `LOGIN_USERNAME`, `LOGIN_PASSWORD`, `EMAIL_HOST_USER`, `EMAIL_SECRET` use `sync: false` (set in Render dashboard, not in YAML) |
+| SSL enforced | `SECURE_SSL_REDIRECT=True`, all cookie secure flags enabled |
+| Strict cookies | `SESSION_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_SAMESITE=Strict`, `CSRF_COOKIE_HTTPONLY=True` |
+
+#### Google Cloud Run (gcp-cloudrun.yaml)
+
+| Decision | Implementation |
+|----------|---------------|
+| Secret Manager | All credentials (`DJANGO_SECRET_KEY`, `LOGIN_*`, `EMAIL_SECRET`, `POSTGRES_*`, `GOOGLE_*`) loaded from GCP Secret Manager via `secretKeyRef` |
+| Service account | Runs under dedicated `fiveaday-sa` service account with least-privilege IAM |
+| Autoscaling | min=0, max=3 instances; startup probe with 50s timeout |
+| Probes | Startup probe + liveness probe on `/health/` |
+
+### Secrets Management
+
+| Rule | Implementation |
+|------|---------------|
+| No hardcoded credentials | `auth.py` requires `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars — refuses login if missing |
+| No secrets in YAML | `render.yaml` uses `generateValue` or `sync: false`; `gcp-cloudrun.yaml` uses Secret Manager refs |
+| No secrets in Docker image | `.dockerignore` excludes all `.env*` files |
+| `.gitignore` coverage | `.env*` pattern excludes all env file variants |
+| Production startup validation | `settings.py` raises `ValueError` if `SECRET_KEY` is the dev default and `DEBUG=False` |
+
+### Email Security
+
+| Decision | Implementation |
+|----------|---------------|
+| TLS enforced | `EMAIL_USE_TLS=True`, port 587 (STARTTLS) |
+| App Password | Uses Gmail App Password (not account password) via `EMAIL_SECRET` env var |
+| `fail_silently` | Defaults to `False` for single sends (raises on failure); `True` for bulk sends (logs failures) |
+| No PII in logs | Celery tasks log by ID (`student_id=X`) not by name/email/DNI |
+| Template auto-escaping | All email templates use Django's default auto-escaping — `{{ variable }}` is HTML-safe |
+| Inline images | Attached via MIME `Content-ID` headers, not external URLs |
+
+### Data Protection & Input Validation
+
+| Layer | Mechanism |
+|-------|-----------|
+| **Models** | `DecimalField` with `MinValueValidator` for all money fields. `UniqueConstraint` for enrollment/schedule/attendance integrity. `PROTECT` on foreign keys prevents orphaned records. |
+| **Forms** | Django `ModelForm` with `clean_*()` validators. Date fields accept `%Y-%m-%d` and `%d/%m/%Y`. DNI validated for minimum length. |
+| **Views** | `get_object_or_404` for safe lookups. `@require_http_methods` on all AJAX endpoints. `Decimal(str(...))` for safe numeric conversion. `json.JSONDecodeError` caught explicitly. |
+| **Services** | `transaction.atomic()` wraps multi-model writes (enrollment creation, payment completion). `ValueError` raised for missing config. |
+| **GDPR** | `gdpr_signed` field on Student. No student data exposed without authentication. PII removed from log messages. |
+
+### Logging & Monitoring
+
+- Console logging via `StreamHandler` with configurable `LOG_LEVEL` env var.
+- Separate loggers for `django` framework and project modules.
+- `HistoryLog` model tracks user actions (payment completed, student enrolled, config updated) — capped at 1000 entries with automatic cleanup.
+- Celery tasks log by entity ID, not PII.
+
+### Future Security Improvements
+
+These are not blockers but would strengthen the system for scale or compliance:
+
+| Priority | Improvement | Why |
+|----------|------------|-----|
+| **High** | Rate limiting on login (`django-ratelimit`, 5 attempts/15 min per IP) | Prevents brute force. Currently no protection. |
+| **High** | Content-Security-Policy header | Prevents XSS. Currently absent — Tailwind CDN requires `unsafe-inline` for styles, but scripts can be locked down. |
+| **High** | Referrer-Policy header (`strict-origin-when-cross-origin`) | Prevents referrer leakage to external links. Currently absent. |
+| **Medium** | Session rotation on OAuth login (`request.session.create()`) | Prevents session fixation. Currently session ID persists through OAuth flow. |
+| **Medium** | Inactivity timeout (30 min idle logout) | 24h session is long for sensitive student data. |
+| **Medium** | Security event audit log (failed logins with IP, CSRF failures) | Currently no visibility into attack attempts. |
+| **Medium** | Permissions-Policy header | Disables camera, microphone, geolocation APIs the app doesn't need. |
+| **Medium** | `Argon2` password hasher (if Django User model is ever adopted) | Stronger than default PBKDF2. |
+| **Low** | Request ID tracking (`X-Request-ID` middleware) | Enables log correlation across services. |
+| **Low** | `detect-secrets` pre-commit hook | Prevents accidental secret commits in the future. |
+| **Low** | Migrate to OAuth-only (deprecate password login) | Reduces credential attack surface to zero. |
+| **Low** | Web Application Firewall (WAF) rules at cloud provider level | Blocks common attack patterns before they reach Django. |
+
+---
+
+## Testing Environment (QA)
+
+> **This section is for testers, teachers, and anyone helping us try out the application before it goes live.**
+> You do not need to be a programmer to use the testing environment. If something looks wrong or confusing, that is exactly the kind of feedback we need.
+
+### What is the testing environment?
+
+The testing environment is a copy of the real application that runs on the internet, just like the final version will. It looks and works exactly the same, but it uses **fake data** — fake students, fake parents, fake payments. Nothing you do here affects real people or real money.
+
+Think of it as a **rehearsal stage**: you can click anything, try any feature, and even break things. We can always reset it.
+
+### How to access it
+
+| | |
+|---|---|
+| **Web address** | *(will be provided once deployed on GCP)* |
+| **Username** | See `.env.testing` → `LOGIN_USERNAME` |
+| **Password** | See `.env.testing` → `LOGIN_PASSWORD` |
+
+The login credentials are stored in the `.env.testing` file and are **never committed to the repository**. Ask the development team if you need them.
+
+1. Open the web address in your browser (Chrome, Firefox, Safari, or Edge all work).
+2. You will see a login page. Type the username and password you were given.
+3. After logging in you will see the **Dashboard** — the home screen with today's tasks, pending payments, and birthdays.
+
+### What you can test
+
+Here is a quick checklist of things to try. If anything does not work, take note of what happened and tell the development team.
+
+- **Dashboard** — Does it load? Do the numbers make sense?
+- **Students** — Can you see the list of students? Open a student's profile? Search by name?
+- **Create a student** — Fill in the form and save. Does the new student appear in the list?
+- **Payments** — Open the payments page. Try marking a payment as completed. Try filtering by status.
+- **Schedule** — Open the weekly schedule. Can you see groups assigned to time slots?
+- **Fun Friday** — Toggle a student's attendance on or off.
+- **Email forms** (Apps section) — Open each email form. You do not need to send real emails; just verify the forms load correctly.
+- **Management** — Can you update the site configuration (pricing)? Create a teacher or group?
+- **General navigation** — Does the sidebar work? Do all links go to the right page? Is the text readable?
+- **Testing Tools** (the blue "info" icon at the bottom of the sidebar) — This is your QA control panel:
+  - **Project Info** — shows the current software version, last commit, server status
+  - **Error Reporting toggle** — turn this ON so every server error is automatically emailed to the development team with full details
+  - **Database Seeding** — click to populate the database with test data, or wipe and start fresh
+  - **QA Backlog** — report bugs and suggestions directly from this page; each new task is emailed to the development team
+
+### How to report a problem
+
+When something goes wrong, please note:
+
+1. **What page you were on** — copy the web address from your browser's address bar, or describe the page ("I was on the payments list").
+2. **What you did** — "I clicked the green Complete button on a payment" or "I searched for a student named Sofia".
+3. **What happened** — "The page showed an error" or "Nothing happened" or "It showed the wrong information".
+4. **Screenshot** — If possible, take a screenshot (press the Print Screen key or use the Snipping Tool on Windows).
+
+Send this information to the development team. Even a short message like "The payments page shows an error when I click Export" is helpful.
+
+### Error pages you might see
+
+| Page | What it means |
+|------|--------------|
+| **Login page** (you are sent back to login) | Your session expired. Just log in again. |
+| **Page not found (404)** | You followed a link that does not exist. Go back to the Dashboard. |
+| **Server error (500)** | Something broke inside the application. This is a bug — please report it. |
+| **Forbidden (403)** | The application blocked your action for security reasons. Try logging in again. |
+
+### For developers: how the QA environment works
+
+The testing environment mirrors production:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `DEBUG` | `False` | Hides technical details from error pages, same as production |
+| `DJANGO_ENV` | `testing` | Like production (collectstatic, Gunicorn, secure cookies) but enables the `/testing/` dashboard |
+| Server | Gunicorn (2 workers) | Same as production (not Django's development server) |
+| HTTPS cookies | `Secure=True`, `SameSite=Strict` | Same cookie policy as production |
+| HTTPS | Via Nginx reverse proxy (local) or Cloud Run (GCP) | See [HTTPS.md](docs/HTTPS.md) for full setup guide |
+| `SECURE_PROXY_SSL_HEADER` | Trusts `X-Forwarded-Proto` from reverse proxy | Enables Django to detect HTTPS behind Nginx/Cloud Run |
+| Database | PostgreSQL 16 (separate volume) | Isolated from the development database |
+| Login | Credentials in `.env.testing` | Dedicated QA credentials, never committed to git |
+| Admin panel | `/admin/` — credentials in `.env.testing` | Django admin for inspecting raw data |
+
+**Configuration files:**
+
+| File | Purpose |
+|------|---------|
+| `.env.testing` | All environment variables for QA (credentials, database, security flags) |
+| `docker-compose.testing.yml` | Docker override that switches to Gunicorn and uses a separate database volume |
+| `seed_testdata` command | Populates the database with realistic fake data |
+| `HTTPS.md` | Full guide for HTTPS setup with Docker (Nginx + self-signed cert) and GCP Cloud Run |
+| `/testing/` | In-app QA dashboard with project info, seeding, backlog, and error reporting toggle |
+| `core/decorators.py` | `qa_access_required` decorator — reusable access gate for QA-only views |
+
+#### Access control for `/testing/`
+
+The testing dashboard and all its API endpoints are protected by three conditions that must **all** be true:
+
+| Condition | Setting | Where it's checked |
+|---|---|---|
+| Environment is `testing` | `DJANGO_ENV=testing` | `settings.IS_TESTING_ENV` |
+| Debug is off | `DJANGO_DEBUG=False` | `settings.IS_TESTING_ENV` |
+| User matches QA username | `QA_TESTING_USERNAME` in `.env.testing` | `core/decorators.py` via session |
+
+If any condition fails, the page returns **404 Not Found** (not 403) so the URL appears not to exist. The sidebar icon is also hidden — controlled by the `show_testing_tools` context variable injected by `core/context_processors.py`.
+
+This means:
+- In **development** (`DEBUG=True`): the page doesn't exist, no sidebar icon.
+- In **production** (`DJANGO_ENV=production`): the page doesn't exist, no sidebar icon.
+- In **testing** with a **non-QA user**: the page doesn't exist, no sidebar icon.
+- In **testing** with the **QA user** (`manitas`): full access, sidebar icon visible.
+
+The QA username is configured in `.env.testing` (never hardcoded) via `QA_TESTING_USERNAME`. To grant another user access, change the value in the env file.
+
+**Running locally (for developers):**
+
+```bash
+# Start the QA environment
+make testing-up
+
+# Populate with test data (students, parents, payments, etc.)
+make testing-seed
+
+# Wipe everything and re-seed from scratch
+make testing-reset
+
+# View logs
+make testing-logs
+
+# Stop the environment
+make testing-down
+
+# Full rebuild (after code changes)
+make testing-rebuild
+```
+
+The `seed_testdata` command creates:
+- 3 teachers, 5 groups
+- 6 parents, 12 child students, 3 adult students, 1 inactive student
+- Active enrollments with monthly and quarterly payment plans
+- Payments in various states (completed, pending, overdue)
+- Schedule slots, todo items, and history log entries
+
+Use `--reset` to wipe and re-seed, or `--small` for a minimal dataset (6 children only).
+
+### GCP deployment plan
+
+The QA environment will be deployed on Google Cloud Platform, optimized for minimal cost:
+
+#### Recommended setup: Cloud Run + Cloud SQL
+
+| Component | GCP Service | Spec | Estimated cost |
+|-----------|-------------|------|----------------|
+| Application | Cloud Run | 1 vCPU, 512 MB, scales 0–2 | Free tier covers ~2M requests/month |
+| Database | Cloud SQL (PostgreSQL 16) | `db-f1-micro`, 10 GB SSD | ~$8/month |
+| Container images | Artifact Registry | Standard repo | Free tier (0.5 GB) |
+| HTTPS | Cloud Run managed | Automatic TLS certificate | Free |
+| DNS (optional) | Cloud DNS | 1 managed zone | ~$0.20/month |
+
+**Total estimated cost: ~$8–10/month**
+
+Cloud Run scales to zero when nobody is using it (no cost for idle time) and GCP provides automatic HTTPS with a `*.run.app` domain at no extra cost. The `db-f1-micro` Cloud SQL instance is the smallest available and more than enough for a QA team of 3–10 people.
+
+#### Why Cloud Run instead of a VM or Kubernetes
+
+- Kubernetes (GKE) has a management fee (~$70/month) that makes no sense for a small QA environment.
+- A Compute Engine VM would cost ~$5/month but requires manual updates, SSL certificate management, and doesn't scale to zero.
+- Cloud Run gives production-grade infrastructure (load balancing, HTTPS, health checks, rolling deploys) with almost no operational overhead.
+
+#### Deployment steps (run once during initial setup)
+
+```bash
+# 1. Build and push the Docker image
+gcloud builds submit --tag gcr.io/PROJECT_ID/fiveaday-testing
+
+# 2. Create the Cloud SQL instance
+gcloud sql instances create fiveaday-testing \
+  --tier=db-f1-micro \
+  --region=europe-southwest1 \
+  --database-version=POSTGRES_16
+
+# 3. Create the database and user
+gcloud sql databases create fiveaday_testing --instance=fiveaday-testing
+gcloud sql users create fiveaday_tester --instance=fiveaday-testing --password=SECURE_PASSWORD
+
+# 4. Store secrets
+echo -n "value" | gcloud secrets create SECRET_NAME --data-file=-
+
+# 5. Deploy to Cloud Run
+gcloud run deploy fiveaday-testing \
+  --image gcr.io/PROJECT_ID/fiveaday-testing \
+  --region europe-southwest1 \
+  --allow-unauthenticated \
+  --set-env-vars "DJANGO_ENV=production,DJANGO_DEBUG=False" \
+  --set-secrets "DJANGO_SECRET_KEY=django-secret-key:latest"
+
+# 6. Seed the database (one-time, via Cloud Run job or exec)
+gcloud run jobs create seed-testdata \
+  --image gcr.io/PROJECT_ID/fiveaday-testing \
+  --command "python" \
+  --args "project/manage.py,seed_testdata" \
+  --region europe-southwest1
+```
+
+After deployment, Cloud Run provides a URL like `https://fiveaday-testing-xxxxx.europe-southwest1.run.app` with HTTPS enabled automatically.
+
+---
+
 ## Contributing
 
 ### Development Workflow
 
-1. Create a feature branch from `main`
+```bash
+# First-time setup
+uv sync --no-install-project   # Install all dependencies (UV — see docs/UV.md)
+make pre-commit-install        # Install pre-commit hooks (Ruff + mypy + bandit)
+make up                        # Start Docker (PostgreSQL + Django)
+```
+
+1. Create a feature branch from `development`
 2. Make changes following the conventions below
-3. Run `make test-local` — all 112 tests must pass
-4. Run `make check` — no Django system check issues
-5. Create a pull request with clear description of changes
+3. Run `make lint` — Ruff linting must pass
+4. Run `make mypy` — mypy type checking must pass
+5. Run `make test` — all 294 tests must pass (PostgreSQL via Docker, parallel, with coverage)
+6. Run `make check` — no Django system check issues
+7. Create a pull request with clear description of changes
+
+Pre-commit hooks run **Ruff** (lint + format), **mypy** (type checking), and **bandit** (security) automatically on every commit.
+
+### Make Commands (Developer Tooling)
+
+| Tool | Purpose | Command |
+|------|---------|---------|
+| **UV** | Dependency management | `uv sync`, `uv add`, `uv lock` |
+| **Ruff** | Lint + format | `make lint`, `make format` |
+| **mypy** | Type checking | `make mypy` |
+| **bandit** | Security linting | `make bandit` |
+| **pip-audit** | Dependency CVE scanning | `make audit` |
+| **pytest-xdist** | Parallel test execution | Built into `make test` (`-n auto`) |
+| **pytest-randomly** | Randomized test ordering | Built into `make test` (seed printed) |
+| **pytest-cov** | Coverage reporting + badge | `make test`, `make coverage-badge` |
+| **pre-commit** | Git hooks: ruff, mypy, bandit | `make pre-commit-install` |
+
+All tools are configured in `pyproject.toml` and installed as dev dependencies via `uv sync`.
 
 ### Code Conventions
 

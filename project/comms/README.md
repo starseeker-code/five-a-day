@@ -45,7 +45,7 @@ All tasks have retry logic (3 retries, exponential backoff):
 | `send_birthday_emails_task` | Daily birthday batch | Celery Beat (8:00 AM) |
 | `send_payment_reminders` | Weekly payment reminder batch | Celery Beat |
 | `send_generic_email_task` | Generic email dispatcher | Manual |
-| `send_enrollment_confirmation_task` | Enrollment confirmation with attachments | On enrollment |
+| `send_enrollment_confirmation_task` | Enrollment confirmation with attachments (uses `student.gender` field) | On enrollment |
 
 Without Redis, Celery runs in eager mode (synchronous, same process).
 
@@ -72,6 +72,17 @@ python manage.py test_all_emails --to admin@test.com
 ## URL Patterns (comms/urls.py)
 
 10 URL patterns for the email app form views (`apps/`, `apps/fun-friday/`, `apps/payment-reminder/`, etc.). Views are imported from `core.views.app_forms`.
+
+## Tests
+
+Tests for comms services live in `project/tests/`:
+
+| File | What it tests |
+| ---- | ------------- |
+| `test_email_service.py` | `EmailService` — basic send, multiple recipients, CC/BCC, attachments, fail_silently, bulk sends, bad template handling. Uses `django.core.mail.outbox` (locmem backend). |
+| `test_email_functions.py` | All convenience functions in `email_functions.py` — correct template, subject, context, and fail_silently for each function |
+
+Run with `make test` (requires Docker + PostgreSQL running).
 
 ## Cross-App Communication
 

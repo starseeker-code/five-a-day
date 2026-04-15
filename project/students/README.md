@@ -9,13 +9,14 @@ The `students` app owns all people-related models: students, parents, teachers, 
 | **Teacher** | `teachers` | first_name, last_name, email (unique), phone, active, admin | Has many Groups |
 | **Group** | `groups` | group_name (unique), color (hex), active | FK to Teacher; has many Students |
 | **Parent** | `parents` | first_name, last_name, dni (unique), phone, email, iban | M2M to Students via StudentParent |
-| **Student** | `students` | first_name, last_name, birth_date, is_adult, school, allergies, gdpr_signed, active | FK to Group; M2M to Parents |
+| **Student** | `students` | first_name, last_name, birth_date, gender (m/f), is_adult, school, allergies, gdpr_signed, active | FK to Group; M2M to Parents |
 | **StudentParent** | `student_parents` | student, parent | Through table for Student-Parent M2M |
 
 ### Key Properties
 
 - `Student.full_name` — "{first_name} {last_name}"
 - `Student.age` — calculated from birth_date
+- `Student.gender` — 'm' or 'f' (used in enrollment confirmation emails)
 - `Parent.full_name` — "{first_name} {last_name}"
 - `Teacher.full_name` — "{first_name} {last_name}"
 

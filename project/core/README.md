@@ -9,7 +9,7 @@ The `core` app is the "everything else" app — it owns the dashboard, authentic
 | **ScheduleSlot** | `schedule_slots` | Weekly schedule grid (row, day, col) with group FK |
 | **FunFridayAttendance** | `fun_friday_attendance` | Tracks student attendance on Fun Fridays |
 | **TodoItem** | `todo_items` | Dashboard task list with due dates |
-| **HistoryLog** | `history_logs` | Audit trail of user actions (auto-capped at 1,000) |
+| **HistoryLog** | `history_logs` | Audit trail of user actions (auto-capped at 1,000 with guarded single-query cleanup) |
 
 ## Views (core/views/)
 
@@ -18,13 +18,13 @@ The monolithic `views.py` was split into 12 focused modules:
 | Module | Views | Description |
 | ------ | ----- | ----------- |
 | `auth.py` | `login_view`, `logout_view`, `google_oauth_redirect`, `google_oauth_callback` | Session-based auth + Google OAuth |
-| `dashboard.py` | `home`, `all_info` | Dashboard with stats, todos, birthdays; database view |
-| `schedule.py` | `schedule_view`, `save_schedule_slot`, `fun_friday_view` | Weekly schedule grid + Fun Friday list |
+| `dashboard.py` | `home`, `all_info` | Dashboard with stats (single `Case/When` aggregate query), todos, birthdays; database view |
+| `schedule.py` | `schedule_view`, `save_schedule_slot`, `fun_friday_view` | Weekly schedule grid + Fun Friday list (single attendance query for both weeks, filters from loaded students) |
 | `fun_friday_attendance.py` | `toggle_fun_friday_this_week`, `add/remove_fun_friday_attendance` | AJAX attendance toggles |
 | `todos.py` | `create_todo`, `complete_todo`, `history_list` | Todo CRUD + history pagination API |
 | `students.py` | `StudentCreateView`, `StudentListView`, etc. | Student/parent CRUD (CBVs + FBVs) |
 | `parents.py` | `ParentCreateView` | Parent creation CBV |
-| `payments.py` | `payments_list`, `create_payment`, `quick_complete_payment`, etc. | Payment CRUD + AJAX APIs |
+| `payments.py` | `payments_list`, `create_payment`, `quick_complete_payment`, etc. | Payment CRUD + AJAX APIs. Stats use single `Case/When` aggregate (1 query instead of 8). |
 | `management.py` | `gestion_view`, `update_site_config`, `create_teacher`, `create_group` | Admin config panel |
 | `app_forms.py` | `fun_friday_form`, `payment_reminder_form`, etc. (10 views) | Email app form views |
 | `support.py` | `submit_support_ticket` | Support ticket email API |
@@ -38,7 +38,7 @@ Student, payment, management, and email app routes live in `students/urls.py`, `
 
 ## Middleware
 
-**SimpleAuthMiddleware** — session-based auth that protects all URLs except `/login/`, `/health/`, `/static/`, `/media/`, and `/auth/google/`. Credentials come from `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars.
+**SimpleAuthMiddleware** — session-based auth that protects all URLs except `/login/`, `/health/`, `/static/`, `/media/`, and `/auth/google/*` (including `/callback/`). Credentials come from `LOGIN_USERNAME`/`LOGIN_PASSWORD` env vars (required; no hardcoded fallbacks).
 
 ## Templates
 
@@ -57,6 +57,17 @@ All templates live in `core/templates/`:
 - `js/base.js` — notification/history dropdowns (loaded on every page)
 - `js/support.js` — support ticket modal
 - `js/home.js`, `js/students.js`, `js/payments.js`, etc. — per-page modules
+
+## Tests
+
+Tests for core components live in `project/tests/`:
+
+| File | What it tests |
+| ---- | ------------- |
+| `test_context_processors.py` | `today_notifications()` — key presence, todo filtering, scheduled app logic, history count, support email |
+| `test_middleware.py` | `SimpleAuthMiddleware` — public paths (static, health, login, oauth), redirect behavior, authenticated sessions |
+
+Run with `make test` (requires Docker + PostgreSQL running).
 
 ## Cross-App Communication
 

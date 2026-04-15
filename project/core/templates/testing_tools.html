@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+
+{% block title %}Five a Day - Testing{% endblock %}
+{% block page_title %}Testing{% endblock %}
+{% block page_subtitle %}Panel de control del entorno de pruebas{% endblock %}
+
+{% block extra_css %}
+<style>
+.qa-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.qa-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.qa-card-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.qa-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.875rem;
+}
+.qa-info-row:last-child { border-bottom: none; }
+.qa-info-label { color: #6b7280; font-weight: 500; }
+.qa-info-value { color: #111827; font-family: ui-monospace, monospace; font-size: 0.8125rem; }
+
+/* Toggle switch */
+.toggle-switch { position: relative; width: 3rem; height: 1.625rem; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; inset: 0; cursor: pointer;
+    background: #d1d5db; border-radius: 9999px; transition: 0.3s;
+}
+.toggle-slider::before {
+    content: ""; position: absolute; height: 1.25rem; width: 1.25rem;
+    left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: #06b6d4; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(1.375rem); }
+
+/* Circular action buttons */
+.circle-btn {
+    width: 3rem; height: 3rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; border: none; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+}
+.circle-btn:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.circle-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Backlog */
+.backlog-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.75rem 1rem; border-radius: 0.75rem;
+    border: 1px solid #e5e7eb; background: #fafafa;
+    transition: background 0.15s;
+}
+.backlog-item:hover { background: #f0f9ff; }
+.priority-badge {
+    font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+    padding: 0.125rem 0.5rem; border-radius: 9999px; letter-spacing: 0.05em;
+}
+.priority-high { background: #fecaca; color: #991b1b; }
+.priority-medium { background: #fef3c7; color: #92400e; }
+.priority-low { background: #d1fae5; color: #065f46; }
+.status-badge {
+    font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+}
+.status-open { background: #dbeafe; color: #1e40af; }
+.status-in_progress { background: #fef3c7; color: #92400e; }
+.status-done { background: #d1fae5; color: #065f46; }
+
+.seed-output {
+    max-height: 12rem; overflow-y: auto;
+    font-family: ui-monospace, monospace; font-size: 0.75rem;
+    background: #111827; color: #a3e635; padding: 1rem; border-radius: 0.75rem;
+    white-space: pre-wrap; line-height: 1.6;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="px-4 py-6" id="testing-page"
+     data-seed-url="{% url 'api_seed_database' %}"
+     data-backlog-create-url="{% url 'api_create_backlog_task' %}"
+     data-toggle-error-url="{% url 'api_toggle_error_email' %}">
+
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            <span class="material-symbols-outlined text-cyan-600 text-5xl">info</span>
+            <h1 class="text-3xl font-bold tracking-tight text-neutral-800">Testing</h1>
+        </div>
+        <p class="text-neutral-600">Panel de control para testers y desarrolladores.</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ROW 1: Info del proyecto + tarjetas compactas   -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+        <!-- INFORMACION DEL PROYECTO (2 cols) -->
+        <div class="qa-card lg:col-span-2">
+            <div class="qa-card-header">
+                <div class="qa-card-icon bg-indigo-100">
+                    <span class="material-symbols-outlined text-indigo-600">code</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-neutral-800">Proyecto</h2>
+                    <p class="text-xs text-neutral-500">Datos en tiempo real del servidor y git</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                <div>
+                    <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Aplicacion</p>
+                    <div class="qa-info-row"><span class="qa-info-label">Version</span><span class="qa-info-value">v{{ app_version }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Entorno</span><span class="qa-info-value">{{ environment }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Debug</span><span class="qa-info-value">{{ debug }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Python</span><span class="qa-info-value">{{ python_version }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Django</span><span class="qa-info-value">{{ django_version }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Base de datos</span><span class="qa-info-value">{{ database_name }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Hora del servidor</span><span class="qa-info-value">{{ server_time }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Zona horaria</span><span class="qa-info-value">{{ timezone }}</span></div>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Ultimo commit</p>
+                    <div class="qa-info-row"><span class="qa-info-label">Rama</span><span class="qa-info-value">{{ git.branch|default:"—" }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Commit</span><span class="qa-info-value" title="{{ git.commit_id_full|default:'' }}">{{ git.commit_id|default:"—" }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Mensaje</span><span class="qa-info-value" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ git.commit_message|default:'' }}">{{ git.commit_message|default:"—" }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Autor</span><span class="qa-info-value">{{ git.commit_author|default:"—" }}</span></div>
+                    <div class="qa-info-row"><span class="qa-info-label">Fecha</span><span class="qa-info-value">{{ git.commit_date|default:"—" }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETAS COMPACTAS (columna derecha) -->
+        <div class="flex flex-col gap-6">
+
+            <!-- Reporte de errores -->
+            <div class="qa-card">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="qa-card-icon bg-rose-100">
+                            <span class="material-symbols-outlined text-rose-600">report</span>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-neutral-800">Reporte de errores</h2>
+                            <p class="text-xs text-neutral-500">Envia errores por email al soporte</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium text-neutral-500" id="error-email-label">
+                            {{ qa_config.error_email_enabled|yesno:"Activo,Inactivo" }}
+                        </span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="error-email-toggle" {% if qa_config.error_email_enabled %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version del entorno -->
+            <div class="qa-card">
+                <div class="flex items-center gap-3">
+                    <div class="qa-card-icon bg-violet-100">
+                        <span class="material-symbols-outlined text-violet-600">deployed_code</span>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-neutral-800">Entorno de pruebas</h2>
+                        <p class="text-xs text-neutral-500">Rama <strong>{{ git.branch|default:"—" }}</strong> &middot; v{{ app_version }} &middot; {{ environment }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin -->
+            <div class="qa-card">
+                <div class="flex items-center gap-3">
+                    <div class="qa-card-icon bg-amber-100">
+                        <span class="material-symbols-outlined text-amber-600">admin_panel_settings</span>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-neutral-800">Panel de administracion</h2>
+                        <a href="/admin/" class="text-xs text-cyan-600 hover:underline">/admin/ &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ROW 2: Datos de prueba                          -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="qa-card mb-8">
+        <div class="qa-card-header">
+            <div class="qa-card-icon bg-emerald-100">
+                <span class="material-symbols-outlined text-emerald-600">database</span>
+            </div>
+            <div class="flex-1">
+                <h2 class="text-lg font-bold text-neutral-800">Datos de prueba</h2>
+                <p class="text-xs text-neutral-500">Llena la base de datos con datos realistas para probar todas las funcionalidades</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="seed-btn" class="circle-btn bg-emerald-600 hover:bg-emerald-700" title="Sembrar datos">
+                    <span class="material-symbols-outlined text-[22px]">play_arrow</span>
+                </button>
+                <button id="seed-reset-btn" class="circle-btn bg-rose-600 hover:bg-rose-700" title="Borrar todo y re-sembrar">
+                    <span class="material-symbols-outlined text-[22px]">restart_alt</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <p class="text-sm text-neutral-600 mb-3">
+                    El comando de siembra crea un conjunto completo de datos de prueba para ejercitar cada funcionalidad sin tener que ingresar datos manualmente:
+                </p>
+                <ul class="text-sm text-neutral-600 space-y-1 ml-4 list-disc">
+                    <li><strong>3 profesores</strong> y <strong>5 grupos</strong> (Starters A/B, Movers, Flyers, Adultos)</li>
+                    <li><strong>6 padres</strong> con DNI, telefono, email e IBAN</li>
+                    <li><strong>12 alumnos</strong> vinculados a padres, asignados a grupos</li>
+                    <li><strong>3 adultos</strong> con sus propios datos de contacto</li>
+                    <li><strong>1 alumno inactivo</strong> (baja — para probar filtros)</li>
+                    <li><strong>Matriculas activas</strong> con planes de pago mensual y trimestral</li>
+                    <li><strong>Pagos</strong> en distintos estados: completados, pendientes y vencidos</li>
+                    <li><strong>Horarios</strong>, <strong>tareas pendientes</strong> y <strong>entradas en el historial</strong></li>
+                </ul>
+            </div>
+            <div>
+                <div id="seed-output" class="seed-output hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ROW 3: Backlog                                  -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="qa-card">
+        <div class="qa-card-header">
+            <div class="qa-card-icon bg-amber-100">
+                <span class="material-symbols-outlined text-amber-600">assignment</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-neutral-800">Backlog</h2>
+                <p class="text-xs text-neutral-500">Registra errores, sugerencias o tareas de prueba. Se lo mas detallado posible — cada tarea se envia por email al equipo de desarrollo.</p>
+            </div>
+        </div>
+
+        <!-- Formulario nueva tarea -->
+        <div class="bg-gray-50 rounded-xl p-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <input type="text" id="backlog-title" placeholder="Titulo del error o tarea..." maxlength="300"
+                       class="md:col-span-5 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-300 focus:border-cyan-400 outline-none">
+                <input type="text" id="backlog-desc" placeholder="Descripcion (cuanto mas detalle, mejor)" maxlength="500"
+                       class="md:col-span-4 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-300 focus:border-cyan-400 outline-none">
+                <select id="backlog-priority" class="md:col-span-1 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-300 outline-none">
+                    <option value="low">Baja</option>
+                    <option value="medium" selected>Media</option>
+                    <option value="high">Alta</option>
+                </select>
+                <button id="backlog-add-btn" class="md:col-span-2 px-4 py-2 bg-cyan-600 text-white rounded-lg font-semibold text-sm hover:bg-cyan-700 transition-colors flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">add</span> Crear
+                </button>
+            </div>
+            <p id="backlog-error" class="text-red-600 text-xs mt-2 hidden"></p>
+        </div>
+
+        <!-- Lista de tareas -->
+        <div id="backlog-list" class="space-y-2">
+            {% for task in tasks %}
+            <div class="backlog-item" data-task-id="{{ task.id }}">
+                <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-neutral-800 truncate">{{ task.title }}</p>
+                    {% if task.description %}<p class="text-xs text-neutral-500 truncate">{{ task.description }}</p>{% endif %}
+                </div>
+                <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+                <span class="text-xs text-neutral-400">{{ task.created_by }} &middot; {{ task.created_at|date:"d/m/Y" }}</span>
+                {% if task.status != 'done' %}
+                <button class="backlog-done-btn text-emerald-600 hover:text-emerald-800 transition-colors" data-task-id="{{ task.id }}" title="Marcar como hecho">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                </button>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-sm text-neutral-400 text-center py-6" id="backlog-empty">No hay tareas. Crea una arriba.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const page = document.getElementById('testing-page');
+    if (!page) return;
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function getCsrfToken() {
+        const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+        if (cookie) return cookie.split('=')[1];
+        const el = document.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+
+    function post(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+            body: JSON.stringify(body),
+        }).then(r => r.json());
+    }
+
+    // ── Toggle reporte de errores ───────────────────
+    const toggle = document.getElementById('error-email-toggle');
+    const label = document.getElementById('error-email-label');
+    if (toggle) {
+        toggle.addEventListener('change', function() {
+            const enabled = this.checked;
+            post(page.dataset.toggleErrorUrl, {enabled})
+                .then(data => {
+                    if (data.success) label.textContent = data.enabled ? 'Activo' : 'Inactivo';
+                    else { this.checked = !enabled; alert(data.message); }
+                })
+                .catch(() => { this.checked = !enabled; });
+        });
+    }
+
+    // ── Datos de prueba ─────────────────────────────
+    function seed(reset) {
+        const output = document.getElementById('seed-output');
+        const seedBtn = document.getElementById('seed-btn');
+        const resetBtn = document.getElementById('seed-reset-btn');
+        seedBtn.disabled = resetBtn.disabled = true;
+        output.classList.remove('hidden');
+        output.textContent = reset ? 'Borrando y re-sembrando...' : 'Sembrando base de datos...';
+
+        post(page.dataset.seedUrl, {reset})
+            .then(data => {
+                output.textContent = data.success ? data.message : 'Error: ' + data.message;
+            })
+            .catch(err => { output.textContent = 'Error en la peticion: ' + err; })
+            .finally(() => { seedBtn.disabled = resetBtn.disabled = false; });
+    }
+    document.getElementById('seed-btn')?.addEventListener('click', () => seed(false));
+    document.getElementById('seed-reset-btn')?.addEventListener('click', () => {
+        if (confirm('Esto borrara TODOS los datos y los re-sembrara. ¿Continuar?')) seed(true);
+    });
+
+    // ── Backlog ─────────────────────────────────────
+    const backlogList = document.getElementById('backlog-list');
+    const backlogEmpty = document.getElementById('backlog-empty');
+
+    document.getElementById('backlog-add-btn')?.addEventListener('click', function() {
+        const titleInput = document.getElementById('backlog-title');
+        const descInput = document.getElementById('backlog-desc');
+        const title = titleInput.value.trim();
+        const description = descInput.value.trim();
+        const priority = document.getElementById('backlog-priority').value;
+        const errorEl = document.getElementById('backlog-error');
+
+        if (!title) {
+            errorEl.textContent = 'El titulo es obligatorio.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        errorEl.classList.add('hidden');
+
+        post(page.dataset.backlogCreateUrl, {title, description, priority})
+            .then(data => {
+                if (!data.success) {
+                    errorEl.textContent = data.message;
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+                if (backlogEmpty) backlogEmpty.remove();
+                const t = data.task;
+                const item = document.createElement('div');
+                item.className = 'backlog-item';
+                item.dataset.taskId = t.id;
+                item.innerHTML = `
+                    <span class="priority-badge priority-${escapeHtml(t.priority)}">${escapeHtml(t.priority)}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-neutral-800 truncate">${escapeHtml(t.title)}</p>
+                        ${description ? '<p class="text-xs text-neutral-500 truncate">' + escapeHtml(description) + '</p>' : ''}
+                    </div>
+                    <span class="status-badge status-open">Open</span>
+                    <span class="text-xs text-neutral-400">${escapeHtml(t.created_by)} &middot; ${escapeHtml(t.created_at)}</span>
+                    <button class="backlog-done-btn text-emerald-600 hover:text-emerald-800 transition-colors" data-task-id="${t.id}" title="Marcar como hecho">
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    </button>`;
+                backlogList.insertBefore(item, backlogList.firstChild);
+                titleInput.value = '';
+                descInput.value = '';
+            })
+            .catch(() => {
+                errorEl.textContent = 'Error en la peticion.';
+                errorEl.classList.remove('hidden');
+            });
+    });
+
+    // Marcar tarea como hecha (delegacion de eventos)
+    backlogList?.addEventListener('click', function(e) {
+        const btn = e.target.closest('.backlog-done-btn');
+        if (!btn) return;
+        const taskId = btn.dataset.taskId;
+        const item = btn.closest('.backlog-item');
+        post(`/api/testing/backlog/${taskId}/update/`, {status: 'done'})
+            .then(data => {
+                if (data.success) {
+                    const badge = item.querySelector('.status-badge');
+                    badge.className = 'status-badge status-done';
+                    badge.textContent = 'Done';
+                    btn.remove();
+                }
+            });
+    });
+})();
+</script>
+{% endblock %}

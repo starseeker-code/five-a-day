@@ -1,7 +1,7 @@
 # scripts/update_readme.py
-import toml
-from datetime import datetime
 import subprocess
+
+import toml
 
 pyproject = toml.load("pyproject.toml")
 dependencies = pyproject.get("tool", {}).get("poetry", {}).get("dependencies", {})
@@ -15,7 +15,7 @@ next_feature = "Integración de Celery + Redis"
 
 deps_table = "\n".join(f"| {pkg} | {ver} |" for pkg, ver in dependencies.items())
 
-with open("README.md", "r", encoding="utf-8") as f:
+with open("README.md", encoding="utf-8") as f:
     readme = f.read()
 
 version_section = f"""[![Versión](https://img.shields.io/badge/versión-v{version}-brightgreen?style=for-the-badge)](#)
@@ -27,9 +27,11 @@ version_section = f"""[![Versión](https://img.shields.io/badge/versión-v{versi
 | **v{version}** | {commit_msg} | {commit_date} | {next_feature} |
 """
 
-readme = readme.split("<!-- AUTO-SECTION:VERSION -->")[0] + \
-         f"<!-- AUTO-SECTION:VERSION -->\n{version_section}<!-- /AUTO-SECTION:VERSION -->" + \
-         readme.split("<!-- /AUTO-SECTION:VERSION -->")[1]
+readme = (
+    readme.split("<!-- AUTO-SECTION:VERSION -->")[0]
+    + f"<!-- AUTO-SECTION:VERSION -->\n{version_section}<!-- /AUTO-SECTION:VERSION -->"
+    + readme.split("<!-- /AUTO-SECTION:VERSION -->")[1]
+)
 
 deps_section = f"""## 📦 Dependencias
 
@@ -38,9 +40,11 @@ deps_section = f"""## 📦 Dependencias
 {deps_table}
 """
 
-readme = readme.split("<!-- AUTO-SECTION:DEPENDENCIAS -->")[0] + \
-         f"<!-- AUTO-SECTION:DEPENDENCIAS -->\n{deps_section}<!-- /AUTO-SECTION:DEPENDENCIAS -->" + \
-         readme.split("<!-- /AUTO-SECTION:DEPENDENCIAS -->")[1]
+readme = (
+    readme.split("<!-- AUTO-SECTION:DEPENDENCIAS -->")[0]
+    + f"<!-- AUTO-SECTION:DEPENDENCIAS -->\n{deps_section}<!-- /AUTO-SECTION:DEPENDENCIAS -->"
+    + readme.split("<!-- /AUTO-SECTION:DEPENDENCIAS -->")[1]
+)
 
 with open("README.md", "w", encoding="utf-8") as f:
     f.write(readme)

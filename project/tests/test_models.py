@@ -1,17 +1,26 @@
 """Tests for core.models — model logic, constraints, properties."""
-import pytest
-from decimal import Decimal
+
 from datetime import date, timedelta
-from django.core.exceptions import ValidationError
+from decimal import Decimal
+
+import pytest
 from django.db import IntegrityError
 
-from students.models import Teacher, Group, Parent, Student, StudentParent
 from billing.models import (
-    SiteConfiguration, EnrollmentType, Enrollment, Payment,
-    current_academic_year, academic_year_start_date, academic_year_end_date,
+    Enrollment,
+    Payment,
+    SiteConfiguration,
+    academic_year_end_date,
+    academic_year_start_date,
+    current_academic_year,
 )
-from core.models import FunFridayAttendance, TodoItem, HistoryLog
-
+from core.models import (
+    FunFridayAttendance,
+    HistoryLog,
+    ScheduleSlot,
+    TodoItem,
+)
+from students.models import Group, Parent, Student
 
 # ── Helper functions ─────────────────────────────────────────────────────────
 
@@ -161,9 +170,7 @@ class TestEnrollment:
         assert active_enrollment.is_paid is True
         assert active_enrollment.remaining_amount == Decimal("0.00")
 
-    def test_unique_active_enrollment_per_student(
-        self, active_enrollment, student, enrollment_type_monthly
-    ):
+    def test_unique_active_enrollment_per_student(self, active_enrollment, student, enrollment_type_monthly):
         with pytest.raises(IntegrityError):
             Enrollment.objects.create(
                 student=student,
@@ -244,9 +251,7 @@ class TestHistoryLog:
 
     def test_log_respects_max_entries(self, db):
         for i in range(1005):
-            HistoryLog.objects.create(
-                action="payment_completed", message=f"Entry {i}"
-            )
+            HistoryLog.objects.create(action="payment_completed", message=f"Entry {i}")
         HistoryLog.log("payment_completed", "Trigger cleanup")
         assert HistoryLog.objects.count() <= HistoryLog.MAX_ENTRIES
 
@@ -266,3 +271,62 @@ class TestFunFridayAttendance:
         FunFridayAttendance.objects.create(student=student, date=friday)
         with pytest.raises(IntegrityError):
             FunFridayAttendance.objects.create(student=student, date=friday)
+
+
+# ── ScheduleSlot ────────────────────────────────────────────────────────────
+
+
+class TestScheduleSlot:
+    def test_create_slot(self, group, db):
+        slot = ScheduleSlot.objects.create(row=0, day=0, col=0, group=group)
+        assert str(slot) == "Slot row=0 day=0 col=0"
+
+    def test_unique_row_day_col(self, group, db):
+        ScheduleSlot.objects.create(row=0, day=1, col=0, group=group)
+        with pytest.raises(IntegrityError):
+            ScheduleSlot.objects.create(row=0, day=1, col=0, group=group)
+
+    def test_null_group(self, db):
+        slot = ScheduleSlot.objects.create(row=1, day=2, col=1, group=None)
+        assert slot.group is None
+
+
+# ── Student gender field ────────────────────────────────────────────────────
+
+
+class TestStudentGender:
+    def test_default_gender_is_m(self, student):
+        assert student.gender == "m"
+
+    def test_gender_choices(self, group, db):
+        female_student = Student.objects.create(
+            first_name="María",
+            last_name="Test",
+            birth_date=date(2018, 3, 1),
+            gender="f",
+            gdpr_signed=True,
+            group=group,
+            active=True,
+        )
+        assert female_student.gender == "f"
+        assert female_student.get_gender_display() == "Femenino"
+
+
+# ── Inactive student / withdrawn ────────────────────────────────────────────
+
+
+class TestInactiveStudent:
+    def test_inactive_student_exists(self, inactive_student):
+        assert inactive_student.active is False
+        assert inactive_student.withdrawal_date is not None
+        assert inactive_student.withdrawal_reason != ""
+
+
+# ── Cancelled enrollment ────────────────────────────────────────────────────
+
+
+class TestCancelledEnrollment:
+    def test_cancelled_enrollment_status(self, cancelled_enrollment):
+        assert cancelled_enrollment.status == "cancelled"
+        # cancelled enrollment should not block creating a new active one
+        # (unique constraint only applies to status='active')

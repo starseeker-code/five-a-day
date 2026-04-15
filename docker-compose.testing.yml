@@ -1,0 +1,42 @@
+# ============================================================================
+# DOCKER COMPOSE — Testing / QA Override
+# ============================================================================
+# Layered on top of the base docker-compose.yml to create a production-like
+# QA environment. DEBUG is off, Gunicorn serves the app, and static files
+# are collected at startup.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.testing.yml up -d
+#   Or simply:  make testing-up
+
+services:
+
+  db:
+    # Override: use a separate volume so QA data never touches dev data
+    volumes:
+      - testing_postgres_data:/var/lib/postgresql/data/pgdata
+      - ./backups:/backups
+
+  web:
+    # Use the QA-specific env file instead of the default .env
+    env_file:
+      - .env.testing
+
+    # Override: run Gunicorn (like production) instead of runserver
+    command: >
+      gunicorn
+        --chdir project
+        --bind 0.0.0.0:8000
+        --workers 2
+        --timeout 120
+        --access-logfile -
+        --error-logfile -
+        project.wsgi:application
+
+    environment:
+      # Ensure the entrypoint collects static files
+      DJANGO_ENV: testing
+
+volumes:
+  testing_postgres_data:
+    driver: local

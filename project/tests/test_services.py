@@ -1,13 +1,13 @@
 """Tests for core.services — business logic layer."""
-import pytest
-from decimal import Decimal
-from datetime import date
 
-from billing.models import Enrollment, Payment, SiteConfiguration
+from datetime import date
+from decimal import Decimal
+
+import pytest
+
 from billing.services.enrollment_service import EnrollmentService
 from billing.services.payment_service import PaymentService
 from billing.services.pricing_service import PricingService
-
 
 # ── PricingService ───────────────────────────────────────────────────────────
 
@@ -42,9 +42,7 @@ class TestPricingService:
 
 
 class TestEnrollmentService:
-    def test_create_monthly_full_time(
-        self, student, site_config, enrollment_type_monthly
-    ):
+    def test_create_monthly_full_time(self, student, site_config, enrollment_type_monthly):
         data = {
             "enrollment_plan": "monthly_full",
             "has_language_cheque": False,
@@ -58,9 +56,7 @@ class TestEnrollmentService:
         assert enrollment.payment_modality == "monthly"
         assert enrollment.final_amount == Decimal("54.00")
 
-    def test_create_monthly_part_time(
-        self, student, site_config, enrollment_type_monthly
-    ):
+    def test_create_monthly_part_time(self, student, site_config, enrollment_type_monthly):
         data = {
             "enrollment_plan": "monthly_part",
             "has_language_cheque": False,
@@ -72,9 +68,7 @@ class TestEnrollmentService:
         assert enrollment.schedule_type == "part_time"
         assert enrollment.final_amount == Decimal("36.00")
 
-    def test_create_quarterly(
-        self, student, site_config, enrollment_type_quarterly
-    ):
+    def test_create_quarterly(self, student, site_config, enrollment_type_quarterly):
         data = {
             "enrollment_plan": "quarterly",
             "has_language_cheque": False,
@@ -86,9 +80,7 @@ class TestEnrollmentService:
         assert enrollment.payment_modality == "quarterly"
         assert enrollment.final_amount == Decimal("153.90")
 
-    def test_sibling_discount_applied(
-        self, student, site_config, enrollment_type_monthly
-    ):
+    def test_sibling_discount_applied(self, student, site_config, enrollment_type_monthly):
         data = {
             "enrollment_plan": "monthly_full",
             "has_language_cheque": False,
@@ -101,9 +93,7 @@ class TestEnrollmentService:
         assert enrollment.final_amount == Decimal("51.30")
         assert enrollment.is_sibling_discount is True
 
-    def test_language_cheque_discount_applied(
-        self, student, site_config, enrollment_type_monthly
-    ):
+    def test_language_cheque_discount_applied(self, student, site_config, enrollment_type_monthly):
         data = {
             "enrollment_plan": "monthly_full",
             "has_language_cheque": True,
@@ -116,9 +106,7 @@ class TestEnrollmentService:
         assert enrollment.final_amount == Decimal("34.00")
         assert enrollment.has_language_cheque is True
 
-    def test_both_discounts_combined(
-        self, student, site_config, enrollment_type_monthly
-    ):
+    def test_both_discounts_combined(self, student, site_config, enrollment_type_monthly):
         data = {
             "enrollment_plan": "monthly_full",
             "has_language_cheque": True,
@@ -130,9 +118,7 @@ class TestEnrollmentService:
         # Base: 54, sibling: 54*(1-0.05) = 51.30, then LC: 51.30 - 20 = 31.30
         assert enrollment.final_amount == Decimal("31.30")
 
-    def test_special_enrollment_with_manual_amount(
-        self, student, site_config, enrollment_type_special
-    ):
+    def test_special_enrollment_with_manual_amount(self, student, site_config, enrollment_type_special):
         data = {
             "enrollment_plan": "monthly_full",
             "has_language_cheque": False,
@@ -144,9 +130,7 @@ class TestEnrollmentService:
         assert enrollment.final_amount == Decimal("25.00")
         assert enrollment.enrollment_type.name == "special"
 
-    def test_adult_enrollment(
-        self, adult_student, site_config, enrollment_type_adults
-    ):
+    def test_adult_enrollment(self, adult_student, site_config, enrollment_type_adults):
         data = {
             "enrollment_plan": "monthly_full",
             "has_language_cheque": False,
@@ -154,15 +138,11 @@ class TestEnrollmentService:
             "is_special": False,
             "manual_amount": None,
         }
-        enrollment = EnrollmentService.create_enrollment(
-            adult_student, data, is_adult=True
-        )
+        enrollment = EnrollmentService.create_enrollment(adult_student, data, is_adult=True)
         assert enrollment.schedule_type == "adult_group"
         assert enrollment.final_amount == Decimal("60.00")
 
-    def test_minimum_amount_enforced(
-        self, student, site_config, enrollment_type_monthly
-    ):
+    def test_minimum_amount_enforced(self, student, site_config, enrollment_type_monthly):
         # Force a scenario where discounts exceed base amount
         config = site_config
         config.language_cheque_discount = Decimal("100.00")
@@ -184,44 +164,30 @@ class TestEnrollmentService:
 
 class TestPaymentService:
     def test_calculate_monthly_amount_full_time(self, active_enrollment, site_config):
-        amount = PaymentService.calculate_monthly_amount(
-            active_enrollment, site_config, month=10
-        )
+        amount = PaymentService.calculate_monthly_amount(active_enrollment, site_config, month=10)
         assert amount == Decimal("54.00")
 
-    def test_calculate_monthly_with_sibling_discount(
-        self, active_enrollment, site_config
-    ):
+    def test_calculate_monthly_with_sibling_discount(self, active_enrollment, site_config):
         active_enrollment.is_sibling_discount = True
         active_enrollment.save()
-        amount = PaymentService.calculate_monthly_amount(
-            active_enrollment, site_config, month=10
-        )
+        amount = PaymentService.calculate_monthly_amount(active_enrollment, site_config, month=10)
         # 54 - (54 * 5/100) = 54 - 2.70 = 51.30
         assert amount == Decimal("51.30")
 
-    def test_calculate_monthly_with_language_cheque(
-        self, active_enrollment, site_config
-    ):
+    def test_calculate_monthly_with_language_cheque(self, active_enrollment, site_config):
         active_enrollment.has_language_cheque = True
         active_enrollment.save()
-        amount = PaymentService.calculate_monthly_amount(
-            active_enrollment, site_config, month=10
-        )
+        amount = PaymentService.calculate_monthly_amount(active_enrollment, site_config, month=10)
         # 54 - 20 = 34
         assert amount == Decimal("34.00")
 
     def test_calculate_monthly_june_discount(self, active_enrollment, site_config):
-        amount = PaymentService.calculate_monthly_amount(
-            active_enrollment, site_config, month=6
-        )
+        amount = PaymentService.calculate_monthly_amount(active_enrollment, site_config, month=6)
         # 54 - 20 (june discount) = 34
         assert amount == Decimal("34.00")
 
     def test_calculate_quarterly_amount(self, active_enrollment, site_config):
-        amount = PaymentService.calculate_quarterly_amount(
-            active_enrollment, site_config, quarter_due_month=10
-        )
+        amount = PaymentService.calculate_quarterly_amount(active_enrollment, site_config, quarter_due_month=10)
         # 54 * 3 = 162, minus 5% = 153.90
         assert amount == Decimal("153.90")
 
@@ -242,3 +208,29 @@ class TestPaymentService:
         assert PaymentService.should_generate_quarterly(1) is True
         assert PaymentService.should_generate_quarterly(4) is True
         assert PaymentService.should_generate_quarterly(2) is False
+
+
+# ── EnrollmentService error handling ────────────────────────────────────────
+
+
+class TestEnrollmentServiceErrors:
+    def test_missing_enrollment_type_raises_value_error(self, student, site_config):
+        """When enrollment types don't exist in DB, service should raise ValueError."""
+        data = {
+            "enrollment_plan": "monthly_full",
+            "has_language_cheque": False,
+            "is_sibling_discount": False,
+            "is_special": False,
+            "manual_amount": None,
+        }
+        # No enrollment types created — should raise ValueError
+        with pytest.raises(ValueError, match="EnrollmentType"):
+            EnrollmentService.create_enrollment(student, data)
+
+    def test_payment_statistics(self, site_config, pending_payment, completed_payment):
+        stats = PaymentService.get_payment_statistics(
+            month=pending_payment.due_date.month,
+            year=pending_payment.due_date.year,
+        )
+        assert stats["pending_count"] >= 1
+        assert isinstance(stats["pending_total"], Decimal)

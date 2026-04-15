@@ -33,7 +33,7 @@ services:
     
     # Puerto expuesto (solo para desarrollo local)
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     
     # Healthcheck: tests actual TCP auth, not just connectivity.
     # This ensures depends_on: service_healthy only passes when the web
@@ -68,9 +68,17 @@ services:
     ports:
       - "8000:8000"
 
-    # Esperar a que PostgreSQL esté listo antes de iniciar
+    # Environment overrides for Docker networking
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      POSTGRES_HOST: db
+
+    # Wait for PostgreSQL + Redis before starting
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
     # Red interna
@@ -78,133 +86,78 @@ services:
       - fiveaday_network
 
   # ==========================================================================
-  # REDIS - Cache y Message Broker (FUTURO)
+  # REDIS - Message Broker for Celery
   # ==========================================================================
-  # Descomenta cuando necesites implementar cache o tareas asíncronas
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: fiveaday_redis
-  #   restart: unless-stopped
-  #   
-  #   # Persistencia de datos Redis
-  #   volumes:
-  #     - redis_data:/data
-  #   
-  #   # Puerto expuesto (opcional para desarrollo)
-  #   ports:
-  #     - "6379:6379"
-  #   
-  #   # Comando con persistencia
-  #   command: redis-server --appendonly yes
-  #   
-  #   # Healthcheck
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   
-  #   networks:
-  #     - fiveaday_network
+  redis:
+    image: redis:7-alpine
+    container_name: fiveaday_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fiveaday_network
 
   # ==========================================================================
-  # CELERY WORKER - Tareas asíncronas (FUTURO)
+  # CELERY WORKER - Async task processing
+  # In production (GCP) this is replaced by Cloud Tasks — no worker process
+  # runs on Cloud Run. Tasks execute synchronously via CELERY_TASK_ALWAYS_EAGER.
   # ==========================================================================
-  # Descomenta cuando necesites procesar tareas en segundo plano
-  # celery_worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: fiveaday_celery_worker
-  #   restart: unless-stopped
-  #   
-  #   command: celery -A project worker -l info
-  #   
-  #   environment:
-  #     # Mismas variables que 'web'
-  #     DJANGO_ENV: ${DJANGO_ENV:-development}
-  #     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
-  #     DATABASE: postgres
-  #     POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
-  #     POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
-  #     POSTGRES_HOST: db
-  #     POSTGRES_PORT: 5432
-  #     CELERY_BROKER_URL: redis://redis:6379/0
-  #     CELERY_RESULT_BACKEND: redis://redis:6379/0
-  #   
-  #   volumes:
-  #     - ./project:/app/project
-  #   
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   
-  #   networks:
-  #     - fiveaday_network
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fiveaday_celery_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      POSTGRES_HOST: db
+    working_dir: /app/project
+    command: celery -A project.celery worker -l info -Q celery,emails --concurrency=2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fiveaday_network
 
   # ==========================================================================
-  # CELERY BEAT - Tareas programadas (FUTURO)
+  # CELERY BEAT - Scheduled tasks (cron)
+  # In production (GCP) this is replaced by Cloud Scheduler — cron jobs trigger
+  # Cloud Run Jobs that execute Django management commands directly.
   # ==========================================================================
-  # Descomenta cuando necesites tareas periódicas (ej: enviar emails diarios)
-  # celery_beat:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: fiveaday_celery_beat
-  #   restart: unless-stopped
-  #   
-  #   command: celery -A project beat -l info
-  #   
-  #   environment:
-  #     # Mismas variables que 'web'
-  #     DJANGO_ENV: ${DJANGO_ENV:-development}
-  #     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
-  #     DATABASE: postgres
-  #     POSTGRES_DB: ${POSTGRES_DB:-fiveaday_db}
-  #     POSTGRES_USER: ${POSTGRES_USER:-fiveaday_user}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
-  #     POSTGRES_HOST: db
-  #     POSTGRES_PORT: 5432
-  #     CELERY_BROKER_URL: redis://redis:6379/0
-  #     CELERY_RESULT_BACKEND: redis://redis:6379/0
-  #   
-  #   volumes:
-  #     - ./project:/app/project
-  #   
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   
-  #   networks:
-  #     - fiveaday_network
-
-  # ==========================================================================
-  # NGINX - Reverse Proxy y servidor de archivos estáticos (FUTURO/PRODUCCIÓN)
-  # ==========================================================================
-  # Descomenta para producción. Sirve archivos estáticos y hace proxy a Django
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: fiveaday_nginx
-  #   restart: unless-stopped
-  #   
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   
-  #   volumes:
-  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./nginx/conf.d:/etc/nginx/conf.d:ro
-  #     - static_volume:/app/staticfiles:ro
-  #     - media_volume:/app/mediafiles:ro
-  #     - ./certbot/conf:/etc/letsencrypt:ro
-  #     - ./certbot/www:/var/www/certbot:ro
-  #   
-  #   depends_on:
-  #     - web
-  #   
-  #   networks:
-  #     - fiveaday_network
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fiveaday_celery_beat
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      POSTGRES_HOST: db
+    working_dir: /app/project
+    command: celery -A project.celery beat -l info --pidfile=/tmp/celerybeat.pid --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fiveaday_network
 
   # ==========================================================================
   # FRONTEND - React/Vue/Next.js (FUTURO)
@@ -234,32 +187,6 @@ services:
   #   networks:
   #     - fiveaday_network
 
-  # ==========================================================================
-  # PGADMIN - Herramienta de administración PostgreSQL (OPCIONAL/DESARROLLO)
-  # ==========================================================================
-  # Descomenta si quieres una interfaz gráfica para gestionar PostgreSQL
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   container_name: fiveaday_pgadmin
-  #   restart: unless-stopped
-  #   
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fiveaday.com}
-  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
-  #   
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin
-  #   
-  #   ports:
-  #     - "5050:80"
-  #   
-  #   depends_on:
-  #     - db
-  #   
-  #   networks:
-  #     - fiveaday_network
-
 # ============================================================================
 # VOLÚMENES PERSISTENTES
 # ============================================================================
@@ -270,10 +197,8 @@ volumes:
     driver: local
   media_volume:
     driver: local
-  # redis_data:
-  #   driver: local
-  # pgadmin_data:
-  #   driver: local
+  redis_data:
+    driver: local
 
 # ============================================================================
 # REDES

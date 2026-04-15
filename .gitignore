@@ -136,7 +136,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .envrc
 .venv
 env/
@@ -214,14 +213,11 @@ __marimo__/
 # DOCKER & ENVIRONMENT
 # ============================================================================
 # Variables de entorno (¡NUNCA subir .env con contraseñas reales!)
-.env
-.env.local
-.env.production
-.env.staging
-.env.render
+.env*
 
 # Mantener el ejemplo
 !.env.example
+!.env.testing.example
 
 # Volúmenes de Docker
 postgres_data/

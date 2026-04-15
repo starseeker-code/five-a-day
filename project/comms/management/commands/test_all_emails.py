@@ -7,14 +7,28 @@ Uso:
     python manage.py test_all_emails --list     # Lista las apps disponibles
     python manage.py test_all_emails --to other@email.com  # Otro destinatario
 """
+
 import os
-from django.core.management.base import BaseCommand
-from django.conf import settings
 from datetime import date, timedelta
 
+from django.conf import settings
+from django.core.management.base import BaseCommand
+
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
-MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
-         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+MESES = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+]
 
 today = date.today()
 next_friday = today + timedelta(days=(4 - today.weekday()) % 7 or 7)
@@ -62,10 +76,15 @@ def get_email_apps():
             "template": "vacation_closure",
             "subject": "[TEST] Cierre por Navidad - Five a Day",
             "context": {
-                "start_closure_day_name": "lunes", "start_closure_day_number": 23,
-                "end_closure_day_name": "viernes", "end_closure_day_number": 3,
-                "month_closure": "diciembre", "closure_reason": "Navidad",
-                "reopening_day_name": "lunes", "reopening_day_number": 8, "month_reopening": "enero",
+                "start_closure_day_name": "lunes",
+                "start_closure_day_number": 23,
+                "end_closure_day_name": "viernes",
+                "end_closure_day_number": 3,
+                "month_closure": "diciembre",
+                "closure_reason": "Navidad",
+                "reopening_day_name": "lunes",
+                "reopening_day_number": 8,
+                "month_reopening": "enero",
             },
             "description": "Aviso de cierre por vacaciones (manual)",
         },
@@ -81,9 +100,13 @@ def get_email_apps():
             "template": "monthly_report",
             "subject": "[TEST] Informe Mensual - Five a Day",
             "context": {
-                "month": MESES[today.month - 1], "year": today.year,
+                "month": MESES[today.month - 1],
+                "year": today.year,
                 "parent_name": "Padre de Prueba",
-                "students": [{"name": "Alumno Ejemplo 1", "group": "Grupo A"}, {"name": "Alumno Ejemplo 2", "group": "Grupo B"}],
+                "students": [
+                    {"name": "Alumno Ejemplo 1", "group": "Grupo A"},
+                    {"name": "Alumno Ejemplo 2", "group": "Grupo B"},
+                ],
                 "total_students": 2,
             },
             "description": "Informe mensual (día 28)",
@@ -93,9 +116,12 @@ def get_email_apps():
             "template": "welcome_student",
             "subject": "[TEST] Bienvenido/a Alumno Test a Five a Day!",
             "context": {
-                "parent_name": "Padre de Prueba", "student_name": "Alumno Test",
-                "group_name": "Grupo A", "enrollment_type": "Mensual",
-                "schedule_type": "Jornada completa", "start_date": "01/09/2025",
+                "parent_name": "Padre de Prueba",
+                "student_name": "Alumno Test",
+                "group_name": "Grupo A",
+                "enrollment_type": "Mensual",
+                "schedule_type": "Jornada completa",
+                "start_date": "01/09/2025",
             },
             "description": "Bienvenida al nuevo alumno",
         },
@@ -110,7 +136,12 @@ def get_email_apps():
             "key": "receipt_quarterly",
             "template": "receipt_quarterly_child",
             "subject": "[TEST] Recibo Trimestral",
-            "context": {"student_name": "Alumno de Prueba", "month_1": "enero", "month_2": "febrero", "month_3": "marzo"},
+            "context": {
+                "student_name": "Alumno de Prueba",
+                "month_1": "enero",
+                "month_2": "febrero",
+                "month_3": "marzo",
+            },
             "description": "Recibo trimestral niños",
         },
         {
@@ -124,7 +155,12 @@ def get_email_apps():
             "key": "enrollment_child",
             "template": "enrollment_child",
             "subject": "[TEST] Confirmación de Matrícula",
-            "context": {"student": "Alumno de Prueba", "genero": "m", "academic_year": f"{today.year}-{today.year + 1}", "month": "septiembre"},
+            "context": {
+                "student": "Alumno de Prueba",
+                "genero": "m",
+                "academic_year": f"{today.year}-{today.year + 1}",
+                "month": "septiembre",
+            },
             "description": "Confirmación matrícula niño",
         },
         {
@@ -149,6 +185,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         import time
+
         from comms.services.email_service import email_service
 
         apps = get_email_apps()
@@ -182,8 +219,16 @@ class Command(BaseCommand):
             try:
                 inline_images = None
                 if app.get("inline_images"):
-                    inline_images = {cid: os.path.join(settings.BASE_DIR, path) for cid, path in app["inline_images"].items()}
-                success = email_service.send_email(template_name=app["template"], recipients=recipient, subject=app["subject"], context=app["context"], inline_images=inline_images)
+                    inline_images = {
+                        cid: os.path.join(settings.BASE_DIR, path) for cid, path in app["inline_images"].items()
+                    }
+                success = email_service.send_email(
+                    template_name=app["template"],
+                    recipients=recipient,
+                    subject=app["subject"],
+                    context=app["context"],
+                    inline_images=inline_images,
+                )
                 if success:
                     sent += 1
                     self.stdout.write(self.style.SUCCESS("OK"))

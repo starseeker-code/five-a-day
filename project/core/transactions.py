@@ -1,7 +1,8 @@
 from datetime import date
-from django.db.models import Q, Prefetch
 
-from billing.models import Payment, Enrollment
+from django.db.models import Prefetch, Q
+
+from billing.models import Enrollment, Payment
 from students.models import Student
 
 

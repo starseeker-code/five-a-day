@@ -4,13 +4,14 @@ Provides the core EmailService class and configuration helper.
 
 Moved from core/email.py as part of the comms app split.
 """
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.conf import settings
-from email.mime.image import MIMEImage
-from typing import List, Dict, Optional, Union
+
 import logging
 import os
+from email.mime.image import MIMEImage
+
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,10 @@ def get_email_config():
     Esta funcion asegura que siempre usamos los valores correctos del .env.
     """
     return {
-        'host_user': settings.EMAIL_HOST_USER,
-        'host_password': settings.EMAIL_HOST_PASSWORD,
-        'from_email': settings.DEFAULT_FROM_EMAIL,
-        'backend': settings.EMAIL_BACKEND,
+        "host_user": settings.EMAIL_HOST_USER,
+        "host_password": settings.EMAIL_HOST_PASSWORD,
+        "from_email": settings.DEFAULT_FROM_EMAIL,
+        "backend": settings.EMAIL_BACKEND,
     }
 
 
@@ -43,11 +44,11 @@ class EmailService:
     """
 
     # Ruta al logo de la academia (relativa a BASE_DIR)
-    LOGO_PATH = 'core/static/images/logo.png'
+    LOGO_PATH = "core/static/images/logo.png"
 
     def __init__(self):
         self.from_email = settings.DEFAULT_FROM_EMAIL
-        self.templates_path = 'emails/'
+        self.templates_path = "emails/"
 
     def _get_logo_path(self) -> str:
         """Obtiene la ruta absoluta al logo de la academia"""
@@ -56,14 +57,14 @@ class EmailService:
     def send_email(
         self,
         template_name: str,
-        recipients: Union[str, List[str]],
+        recipients: str | list[str],
         subject: str,
-        context: Optional[Dict] = None,
-        cc: Optional[List[str]] = None,
-        bcc: Optional[List[str]] = None,
+        context: dict | None = None,
+        cc: list[str] | None = None,
+        bcc: list[str] | None = None,
         fail_silently: bool = False,
-        attachments: Optional[List] = None,
-        inline_images: Optional[Dict[str, str]] = None
+        attachments: list | None = None,
+        inline_images: dict[str, str] | None = None,
     ) -> bool:
         """
         Envia un email usando un template HTML
@@ -93,11 +94,11 @@ class EmailService:
                 context = {}
 
             # Anadir variables globales al contexto
-            context.setdefault('year', 2025)
-            context.setdefault('site_name', 'Five a Day')
+            context.setdefault("year", 2025)
+            context.setdefault("site_name", "Five a Day")
 
             # Renderizar template HTML
-            template_path = f'{self.templates_path}{template_name}.html'
+            template_path = f"{self.templates_path}{template_name}.html"
             html_content = render_to_string(template_path, context)
 
             # Crear version texto plano (opcional, para clientes sin HTML)
@@ -105,24 +106,19 @@ class EmailService:
 
             # Crear email con alternativas (texto y HTML)
             email = EmailMultiAlternatives(
-                subject=subject,
-                body=text_content,
-                from_email=self.from_email,
-                to=recipients,
-                cc=cc,
-                bcc=bcc
+                subject=subject, body=text_content, from_email=self.from_email, to=recipients, cc=cc, bcc=bcc
             )
             email.attach_alternative(html_content, "text/html")
 
             # Anadir imagenes inline si existen
             if inline_images:
-                email.mixed_subtype = 'related'
+                email.mixed_subtype = "related"
                 for content_id, image_path in inline_images.items():
                     if os.path.exists(image_path):
-                        with open(image_path, 'rb') as img_file:
+                        with open(image_path, "rb") as img_file:
                             img = MIMEImage(img_file.read())
-                            img.add_header('Content-ID', f'<{content_id}>')
-                            img.add_header('Content-Disposition', 'inline', filename=os.path.basename(image_path))
+                            img.add_header("Content-ID", f"<{content_id}>")
+                            img.add_header("Content-Disposition", "inline", filename=os.path.basename(image_path))
                             email.attach(img)
 
             # Anadir adjuntos si existen
@@ -143,11 +139,8 @@ class EmailService:
             return False
 
     def send_bulk_emails(
-        self,
-        template_name: str,
-        emails_data: List[Dict],
-        fail_silently: bool = True
-    ) -> Dict[str, int]:
+        self, template_name: str, emails_data: list[dict], fail_silently: bool = True
+    ) -> dict[str, int]:
         """
         Envia multiples emails usando el mismo template
 
@@ -159,21 +152,21 @@ class EmailService:
         Returns:
             Diccionario con {sent: N, failed: N}
         """
-        results = {'sent': 0, 'failed': 0}
+        results = {"sent": 0, "failed": 0}
 
         for email_data in emails_data:
             success = self.send_email(
                 template_name=template_name,
-                recipients=email_data['recipient'],
-                subject=email_data.get('subject', 'Five a Day'),
-                context=email_data.get('context', {}),
-                fail_silently=fail_silently
+                recipients=email_data["recipient"],
+                subject=email_data.get("subject", "Five a Day"),
+                context=email_data.get("context", {}),
+                fail_silently=fail_silently,
             )
 
             if success:
-                results['sent'] += 1
+                results["sent"] += 1
             else:
-                results['failed'] += 1
+                results["failed"] += 1
 
         logger.info(f"Envio masivo completado: {results['sent']} enviados, {results['failed']} fallidos")
         return results

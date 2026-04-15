@@ -11,47 +11,54 @@ Usage:
     python manage.py generate_payments --dry-run    # Preview without creating
 """
 
+from datetime import date
+
 from django.core.management.base import BaseCommand
+
 from billing.models import (
-    Enrollment, Payment, SiteConfiguration,
+    Enrollment,
+    Payment,
+    SiteConfiguration,
     current_academic_year,
 )
 from billing.services.payment_service import (
-    PaymentService, MONTH_NAMES_ES, QUARTER_NAMES_ES,
+    MONTH_NAMES_ES,
+    QUARTER_NAMES_ES,
+    PaymentService,
 )
-from datetime import date
 
 
 class Command(BaseCommand):
-    help = 'Generate automatic periodic payments for enrolled students'
+    help = "Generate automatic periodic payments for enrolled students"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--month', type=int, default=None,
-            help='Month to generate payments for (1-12). Defaults to current month.'
+            "--month", type=int, default=None, help="Month to generate payments for (1-12). Defaults to current month."
         )
         parser.add_argument(
-            '--year', type=int, default=None,
-            help='Year to generate payments for. Defaults to current year.'
+            "--year", type=int, default=None, help="Year to generate payments for. Defaults to current year."
         )
         parser.add_argument(
-            '--dry-run', action='store_true',
-            help='Preview payments that would be created without saving.'
+            "--dry-run", action="store_true", help="Preview payments that would be created without saving."
         )
 
     def handle(self, *args, **options):
         today = date.today()
-        month = options['month'] or today.month
-        year = options['year'] or today.year
-        dry_run = options['dry_run']
+        month = options["month"] or today.month
+        year = options["year"] or today.year
+        dry_run = options["dry_run"]
 
         config = SiteConfiguration.get_config()
         academic_year = current_academic_year(date(year, month, 1))
 
-        enrollments = Enrollment.objects.filter(
-            status='active',
-            academic_year=academic_year,
-        ).select_related('student', 'student__group')
+        enrollments = (
+            Enrollment.objects.filter(
+                status="active",
+                academic_year=academic_year,
+            )
+            .select_related("student", "student__group")
+            .prefetch_related("student__parents")
+        )
 
         created_count = 0
         skipped_count = 0
@@ -65,19 +72,17 @@ class Command(BaseCommand):
             if not student.is_adult:
                 parent = student.parents.first()
                 if not parent:
-                    self.stdout.write(self.style.WARNING(
-                        f"  SKIP {student.full_name}: no parent found"
-                    ))
+                    self.stdout.write(self.style.WARNING(f"  SKIP {student.full_name}: no parent found"))
                     skipped_count += 1
                     continue
 
             modality = enrollment.payment_modality
             due_date = date(year, month, 1)
 
-            if modality == 'monthly' and PaymentService.should_generate_monthly(month):
+            if modality == "monthly" and PaymentService.should_generate_monthly(month):
                 exists = Payment.objects.filter(
                     student=student,
-                    payment_type='monthly',
+                    payment_type="monthly",
                     due_date__month=month,
                     due_date__year=year,
                 ).exists()
@@ -90,27 +95,25 @@ class Command(BaseCommand):
                 concept = f"Mensualidad {MONTH_NAMES_ES.get(month, '')} {year}"
 
                 if dry_run:
-                    self.stdout.write(
-                        f"  [DRY RUN] {student.full_name}: {concept} - €{amount}"
-                    )
+                    self.stdout.write(f"  [DRY RUN] {student.full_name}: {concept} - €{amount}")
                 else:
                     Payment.objects.create(
                         student=student,
                         parent=parent,
                         enrollment=enrollment,
-                        payment_type='monthly',
-                        payment_method='transfer',
+                        payment_type="monthly",
+                        payment_method="transfer",
                         amount=amount,
-                        payment_status='pending',
+                        payment_status="pending",
                         due_date=due_date,
                         concept=concept,
                     )
                 created_count += 1
 
-            elif modality == 'quarterly' and PaymentService.should_generate_quarterly(month):
+            elif modality == "quarterly" and PaymentService.should_generate_quarterly(month):
                 exists = Payment.objects.filter(
                     student=student,
-                    payment_type='quarterly',
+                    payment_type="quarterly",
                     due_date__month=month,
                     due_date__year=year,
                 ).exists()
@@ -123,18 +126,16 @@ class Command(BaseCommand):
                 concept = f"Trimestre {QUARTER_NAMES_ES.get(month, '')} {year}"
 
                 if dry_run:
-                    self.stdout.write(
-                        f"  [DRY RUN] {student.full_name}: {concept} - €{amount}"
-                    )
+                    self.stdout.write(f"  [DRY RUN] {student.full_name}: {concept} - €{amount}")
                 else:
                     Payment.objects.create(
                         student=student,
                         parent=parent,
                         enrollment=enrollment,
-                        payment_type='quarterly',
-                        payment_method='transfer',
+                        payment_type="quarterly",
+                        payment_method="transfer",
                         amount=amount,
-                        payment_status='pending',
+                        payment_status="pending",
                         due_date=due_date,
                         concept=concept,
                     )
@@ -143,7 +144,9 @@ class Command(BaseCommand):
                 skipped_count += 1
 
         prefix = "[DRY RUN] " if dry_run else ""
-        self.stdout.write(self.style.SUCCESS(
-            f"{prefix}Payment generation complete for {MONTH_NAMES_ES.get(month, month)} {year}: "
-            f"{created_count} created, {skipped_count} skipped"
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"{prefix}Payment generation complete for {MONTH_NAMES_ES.get(month, month)} {year}: "
+                f"{created_count} created, {skipped_count} skipped"
+            )
+        )

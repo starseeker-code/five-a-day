@@ -7,7 +7,12 @@
         logs-db ps stats shell bash migrate makemigrations createsuperuser \
         collectstatic check dbshell backup restore reset-db test test-local \
         test-verbose test-coverage test-models test-services test-views \
-        clean clean-all health url send-test-email generate-payments
+        clean clean-all health url send-test-email generate-payments \
+        testing-up testing-down testing-logs testing-seed testing-reset \
+        testing-rebuild testing-shell testing-health \
+        sync lint lint-fix format format-check pre-commit-install pc-run \
+        mypy bandit audit coverage-badge \
+        celery-logs celery-restart celery-status celery-test-task
 
 # ============================================================================
 # HELP
@@ -75,6 +80,35 @@ help:
 	@echo "  Payments:"
 	@echo "    make generate-payments          Generate current month"
 	@echo "    make generate-payments-dry      Preview without creating"
+	@echo ""
+	@echo "  Testing / QA Environment:"
+	@echo "    make testing-up       Start QA environment (production-like)"
+	@echo "    make testing-down     Stop QA environment"
+	@echo "    make testing-rebuild  Full rebuild of QA environment"
+	@echo "    make testing-logs     Tail QA logs"
+	@echo "    make testing-seed     Populate QA database with test data"
+	@echo "    make testing-reset    Wipe QA database and re-seed"
+	@echo "    make testing-shell    Django shell in QA container"
+	@echo "    make testing-health   Health check for QA environment"
+	@echo ""
+	@echo "  Celery (async tasks):"
+	@echo "    make celery-logs      Tail Celery worker + beat logs"
+	@echo "    make celery-restart   Restart worker + beat containers"
+	@echo "    make celery-status    Show Celery worker status"
+	@echo "    make celery-test-task Send a debug task to verify Celery works"
+	@echo ""
+	@echo "  Developer Tooling:"
+	@echo "    make sync             Install all deps (including dev) via uv"
+	@echo "    make lint             Run Ruff linter"
+	@echo "    make lint-fix         Run Ruff linter with auto-fix"
+	@echo "    make format           Format code with Ruff"
+	@echo "    make format-check     Check formatting (no changes)"
+	@echo "    make mypy             Run mypy type checker"
+	@echo "    make bandit           Run bandit security linter"
+	@echo "    make audit            Audit dependencies for vulnerabilities"
+	@echo "    make coverage-badge   Generate coverage.svg badge from last test run"
+	@echo "    make pre-commit-install  Install pre-commit hooks"
+	@echo "    make pc-run   Run pre-commit on all files"
 	@echo ""
 	@echo "  Cleanup:"
 	@echo "    make clean            Remove stopped containers + prune"
@@ -237,7 +271,8 @@ reset-db:
 
 # Run all tests inside Docker (uses the container's PostgreSQL)
 test:
-	docker compose exec web python -m pytest project/tests/ -v --tb=short
+	docker compose exec web uv sync --frozen --no-install-project --quiet
+	docker compose exec -e DJANGO_SETTINGS_MODULE=project.settings_test -e TEST_DB_HOST=db web python -m pytest project/tests/ -v --tb=short -n auto --cov=core --cov=students --cov=billing --cov=comms --cov-report=term-missing
 
 # Run tests locally against the Docker PostgreSQL (default)
 test-local:
@@ -314,21 +349,145 @@ clean-all:
 #   1. pyproject.toml → version = "x.y.z"
 #   2. project/settings.py → APP_VERSION fallback = "x.y.z"
 # This command updates both at once.
+#
+# Usage: make version x.y.z
+
+# Capture `make version x.y.z` — treat the version number as a goal with an empty recipe
+# so Make doesn't complain about a missing target named "x.y.z".
+ifeq ($(firstword $(MAKECMDGOALS)),version)
+  _VERSION_ARG := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifneq ($(_VERSION_ARG),)
+    $(eval $(_VERSION_ARG):;@:)
+  endif
+endif
 
 version:
-	@if [ -z "$(V)" ]; then \
-		echo "Usage: make version V=1.1.0"; \
+	@CURRENT=$$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/'); \
+	NEW="$(_VERSION_ARG)"; \
+	if [ -z "$$NEW" ]; then \
+		echo "Usage: make version x.y.z"; \
 		echo ""; \
-		echo "Current version:"; \
-		grep 'version = ' pyproject.toml | head -1; \
-		grep 'APP_VERSION' project/project/settings.py | head -1; \
+		echo "Current version: $$CURRENT"; \
 		exit 1; \
+	fi; \
+	read -p "Version $$CURRENT will become the new version $$NEW, are you sure? [y/N] " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "yes" ]; then \
+		sed -i 's/^version = ".*"/version = "'"$$NEW"'"/' pyproject.toml; \
+		sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
+		echo "Version updated to $$NEW in:"; \
+		echo "  - pyproject.toml"; \
+		echo "  - project/settings.py"; \
+	else \
+		echo "Cancelled."; \
 	fi
-	@sed -i 's/^version = ".*"/version = "$(V)"/' pyproject.toml
-	@sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "$(V)")/' project/project/settings.py
-	@echo "Version updated to $(V) in:"
-	@echo "  - pyproject.toml"
-	@echo "  - project/settings.py"
+
+# ============================================================================
+# TESTING / QA ENVIRONMENT
+# ============================================================================
+# These targets use docker-compose.testing.yml on top of the base file.
+# The QA environment mimics production: DEBUG=False, Gunicorn, HTTPS cookies.
+
+TESTING_COMPOSE = docker compose -f docker-compose.yml -f docker-compose.testing.yml
+
+testing-up:
+	$(TESTING_COMPOSE) up -d --remove-orphans
+	@echo "QA environment started: http://localhost:8000"
+	@echo "Login with credentials from .env.testing (LOGIN_USERNAME / LOGIN_PASSWORD)"
+
+testing-down:
+	$(TESTING_COMPOSE) down
+
+testing-rebuild:
+	$(TESTING_COMPOSE) down
+	$(TESTING_COMPOSE) build --no-cache
+	$(TESTING_COMPOSE) up -d
+	@echo "QA environment rebuilt: http://localhost:8000"
+
+testing-logs:
+	$(TESTING_COMPOSE) logs -f web
+
+testing-seed:
+	$(TESTING_COMPOSE) exec web python project/manage.py seed_testdata
+
+testing-reset:
+	$(TESTING_COMPOSE) exec web python project/manage.py seed_testdata --reset
+
+testing-shell:
+	$(TESTING_COMPOSE) exec web python project/manage.py shell
+
+testing-health:
+	@echo "=== QA Services ==="
+	@$(TESTING_COMPOSE) ps
+	@echo ""
+	@echo "=== Health endpoint ==="
+	@curl -sf http://localhost:8000/health/ 2>/dev/null || echo "(not reachable)"
+
+# ============================================================================
+# CELERY (async tasks + scheduled jobs)
+# ============================================================================
+celery-logs:
+	docker compose logs -f celery_worker celery_beat
+
+celery-restart:
+	docker compose restart celery_worker celery_beat
+
+celery-status:
+	docker compose exec -w /app/project celery_worker celery -A project.celery inspect active
+
+celery-test-task:
+	docker compose exec web python project/manage.py shell -c "from project.celery import debug_task; debug_task.delay(); print('Task queued — check celery-logs')"
+
+# ============================================================================
+# DEVELOPER TOOLING (UV, Ruff, pre-commit)
+# ============================================================================
+sync:
+	uv sync --no-install-project
+
+lint:
+	uv run --no-project ruff check project/
+
+lint-fix:
+	uv run --no-project ruff check --fix project/
+
+format:
+	uv run --no-project ruff format project/
+
+format-check:
+	uv run --no-project ruff format --check project/
+
+mypy:
+	uv run mypy project/
+
+bandit:
+	PYTHONUTF8=1 uv run bandit -r project/ -c pyproject.toml
+
+audit:
+	uv run pip-audit
+
+coverage-badge:
+	@echo "Copying .coverage from Docker container..."
+	docker compose cp web:/app/.coverage .coverage
+	uv run coverage-badge -o coverage.svg -f
+	@rm -f .coverage
+	@echo "coverage.svg updated — commit it to the repo"
+
+pre-commit-install:
+	uv run --no-project pre-commit install
+
+pc-run:
+	@if uv run --no-project pre-commit run --all-files; then \
+		read -p "Pre-commit passed. Is this a new version? [y/N] " answer; \
+		if [ "$$answer" = "y" ] || [ "$$answer" = "yes" ]; then \
+			CURRENT=$$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/'); \
+			MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
+			MINOR=$$(echo $$CURRENT | cut -d. -f2); \
+			PATCH=$$(echo $$CURRENT | cut -d. -f3); \
+			NEW="$$MAJOR.$$MINOR.$$((PATCH + 1))"; \
+			sed -i 's/^version = ".*"/version = "'"$$NEW"'"/' pyproject.toml; \
+			sed -i 's/APP_VERSION = os.getenv("APP_VERSION", ".*")/APP_VERSION = os.getenv("APP_VERSION", "'"$$NEW"'")/' project/project/settings.py; \
+			echo "Updated version $$CURRENT with new version $$NEW"; \
+		fi; \
+	fi
 
 # ============================================================================
 # PRODUCTION

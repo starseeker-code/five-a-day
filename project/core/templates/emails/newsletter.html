@@ -1,0 +1,24 @@
+{% extends 'emails/base_email.html' %}
+{% load static %}
+
+{% block content %}
+
+<p>Buenas tardes,</p>
+<br>
+<p>Nos complace compartir con vosotros/as el boletín informativo donde resumimos lo que hemos estado trabajando estos meses.</p>
+<br>
+{% if group_name %}
+<p><strong>Newsletter {{ group_name }}</strong></p>
+<br>
+{% endif %}
+{% if newsletter_link %}
+<p><a href="{{ newsletter_link }}" style="color: #8b5cf6; text-decoration: underline;">Ver boletín completo</a></p>
+<br>
+{% endif %}
+{% if message %}
+<p>{{ message|linebreaksbr }}</p>
+<br>
+{% endif %}
+<p>Kind regards,<br>El equipo de Five a Day</p>
+
+{% endblock %}

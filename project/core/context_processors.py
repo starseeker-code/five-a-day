@@ -1,7 +1,9 @@
 from datetime import date
+
 from django.conf import settings
-from .models import TodoItem, HistoryLog
+
 from .constants import SCHEDULED_APPS
+from .models import HistoryLog, TodoItem
 
 
 def today_notifications(request):
@@ -31,10 +33,18 @@ def today_notifications(request):
     except Exception:
         history_count = 0
 
+    # QA testing tools visibility
+    show_testing_tools = (
+        settings.IS_TESTING_ENV
+        and settings.QA_TESTING_USERNAME
+        and request.session.get("username") == settings.QA_TESTING_USERNAME
+    )
+
     return {
         "notifications_today_todos": todos,
         "notifications_today_apps": apps_today,
         "notifications_count": notifications_count,
         "history_count": history_count,
         "support_email": getattr(settings, "SUPPORT_EMAIL", ""),
+        "show_testing_tools": show_testing_tools,
     }

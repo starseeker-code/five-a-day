@@ -8,15 +8,15 @@ The `billing` app owns all financial logic: pricing configuration, enrollment pl
 | ----- | ----- | ---------- |
 | **SiteConfiguration** | `site_configuration` | Singleton (pk=1). All pricing: enrollment fees, monthly fees, discount percentages/amounts |
 | **EnrollmentType** | `enrollment_types` | name (monthly, quarterly, adults, special), display_name, base amounts |
-| **Enrollment** | `enrollments` | FK to Student + EnrollmentType. schedule_type, payment_modality, discounts, amounts, status, academic_year |
+| **Enrollment** | `enrollments` | FK to Student + EnrollmentType. schedule_type, payment_modality, discounts, amounts, status, academic_year. Indexed on `academic_year` for payment generation queries. |
 | **Payment** | `payments` | FK to Student + Parent + Enrollment. amount, type, method, status, due_date, payment_date |
 
 ### Key Business Rules
 
-- **SiteConfiguration** is a singleton — `get_config()` creates it if missing, using seed values from `billing/constants.py`
+- **SiteConfiguration** is a singleton — `get_config()` uses `get_or_create()` (race-condition safe), seeded from `billing/constants.py`
 - **One active enrollment per student** — enforced by UniqueConstraint on `(student)` where `status='active'`
 - **Payment.is_overdue** — True when status is pending and due_date < today
-- **Enrollment.is_paid** / **remaining_amount** — calculated from completed payment totals
+- **Enrollment.is_paid** / **remaining_amount** — calculated from completed payment totals via shared `_total_paid()` helper (single query path)
 
 ### Helper Functions (in models.py)
 
@@ -28,15 +28,16 @@ The `billing` app owns all financial logic: pricing configuration, enrollment pl
 
 ### EnrollmentService (`billing/services/enrollment_service.py`)
 
-- `create_enrollment(student, enrollment_data, is_adult)` — creates an Enrollment with proper pricing and discounts
+- `create_enrollment(student, enrollment_data, is_adult)` — creates an Enrollment within `transaction.atomic()` with proper pricing and discounts. Raises `ValueError` if required EnrollmentType is missing.
 - `_resolve_plan(config, data, ...)` — determines enrollment type, base amount, schedule type, payment modality
 - `_apply_discounts(config, base, ...)` — applies sibling and language cheque discounts
 
 ### PaymentService (`billing/services/payment_service.py`)
 
-- `calculate_monthly_amount(enrollment, config, month)` — monthly payment with discounts + June bonus
-- `calculate_quarterly_amount(enrollment, config, quarter_due_month)` — 3 months minus quarterly discount
-- `complete_payment(payment_id)` — marks payment completed with today's date
+- `_get_base_monthly_fee(enrollment, config)` — shared helper that resolves base fee by schedule type (adult_group / full_time / part_time)
+- `calculate_monthly_amount(enrollment, config, month)` — monthly payment with discounts + June bonus (delegates to `_get_base_monthly_fee`)
+- `calculate_quarterly_amount(enrollment, config, quarter_due_month)` — 3 months minus quarterly discount (delegates to `_get_base_monthly_fee`)
+- `complete_payment(payment_id)` — marks payment completed with today's date (within `transaction.atomic()`)
 - `should_generate_monthly/quarterly(month)` — academic calendar validation
 - `get_payment_statistics(month, year)` — aggregate pending/completed counts and totals
 
